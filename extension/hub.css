@@ -14,8 +14,7 @@ body { overflow: hidden; }
 .top-brand { display: flex; align-items: center; gap: var(--space-2); width: 232px; flex: none; }
 .collapsed .top-brand { width: auto; }
 .brand-link { display: flex; align-items: center; gap: var(--space-2); color: var(--text-primary); text-decoration: none; min-width: 0; }
-.brand-logo { width: 30px; height: 30px; border-radius: var(--radius-md); background: var(--primary-strong); color: var(--text-on-primary); display: grid; place-items: center; flex: none; }
-.brand-logo .ms { font-size: 18px; vertical-align: 0; }
+.brand-logo { width: 30px; height: 30px; flex: none; object-fit: contain; }
 .brand-name { font: var(--weight-semibold) var(--text-md)/1 var(--font); white-space: nowrap; }
 .icon-btn { width: 36px; height: 36px; display: inline-grid; place-items: center; flex: none; border: 0; border-radius: var(--radius-md); background: transparent; color: var(--text-secondary); cursor: pointer; }
 .icon-btn:hover { background: var(--surface-hover); color: var(--text-primary); }

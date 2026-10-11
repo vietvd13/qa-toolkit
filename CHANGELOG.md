@@ -4,6 +4,9 @@ Ghi theo [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/), đánh số t
 
 ## [Chưa phát hành]
 
+### Thay đổi
+- Icon và logo mới cho extension, đầu trang bộ công cụ và README (có bản logo cho nền tối).
+
 ## [1.3.0] - 2026-10-11
 
 ### Thêm

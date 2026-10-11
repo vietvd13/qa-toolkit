@@ -1,6 +1,9 @@
 <div align="center">
 
-<img src="extension/icons/icon128.png" width="72" height="72" alt="">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/logo-dark.png">
+  <img src="docs/images/logo.png" width="360" alt="qa-toolkit">
+</picture>
 
 # Bộ công cụ
 
