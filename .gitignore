@@ -1,0 +1,25 @@
+# Thư viện
+node_modules/
+
+# File đóng gói extension (tạo bằng npm run ext:zip, đính kèm ở GitHub Releases)
+dist/
+
+# Kết quả chạy tool dòng lệnh — có thể chứa link affiliate thật, không đưa lên git
+results/
+
+# Hồ sơ trình duyệt tạm, log
+.playwright/
+*.log
+npm-debug.log*
+
+# Hệ điều hành / trình soạn thảo
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/*
+!.vscode/extensions.json
+.idea/
+
+# Biến môi trường
+.env
+.env.*

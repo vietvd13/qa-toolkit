@@ -1,0 +1,23 @@
+name: Đề xuất tính năng / công cụ mới
+description: Gợi ý cải tiến hoặc một công cụ mới cho bộ
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Bạn đang gặp khó khăn gì?
+      description: Đang làm việc gì, mất thời gian hay dễ sai ở chỗ nào.
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: Bạn muốn công cụ làm gì?
+      description: Đầu vào là gì, kết quả mong muốn trông ra sao.
+    validations:
+      required: true
+  - type: textarea
+    id: extra
+    attributes:
+      label: Thông tin thêm
+      description: Ví dụ, ảnh chụp, công cụ tương tự bạn từng dùng…

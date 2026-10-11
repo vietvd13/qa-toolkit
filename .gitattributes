@@ -1,0 +1,6 @@
+# Lưu file văn bản với xuống dòng LF trong repo (Windows vẫn checkout bình thường)
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.zip binary

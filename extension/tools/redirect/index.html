@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kiểm tra Redirect</title>
+<link rel="stylesheet" href="../../shared/theme.css">
+<link rel="stylesheet" href="style.css">
+<script src="../../shared/theme.js"></script>
+<script src="../../shared/embed.js"></script>
+</head>
+<body>
+<div class="wrap">
+  <header class="brand">
+    <span class="brand-icon"><span class="ms lg" aria-hidden="true">alt_route</span></span>
+    <div>
+      <h1>Kiểm tra Redirect</h1>
+      <p>Mở một link nhiều lần, ghi lại từng link nó đi qua và chỉ ra tham số nằm ở đâu.</p>
+    </div>
+  </header>
+
+  <!-- FORM -->
+  <form class="card" id="form" autocomplete="off" novalidate>
+    <label for="url">Link cần kiểm tra</label>
+    <div class="url-row">
+      <input id="url" type="url" placeholder="https://..." required spellcheck="false">
+      <button class="btn btn-primary" id="btnStart" type="submit"><span class="ms fill" aria-hidden="true">play_arrow</span><span>Bắt đầu kiểm tra</span></button>
+    </div>
+    <div class="form-msg" id="formMsg" role="alert"></div>
+    <div class="settings">
+      <div>
+        <label for="repeat">Số lượt</label>
+        <input id="repeat" type="number" min="1" value="1000" inputmode="numeric">
+      </div>
+      <div>
+        <label for="concurrency">Chạy song song <span class="hint" id="concHint">1–10</span></label>
+        <input id="concurrency" type="number" min="1" max="10" value="5" inputmode="numeric">
+      </div>
+      <div>
+        <span class="label" id="deviceLabel">Thiết bị giả lập</span>
+        <div class="seg" id="device" role="group" aria-labelledby="deviceLabel">
+          <button type="button" data-v="0" class="on" aria-pressed="true"><span class="ms sm" aria-hidden="true">computer</span>Máy tính</button>
+          <button type="button" data-v="1" aria-pressed="false"><span class="ms sm" aria-hidden="true">smartphone</span>Điện thoại</button>
+        </div>
+      </div>
+      <div>
+        <label for="params">Tham số cần tìm <span class="hint">cách nhau bằng dấu phẩy</span></label>
+        <input id="params" type="text" value="sub3, sub4, Sub_id, affiliate_id, utm_content" spellcheck="false">
+      </div>
+    </div>
+    <details class="adv">
+      <summary><span class="ms sm chev" aria-hidden="true">chevron_right</span><span class="ms sm" aria-hidden="true">tune</span>Tuỳ chọn nâng cao</summary>
+      <div class="adv-grid">
+        <div>
+          <label for="idle">Chờ ổn định <span class="hint">ms</span></label>
+          <input id="idle" type="number" min="500" value="4000" inputmode="numeric">
+        </div>
+        <div>
+          <label for="timeout">Giới hạn mỗi lượt <span class="hint">ms</span></label>
+          <input id="timeout" type="number" min="5000" value="45000" inputmode="numeric">
+        </div>
+        <p>Trang trung gian đứng chờ lâu trước khi chuyển tiếp? Tăng “chờ ổn định” để không bỏ sót link.</p>
+        <label class="check full" id="clearCookiesRow"><input type="checkbox" id="clearCookies"> Xoá cookie của các link đã đi qua sau mỗi lượt <span class="hint">· mỗi lượt như người mới, nhưng bạn sẽ bị đăng xuất khỏi các trang đó (vd Shopee)</span></label>
+      </div>
+    </details>
+  </form>
+
+  <!-- EMPTY STATE -->
+  <section class="card" id="introCard">
+    <div class="intro">
+      <div>
+        <h2>Mỗi lượt là một đường đi</h2>
+        <p id="runNote">Tool mở link, đi hết chuỗi chuyển hướng rồi vẽ lại các link đã qua.</p>
+        <p>Link nào chứa tham số thì được đánh dấu <span style="color:var(--success);font-weight:600">xanh</span> kèm tên tham số. Tham số không xuất hiện ở link nào thì báo <span style="color:var(--warning);font-weight:600">thiếu</span>.</p>
+      </div>
+      <div class="sample" aria-hidden="true">
+        <div class="missing"><span class="ms sm" aria-hidden="true">warning</span>Thiếu <span class="miss-chip">sub3</span><span class="miss-chip">sub4</span></div>
+        <ol class="route">
+          <li class="stop"><span class="node"></span><span class="st s3">302</span><span class="u"><b>track.example.vn</b>/click?id=…</span><span class="pchips"></span></li>
+          <li class="stop has"><span class="node"></span><span class="st s3">302</span><span class="u"><b>go.example.vn</b>/r?affiliate_id=…</span><span class="pchips"><span class="pchip">affiliate_id</span><span class="pchip">Sub_id</span></span></li>
+          <li class="stop end"><span class="node"></span><span class="st s2">200</span><span class="u"><b>shop.example.vn</b>/product/…</span><span class="pchips"></span></li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <!-- RUN BAR -->
+  <div class="runbar hidden" id="runbar">
+    <div class="runbar-in">
+      <div class="runbar-row">
+        <div class="status" aria-live="polite"><span class="s-dot" id="dot"></span><span id="statusText">Đang chạy</span></div>
+        <div class="count" id="countBig">0 <small>/ 0 lượt</small></div>
+        <div class="run-time" id="timeText"></div>
+        <div class="run-actions">
+          <button class="btn btn-danger btn-sm" id="btnStop" type="button"><span class="ms sm fill" aria-hidden="true">stop</span>Dừng</button>
+          <button class="btn btn-sm" id="btnCsv" type="button" disabled><span class="ms sm" aria-hidden="true">download</span>Tải CSV</button>
+        </div>
+      </div>
+      <div class="bar"><div id="barFill"></div></div>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="hidden" id="results">
+    <div class="tabs" role="tablist">
+      <button class="tab" role="tab" id="tab-overview" aria-controls="panel-overview" aria-selected="true" data-tab="overview"><span class="ms sm" aria-hidden="true">dashboard</span>Tổng quan</button>
+      <button class="tab" role="tab" id="tab-rows" aria-controls="panel-rows" aria-selected="false" data-tab="rows"><span class="ms sm" aria-hidden="true">view_list</span>Từng lượt <span class="n" id="tabRowsCount">0</span></button>
+    </div>
+
+    <!-- OVERVIEW -->
+    <div role="tabpanel" id="panel-overview" aria-labelledby="tab-overview">
+      <div class="kpis" id="kpis"></div>
+
+      <section class="card">
+        <h2 class="section-title">Vì sao kết quả khác nhau?</h2>
+        <p class="section-sub">Tool tự so các lượt với nhau để tìm quy luật.</p>
+        <ul class="insights" id="insights"></ul>
+      </section>
+
+      <section class="card">
+        <h2 class="section-title">Tỉ lệ từng giá trị</h2>
+        <p class="section-sub">Số lượt có giá trị đó trên tổng số lượt đã chạy. Bấm một giá trị để xem các lượt tương ứng.</p>
+        <div class="dist" id="dist"></div>
+      </section>
+
+      <section class="card">
+        <h2 class="section-title">Các nhóm kết quả</h2>
+        <p class="section-sub">Gom các lượt có cùng giá trị và cùng đường đi. Tham số mà gần như mỗi lượt một giá trị thì chỉ so có hay không. Bấm một nhóm để xem các lượt trong nhóm.</p>
+        <div class="groups-wrap"><table class="groups">
+          <thead id="groupHead"></thead>
+          <tbody id="groupBody"></tbody>
+        </table></div>
+      </section>
+    </div>
+
+    <!-- ROWS -->
+    <div role="tabpanel" id="panel-rows" aria-labelledby="tab-rows" class="hidden">
+      <div class="toolbar">
+        <div class="search-box"><span class="ms sm" aria-hidden="true">search</span><input type="search" id="search" placeholder="Tìm giá trị, domain hoặc URL…" aria-label="Tìm kiếm"></div>
+        <div class="spacer"></div>
+        <span class="muted" id="countText" style="font-size:12.5px"></span>
+      </div>
+      <div class="toolbar">
+        <div class="chips" id="filters"></div>
+      </div>
+      <div class="table-wrap">
+        <table class="res" id="resTable">
+          <thead id="resHead"></thead>
+        </table>
+        <div class="empty" id="emptyMsg">Đang chờ kết quả lượt đầu tiên…</div>
+      </div>
+      <p class="muted" style="font-size:12.5px;margin:10px 2px 0">Rê chuột vào một link hoặc một tham số để xem nhanh, bấm vào tham số để mở bằng chứng. Bấm vào dòng để xem link đầy đủ.</p>
+    </div>
+  </div>
+</div>
+
+<script src="engine.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

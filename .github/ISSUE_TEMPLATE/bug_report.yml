@@ -1,0 +1,49 @@
+name: Báo lỗi
+description: Công cụ chạy sai, báo lỗi hoặc hiển thị không đúng
+labels: [bug]
+body:
+  - type: dropdown
+    id: tool
+    attributes:
+      label: Công cụ nào?
+      options:
+        - Kiểm tra Redirect (extension)
+        - Kiểm tra Redirect (bản web npm run ui)
+        - Kiểm tra Redirect (dòng lệnh)
+        - Khung bộ công cụ / Giao diện
+        - Khác
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: Chuyện gì đã xảy ra?
+      description: Mô tả ngắn gọn, kèm ảnh chụp màn hình nếu có. Đừng dán link affiliate hay dữ liệu thật của khách hàng.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Các bước để gặp lại lỗi
+      placeholder: |
+        1. Mở Kiểm tra Redirect
+        2. Nhập link …, 10 lượt
+        3. …
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Bạn mong đợi điều gì?
+  - type: input
+    id: version
+    attributes:
+      label: Phiên bản
+      description: Xem ở cuối thanh bên của bộ công cụ (vd v1.2.0)
+    validations:
+      required: true
+  - type: input
+    id: browser
+    attributes:
+      label: Trình duyệt & hệ điều hành
+      placeholder: Chrome 140 / Windows 11

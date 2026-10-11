@@ -1,0 +1,42 @@
+name: Release
+
+# Đẩy tag dạng v1.2.3 (vd: npm version minor && git push --follow-tags)
+# → kiểm tra, đóng gói extension và tạo GitHub Release kèm file .zip
+on:
+  push:
+    tags: ["v*.*.*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Phát hành
+    runs-on: ubuntu-latest
+    env:
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+      - run: npm run verify
+
+      - name: Tag phải khớp phiên bản trong package.json
+        run: |
+          PKG="v$(node -p "require('./package.json').version")"
+          if [ "$PKG" != "$GITHUB_REF_NAME" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME không khớp package.json ($PKG)"
+            exit 1
+          fi
+
+      - run: npm run ext:zip
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*.zip
+          generate_release_notes: true

@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bộ công cụ</title>
+<link rel="stylesheet" href="shared/theme.css">
+<link rel="stylesheet" href="hub.css">
+<script src="shared/theme.js"></script>
+</head>
+<body>
+<div class="hub" id="hub">
+  <aside class="side" aria-label="Danh sách công cụ">
+    <div class="side-brand">
+      <span class="side-logo"><span class="ms fill" aria-hidden="true">home_repair_service</span></span>
+      <div class="side-title">
+        <strong>Bộ công cụ</strong>
+        <span>Hỗ trợ test</span>
+      </div>
+    </div>
+
+    <nav class="side-nav">
+      <a class="nav-item" href="#/" data-id="">
+        <span class="ms" aria-hidden="true">apps</span><span class="nav-label">Tất cả công cụ</span>
+      </a>
+      <div class="nav-section">Công cụ</div>
+      <div id="navTools"></div>
+    </nav>
+
+    <div class="side-foot">
+      <button class="nav-item" type="button" id="btnTheme" aria-haspopup="dialog" title="Giao diện">
+        <span class="ms" aria-hidden="true">palette</span><span class="nav-label">Giao diện</span>
+      </button>
+      <button class="nav-item" type="button" id="btnCollapse" aria-label="Thu gọn thanh bên">
+        <span class="ms" aria-hidden="true">left_panel_close</span><span class="nav-label">Thu gọn</span>
+      </button>
+      <span class="ver nav-label" id="ver"></span>
+    </div>
+  </aside>
+
+  <main class="main">
+    <section class="home" id="home">
+      <div class="home-in">
+        <h1>Chọn công cụ</h1>
+        <p class="muted">Mỗi công cụ chạy riêng. Đang chạy dở một cái vẫn mở được cái khác, quay lại kết quả vẫn còn.</p>
+        <div class="tool-grid" id="toolGrid"></div>
+      </div>
+    </section>
+    <div class="frames" id="frames"></div>
+  </main>
+</div>
+<!-- Bảng cài đặt giao diện -->
+<div class="modal-bg hidden" id="themeDlg">
+  <div class="modal theme-modal" role="dialog" aria-modal="true" aria-labelledby="themeTitle">
+    <div class="modal-h">
+      <div>
+        <h3 id="themeTitle">Giao diện</h3>
+        <div class="muted">Áp dụng ngay cho mọi công cụ. Chỉ lưu trên máy này.</div>
+      </div>
+      <button class="x" type="button" data-close aria-label="Đóng"><span class="ms" aria-hidden="true">close</span></button>
+    </div>
+    <div class="modal-b">
+      <section class="tset">
+        <h4>Chế độ màu</h4>
+        <div class="seg" id="modeSeg" role="radiogroup" aria-label="Chế độ màu">
+          <button type="button" role="radio" data-mode="system"><span class="ms sm" aria-hidden="true">brightness_auto</span>Theo hệ thống</button>
+          <button type="button" role="radio" data-mode="light"><span class="ms sm" aria-hidden="true">light_mode</span>Sáng</button>
+          <button type="button" role="radio" data-mode="dark"><span class="ms sm" aria-hidden="true">dark_mode</span>Tối</button>
+        </div>
+      </section>
+
+      <section class="tset">
+        <h4>Màu chủ đạo <span class="hint">nút chính, mục đang chọn, thanh tiến độ</span></h4>
+        <div class="swatches" id="swPrimary" role="radiogroup" aria-label="Màu chủ đạo"></div>
+      </section>
+
+      <section class="tset">
+        <h4>Màu phụ <span class="hint">nhãn, biểu đồ tỉ lệ, điểm nhấn nhẹ</span></h4>
+        <div class="swatches" id="swSecondary" role="radiogroup" aria-label="Màu phụ"></div>
+      </section>
+
+      <section class="tset">
+        <h4>Xem trước</h4>
+        <div class="preview">
+          <div class="pv-row">
+            <button class="btn btn-primary" type="button" style="padding:9px 18px"><span class="ms fill sm" aria-hidden="true">play_arrow</span>Nút chính</button>
+            <button class="btn" type="button">Nút phụ</button>
+            <button class="btn btn-ghost" type="button">Nút chữ</button>
+            <button class="btn btn-danger btn-sm" type="button"><span class="ms sm fill" aria-hidden="true">stop</span>Dừng</button>
+          </div>
+          <div class="pv-row">
+            <span class="chip on">Đang lọc</span><span class="chip">Bộ lọc</span>
+            <span class="badge badge-primary">chủ đạo</span><span class="badge badge-secondary">màu phụ</span>
+            <span class="badge badge-success">✓ đạt</span><span class="badge badge-warning">! thiếu</span><span class="badge badge-error">✗ lỗi</span><span class="badge badge-info">i thông tin</span>
+          </div>
+          <div class="pv-row">
+            <span class="pv-nav"><span class="ms sm" aria-hidden="true">alt_route</span>Mục đang chọn</span>
+            <span class="pv-bar"><span></span></span>
+            <span class="pv-bar sec"><span></span></span>
+          </div>
+        </div>
+      </section>
+
+      <section class="tset">
+        <h4>Độ dễ đọc <span class="hint">chuẩn tối thiểu 4.5:1 cho chữ</span></h4>
+        <table class="contrast">
+          <thead><tr><th>Cặp màu</th><th>Sáng</th><th>Tối</th></tr></thead>
+          <tbody id="contrastBody"></tbody>
+        </table>
+        <p class="adj-note" id="adjNote"></p>
+      </section>
+
+      <div class="theme-actions">
+        <button class="btn btn-ghost" type="button" id="btnThemeReset"><span class="ms sm" aria-hidden="true">restart_alt</span>Khôi phục mặc định</button>
+        <button class="btn btn-primary" type="button" data-close style="padding:9px 22px">Xong</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="tools/registry.js"></script>
+<script src="hub.js"></script>
+</body>
+</html>

@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tên công cụ</title>
+<link rel="stylesheet" href="../../shared/theme.css">
+<script src="../../shared/theme.js"></script>
+<script src="../../shared/embed.js"></script>
+<!-- CSS riêng của tool (nếu cần): <link rel="stylesheet" href="style.css"> -->
+</head>
+<body>
+<div class="wrap">
+  <!-- Đầu trang: tự ẩn khi mở trong bộ công cụ -->
+  <header class="brand">
+    <span class="brand-icon"><span class="ms lg" aria-hidden="true">construction</span></span>
+    <div>
+      <h1>Tên công cụ</h1>
+      <p>Một câu nói rõ công cụ này làm gì.</p>
+    </div>
+  </header>
+
+  <form class="card" id="form">
+    <label for="input">Dữ liệu đầu vào</label>
+    <textarea id="input" rows="4" placeholder="Dán dữ liệu vào đây…"></textarea>
+    <div style="margin-top:14px">
+      <button class="btn btn-primary" type="submit" style="padding:10px 20px">
+        <span class="ms fill" aria-hidden="true">play_arrow</span>Chạy
+      </button>
+    </div>
+  </form>
+
+  <section class="card">
+    <h2 class="section-title">Kết quả</h2>
+    <p class="section-sub">Kết quả hiện ở đây.</p>
+    <div class="table-wrap" style="min-height:0">
+      <table>
+        <thead><tr><th>STT</th><th>Giá trị</th></tr></thead>
+        <tbody id="out"></tbody>
+      </table>
+      <div class="empty" id="empty">Chưa có kết quả.</div>
+    </div>
+  </section>
+</div>
+<!-- Extension không cho viết script trong HTML → để trong app.js -->
+<script src="app.js"></script>
+</body>
+</html>
