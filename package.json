@@ -31,7 +31,7 @@
     "check": "node scripts/check.js",
     "verify": "npm run lint && npm run check",
     "ext:zip": "node scripts/zip-extension.js",
-    "version": "node scripts/sync-version.js && git add extension/manifest.json",
+    "version": "node scripts/sync-version.js && git add extension/manifest.json CHANGELOG.md",
     "prepare": "husky",
     "commitlint": "commitlint --edit"
   },

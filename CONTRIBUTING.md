@@ -130,4 +130,4 @@ npm version patch|minor|major   # đồng bộ phiên bản package.json + manif
 git push --follow-tags          # GitHub Actions tạo Release kèm file .zip
 ```
 
-Trước khi phát hành, chuyển mục *Chưa phát hành* trong CHANGELOG thành phiên bản mới.
+`npm version` tự chuyển mục *Chưa phát hành* trong CHANGELOG thành phiên bản mới (kèm ngày) và dùng nội dung đó làm mô tả cho Release. Chỉ cần ghi đủ thay đổi vào *Chưa phát hành* trước khi chạy.

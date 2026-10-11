@@ -37,7 +37,11 @@ jobs:
 
       - run: npm run ext:zip
 
+      - name: Lấy ghi chú phát hành từ CHANGELOG
+        run: node scripts/release-notes.js "$GITHUB_REF_NAME" > dist/RELEASE_NOTES.md
+
       - uses: softprops/action-gh-release@v2
         with:
           files: dist/*.zip
+          body_path: dist/RELEASE_NOTES.md
           generate_release_notes: true
