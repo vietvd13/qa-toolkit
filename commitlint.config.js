@@ -32,6 +32,8 @@ const SCOPES = [
 
 module.exports = {
   extends: ['@commitlint/config-conventional'],
+  // Commit do Dependabot tạo ("chore(deps): Bump …", viết hoa chữ đầu) không sửa được → bỏ qua
+  ignores: [msg => /^Signed-off-by: dependabot\[bot\]/m.test(msg)],
   rules: {
     'type-enum': [2, 'always', ['feat', 'fix', 'perf', 'refactor', 'style', 'docs', 'test', 'build', 'ci', 'chore', 'revert']],
     'scope-enum': [2, 'always', SCOPES],
