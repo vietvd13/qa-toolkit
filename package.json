@@ -3,18 +3,15 @@
   "displayName": "Bộ công cụ",
   "version": "1.2.0",
   "private": true,
-  "description": "A Manifest V3 Chrome extension that bundles everyday QA and testing utilities into one hub, starting with a redirect-chain inspector that traces every hop of a link and pinpoints where affiliate and tracking parameters appear. Ships with an optional Playwright-powered web UI and CLI.",
+  "description": "A modular Chrome extension (Manifest V3) that brings everyday QA and testing utilities together in one hub, with a shared design system, light/dark themes and an optional local web version.",
   "keywords": [
     "chrome-extension",
     "manifest-v3",
     "qa",
     "testing",
     "toolkit",
-    "redirect",
-    "redirect-chain",
-    "affiliate",
-    "utm",
-    "playwright"
+    "productivity",
+    "developer-tools"
   ],
   "author": {
     "name": "vietvd13",
