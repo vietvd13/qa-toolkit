@@ -1,0 +1,17 @@
+
+# <loại>(<phạm vi>): <mô tả ngắn, chữ thường, không dấu chấm cuối>
+#
+# Loại:     feat | fix | perf | refactor | style | docs | test | build | ci | chore | revert
+# Phạm vi:  hub | theme | template | ext | web | cli | console | deps | ci | docs | release | <id công cụ, vd redirect>
+#
+# Ví dụ:
+#   feat(redirect): thêm bộ lọc theo affiliate_id
+#   fix(hub): ô tìm kiếm không nhận phím Enter
+#   docs: bổ sung hướng dẫn cài đặt
+#
+# Thân (không bắt buộc, cách tiêu đề 1 dòng trống): vì sao thay đổi, ảnh hưởng gì.
+# Chân (không bắt buộc):
+#   Closes #12
+#   BREAKING CHANGE: <điều thay đổi không tương thích ngược>
+#
+# Dùng mẫu này: git config commit.template .gitmessage

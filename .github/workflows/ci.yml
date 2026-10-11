@@ -18,6 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
+      HUSKY: "0"
     steps:
       - uses: actions/checkout@v4
 
@@ -42,3 +43,29 @@ jobs:
           name: bo-cong-cu-extension
           path: dist/*.zip
           retention-days: 14
+
+  commitlint:
+    name: Kiểm tra lời nhắn commit
+    runs-on: ubuntu-latest
+    env:
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
+      HUSKY: "0"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+
+      - name: Các commit của Pull Request
+        if: github.event_name == 'pull_request'
+        run: npx commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
+
+      - name: Commit vừa đẩy lên
+        if: github.event_name == 'push'
+        run: npx commitlint --last --verbose

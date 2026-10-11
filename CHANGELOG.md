@@ -9,6 +9,7 @@ Ghi theo [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/), đánh số t
 - Trang **Tất cả công cụ** có đếm số và lọc theo nhóm; thanh bên có nhóm "Công cụ" thu gọn được.
 - Trường `category` và `platforms` trong `tools/registry.js`.
 - Thang chữ, khoảng cách (bội số 4px) và bo góc dùng chung trong `shared/theme.css`.
+- Quy tắc commit theo Conventional Commits, kiểm tra tự động bằng commitlint + husky và trên CI.
 
 ### Thay đổi
 - Font Inter cho toàn bộ giao diện, mono của hệ điều hành cho link và mã.

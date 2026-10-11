@@ -31,14 +31,19 @@
     "check": "node scripts/check.js",
     "verify": "npm run lint && npm run check",
     "ext:zip": "node scripts/zip-extension.js",
-    "version": "node scripts/sync-version.js && git add extension/manifest.json"
+    "version": "node scripts/sync-version.js && git add extension/manifest.json",
+    "prepare": "husky",
+    "commitlint": "commitlint --edit"
   },
   "dependencies": {
     "playwright": "^1.64.0"
   },
   "devDependencies": {
+    "@commitlint/cli": "^21.2.3",
+    "@commitlint/config-conventional": "^21.2.3",
     "@eslint/js": "^10.0.1",
     "eslint": "^10.12.0",
-    "globals": "^17.13.0"
+    "globals": "^17.13.0",
+    "husky": "^9.1.7"
   }
 }
