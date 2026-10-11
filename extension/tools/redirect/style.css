@@ -10,22 +10,22 @@
 
 /* ---------- Giới thiệu (trước khi chạy) ---------- */
 .intro { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 28px; align-items: center; }
-.intro h2 { font: 700 17px/1.25 var(--display); margin: 0 0 8px; }
+.intro h2 { font: var(--weight-semibold) var(--text-lg)/var(--leading-heading) var(--font); margin: 0 0 8px; }
 .intro p { margin: 0 0 6px; color: var(--text-secondary); }
-.intro .sample { background: var(--surface); border-radius: 10px; padding: 14px 16px; }
+.intro .sample { background: var(--surface); border-radius: var(--radius-lg); padding: 14px 16px; }
 
 /* ---------- Thanh tiến độ (dính trên đầu) ---------- */
 .runbar { position: sticky; top: 0; z-index: 20; margin: 18px -24px 0; padding: 12px 24px 0; background: color-mix(in srgb, var(--background) 88%, transparent); backdrop-filter: blur(8px); }
 .runbar-in { background: var(--surface-elevated); border: 1px solid var(--border); border-radius: var(--r); box-shadow: var(--shadow); overflow: hidden; }
 .runbar-row { display: flex; align-items: center; gap: 18px; padding: 12px 16px; flex-wrap: wrap; }
 .status { display: flex; align-items: center; gap: 9px; font-weight: 600; min-width: 0; }
-.status .s-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--text-secondary); flex: none; }
+.status .s-dot { width: 9px; height: 9px; border-radius: var(--radius-full); background: var(--text-secondary); flex: none; }
 .s-dot.run { background: var(--primary); box-shadow: 0 0 0 0 var(--primary); animation: ping 1.4s infinite; }
 .s-dot.ok { background: var(--success); }
 .s-dot.stop { background: var(--warning); }
 .s-dot.err { background: var(--error); }
 @keyframes ping { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--primary) 60%, transparent); } 100% { box-shadow: 0 0 0 9px transparent; } }
-.count { font: 700 20px/1 var(--display); font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
+.count { font: var(--weight-bold) var(--text-xl)/1 var(--font); font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
 .count small { font: 500 13px var(--font); color: var(--text-secondary); }
 .run-time { color: var(--text-secondary); font-size: 13px; font-variant-numeric: tabular-nums; }
 .run-actions { margin-left: auto; display: flex; gap: 8px; }
@@ -34,11 +34,11 @@
 
 /* ---------- Ô số liệu ---------- */
 .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
-.kpi { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: var(--r); padding: 14px 16px; box-shadow: var(--shadow); }
+.kpi { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: var(--radius-lg); padding: var(--space-4); box-shadow: var(--shadow-sm); }
 .kpi .k { font: 500 12.5px var(--mono); color: var(--text-secondary); }
-.kpi .v { font: 700 28px/1.1 var(--display); letter-spacing: -.02em; margin: 6px 0 2px; font-variant-numeric: tabular-nums; }
+.kpi .v { font: var(--weight-bold) var(--text-3xl)/var(--leading-heading) var(--font); letter-spacing: -.02em; margin: 6px 0 2px; font-variant-numeric: tabular-nums; }
 .kpi .d { font-size: 12.5px; color: var(--text-secondary); }
-.kpi .meter { height: 4px; border-radius: 99px; background: var(--surface); margin-top: 10px; overflow: hidden; }
+.kpi .meter { height: 4px; border-radius: var(--radius-full); background: var(--surface); margin-top: 10px; overflow: hidden; }
 .kpi .meter > div { height: 100%; background: var(--success); }
 .kpi.low .meter > div { background: var(--warning); }
 .kpi.err .v { color: var(--error); }
@@ -53,7 +53,7 @@
 
 /* ---------- Tỉ lệ từng giá trị ---------- */
 .dist { columns: 320px; column-gap: 14px; }
-.dist-panel { border: 1px solid var(--card-border); border-radius: 12px; overflow: hidden; background: var(--card-bg); break-inside: avoid; margin-bottom: 14px; }
+.dist-panel { border: 1px solid var(--card-border); border-radius: var(--radius-lg); overflow: hidden; background: var(--card-bg); break-inside: avoid; margin-bottom: 14px; }
 .dist-panel h3 { margin: 0; padding: 10px 14px; font: 500 13px var(--mono); background: var(--surface); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; gap: 8px; }
 .dist-panel h3 span { font-family: var(--font); color: var(--text-secondary); font-size: 12px; }
 .dist-body { max-height: 268px; overflow-y: auto; overscroll-behavior: contain; }
@@ -66,13 +66,13 @@
 .dist-row.none .v { font-family: var(--font); color: var(--warning); }
 .dist-more { padding: 9px 14px; border-top: 1px solid var(--border); font-size: 12.5px; color: var(--text-secondary); }
 .pct { display: flex; align-items: center; gap: 8px; min-width: 0; }
-.pct .track { flex: 1; height: 5px; background: var(--surface); border-radius: 99px; overflow: hidden; }
-.pct .track > * { display: block; height: 100%; background: var(--secondary); border-radius: 99px; }
+.pct .track { flex: 1; height: 5px; background: var(--surface); border-radius: var(--radius-full); overflow: hidden; }
+.pct .track > * { display: block; height: 100%; background: var(--secondary); border-radius: var(--radius-full); }
 .pct span { width: 44px; text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; font-size: 12.5px; }
 .dist-row.none .pct .track > * { background: var(--warning); }
 
 /* ---------- Các nhóm kết quả ---------- */
-.groups-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 12px; }
+.groups-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius-lg); }
 #groupBody tr:last-child td { border-bottom: 0; }
 .groups tbody tr { cursor: pointer; }
 .groups tbody tr:hover td { background: var(--table-row-hover); }
@@ -105,9 +105,9 @@ tbody.open .caret { transform: rotate(90deg); }
 .stop:first-child::before { top: 50%; }
 .stop:last-child::before { bottom: 50%; }
 .stop:only-child::before { display: none; }
-.stop .node { position: relative; z-index: 1; width: 8px; height: 8px; margin-left: 3px; border-radius: 50%; background: var(--surface-elevated); border: 2px solid var(--text-secondary); }
+.stop .node { position: relative; z-index: 1; width: 8px; height: 8px; margin-left: 3px; border-radius: var(--radius-full); background: var(--surface-elevated); border: 2px solid var(--text-secondary); }
 .stop.has .node { width: 12px; height: 12px; margin-left: 1px; background: var(--success); border-color: var(--success); box-shadow: 0 0 0 3px var(--success-bg); }
-.stop.end .node { border-radius: 2px; }
+.stop.end .node { border-radius: var(--radius-sm); }
 .stop .st { font: 11px var(--mono); color: var(--text-secondary); }
 .stop .st.s2 { color: var(--success); }
 .stop .st.s3 { color: var(--text-secondary); }
@@ -115,11 +115,11 @@ tbody.open .caret { transform: rotate(90deg); }
 .stop .u { font: 12px var(--mono); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-secondary); }
 .stop .u b { font-weight: 500; color: var(--text-primary); }
 .pchips { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
-.pchip, .miss-chip { font: 500 11.5px var(--mono); border-radius: 5px; padding: 1px 7px; border: 0; cursor: pointer; }
+.pchip, .miss-chip { font: 500 11.5px var(--mono); border-radius: var(--radius-sm); padding: 1px 7px; border: 0; cursor: pointer; }
 .pchip { background: var(--success-bg); color: var(--success); }
 .miss-chip { background: var(--warning-bg); color: var(--warning); }
 .pchip:hover, .miss-chip:hover { box-shadow: inset 0 0 0 1px currentColor; }
-.route-err { color: var(--error); background: var(--error-bg); border-radius: 6px; padding: 6px 10px; font-size: 12.5px; }
+.route-err { color: var(--error); background: var(--error-bg); border-radius: var(--radius-md); padding: 6px 10px; font-size: 12.5px; }
 
 /* ---------- Chi tiết link đầy đủ ---------- */
 tr.detail > td { background: var(--surface); padding: 14px 16px 18px 72px; }
@@ -132,7 +132,7 @@ tr.detail > td { background: var(--surface); padding: 14px 16px 18px 72px; }
 .hop .loc { color: var(--text-secondary); font-size: 12px; margin-top: 3px; word-break: break-all; }
 
 /* ---------- Cửa sổ bằng chứng ---------- */
-.proof-item { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+.proof-item { border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
 .proof-item.found { border-color: color-mix(in srgb, var(--success) 50%, var(--border)); }
 .proof-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; padding: 8px 12px; background: var(--surface); font-size: 12.5px; }
 .proof-url { padding: 12px; font: 12.5px/1.65 var(--mono); word-break: break-all; }

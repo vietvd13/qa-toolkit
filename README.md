@@ -44,7 +44,7 @@ Cập nhật bản mới: giải nén đè vào thư mục cũ, rồi bấm nút
 
 ## Tính năng chung
 
-- **Nhiều công cụ trong một chỗ:** thanh bên chọn công cụ, công cụ đang chạy dở vẫn chạy khi chuyển sang công cụ khác.
+- **Nhiều công cụ trong một chỗ:** tìm công cụ (Ctrl K), lọc theo nhóm, thanh bên chọn nhanh. Công cụ đang chạy dở vẫn chạy khi chuyển sang công cụ khác.
 - **Giao diện sáng / tối / theo hệ thống** và **tự chọn màu chủ đạo, màu phụ**. Màu quá nhạt được tự chỉnh để chữ luôn đạt độ tương phản 4.5:1.
 - **Xuất CSV** kết quả để mở bằng Excel hoặc Google Sheets.
 
@@ -52,11 +52,11 @@ Cập nhật bản mới: giải nén đè vào thư mục cũ, rồi bấm nút
 
 ## Bản chạy bằng Node (tuỳ chọn)
 
-Kiểm tra Redirect còn có bản web và bản dòng lệnh, chạy bằng trình duyệt ngầm (Playwright). Mỗi lượt là một phiên mới với cookie sạch.
+Có thêm bản web (giao diện giống hệt extension, mở tại `http://localhost:3000`) và bản dòng lệnh, chạy bằng trình duyệt ngầm (Playwright). Mỗi lượt là một phiên mới với cookie sạch.
 
 ```bash
 npm run setup                       # cài thư viện + trình duyệt Chromium (lần đầu)
-npm run ui                          # giao diện web tại http://localhost:3000
+npm run ui                          # bộ công cụ bản web tại http://localhost:3000
 npm start -- "https://link..." --repeat 100   # chạy trong terminal, in bảng kết quả
 ```
 
@@ -81,12 +81,12 @@ npm run ext:zip       # đóng gói extension vào dist/
 
 ```
 extension/            Chrome extension (sản phẩm chính)
-  hub.*               khung bộ công cụ: thanh bên, trang chọn công cụ, cài đặt giao diện
+  hub.*               khung bộ công cụ: đầu trang + tìm kiếm, thanh bên, danh mục, cài đặt giao diện
   shared/             theme.css (hệ màu + thành phần) · theme.js (sáng/tối, màu tự chọn)
   tools/registry.js   danh sách công cụ
   tools/_template/    khung để tạo công cụ mới
   tools/redirect/     Kiểm tra Redirect
-node/                 bản web (server.js) và dòng lệnh (trace.js) chạy bằng Playwright
+node/                 bản web (server.js, phục vụ nguyên extension/) và dòng lệnh (trace.js) chạy bằng Playwright
 scripts/              đóng gói, kiểm tra, đồng bộ phiên bản
 extras/               script dán vào Console
 docs/images/          ảnh chụp cho README
@@ -107,4 +107,4 @@ Kiểm tra Redirect mở link thật. Mở link affiliate với số lượng l�
 
 ## Giấy phép
 
-[MIT](LICENSE) © 2026 viet.vd
+[MIT](LICENSE) © 2026 [vietvd13](https://github.com/vietvd13)

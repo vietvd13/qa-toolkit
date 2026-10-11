@@ -4,46 +4,68 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Bộ công cụ</title>
+<link rel="icon" href="icons/icon32.png">
 <link rel="stylesheet" href="shared/theme.css">
 <link rel="stylesheet" href="hub.css">
 <script src="shared/theme.js"></script>
 </head>
 <body>
+<a class="skip" href="#main">Bỏ qua tới nội dung chính</a>
 <div class="hub" id="hub">
-  <aside class="side" aria-label="Danh sách công cụ">
-    <div class="side-brand">
-      <span class="side-logo"><span class="ms fill" aria-hidden="true">home_repair_service</span></span>
-      <div class="side-title">
-        <strong>Bộ công cụ</strong>
-        <span>Hỗ trợ test</span>
-      </div>
+  <!-- Đầu trang: logo · tìm công cụ · giao diện -->
+  <header class="top">
+    <div class="top-brand">
+      <button class="icon-btn" type="button" id="btnCollapse" aria-label="Thu gọn thanh bên" aria-controls="side" aria-expanded="true">
+        <span class="ms" aria-hidden="true">menu</span>
+      </button>
+      <a class="brand-link" href="#/">
+        <span class="brand-logo"><span class="ms fill" aria-hidden="true">home_repair_service</span></span>
+        <span class="brand-name">Bộ công cụ</span>
+      </a>
     </div>
 
+    <div class="top-search" role="search">
+      <span class="ms" aria-hidden="true">search</span>
+      <input type="search" id="q" placeholder="Tìm công cụ…" aria-label="Tìm công cụ" autocomplete="off" spellcheck="false">
+      <kbd class="kbd" aria-hidden="true">Ctrl K</kbd>
+    </div>
+
+    <div class="top-actions">
+      <button class="icon-btn" type="button" id="btnMode" aria-label="Chế độ màu"><span class="ms" aria-hidden="true">brightness_auto</span></button>
+      <button class="icon-btn" type="button" id="btnTheme" aria-haspopup="dialog" aria-label="Giao diện"><span class="ms" aria-hidden="true">palette</span></button>
+    </div>
+  </header>
+
+  <!-- Thanh bên -->
+  <aside class="side" id="side" aria-label="Điều hướng">
     <nav class="side-nav">
-      <a class="nav-item" href="#/" data-id="">
+      <a class="nav-item" href="#/" data-id="" title="Tất cả công cụ">
         <span class="ms" aria-hidden="true">apps</span><span class="nav-label">Tất cả công cụ</span>
       </a>
-      <div class="nav-section">Công cụ</div>
-      <div id="navTools"></div>
+      <button class="nav-group" type="button" id="btnGroup" aria-expanded="true" aria-controls="navTools">
+        <span class="nav-label">Công cụ</span><span class="nav-count" id="navCount"></span>
+        <span class="ms sm chev" aria-hidden="true">expand_more</span>
+      </button>
+      <div id="navTools" class="nav-list"></div>
     </nav>
-
     <div class="side-foot">
-      <button class="nav-item" type="button" id="btnTheme" aria-haspopup="dialog" title="Giao diện">
-        <span class="ms" aria-hidden="true">palette</span><span class="nav-label">Giao diện</span>
-      </button>
-      <button class="nav-item" type="button" id="btnCollapse" aria-label="Thu gọn thanh bên">
-        <span class="ms" aria-hidden="true">left_panel_close</span><span class="nav-label">Thu gọn</span>
-      </button>
       <span class="ver nav-label" id="ver"></span>
     </div>
   </aside>
 
-  <main class="main">
+  <!-- Nội dung -->
+  <main class="main" id="main" tabindex="-1">
     <section class="home" id="home">
       <div class="home-in">
-        <h1>Chọn công cụ</h1>
-        <p class="muted">Mỗi công cụ chạy riêng. Đang chạy dở một cái vẫn mở được cái khác, quay lại kết quả vẫn còn.</p>
+        <h1>Tất cả công cụ</h1>
+        <p class="lead" id="lead"></p>
+        <div class="cats" id="cats" role="toolbar" aria-label="Lọc theo nhóm"></div>
         <div class="tool-grid" id="toolGrid"></div>
+        <div class="empty hidden" id="noTools">
+          <span class="ms lg" aria-hidden="true">search_off</span>
+          <p>Không có công cụ nào khớp “<span id="noToolsQ"></span>”.</p>
+          <button class="btn" type="button" id="btnClearSearch">Xoá tìm kiếm</button>
+        </div>
       </div>
     </section>
     <div class="frames" id="frames"></div>

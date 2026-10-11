@@ -1,8 +1,9 @@
 #!/usr/bin/env node
-// Bản web (chạy trên máy) của tool Kiểm tra Redirect.
+// Bản web (chạy trên máy) của Bộ công cụ.
 //   npm run ui          → mở http://localhost:3000
-// Dùng CHUNG giao diện với extension (extension/tools/redirect/), chỉ thay engine.js
-// bằng node/redirect-engine.js: trình duyệt ngầm (Playwright) chạy ở đây, trang nhận kết quả qua SSE.
+// Phục vụ NGUYÊN thư mục extension/ (khung bộ công cụ, giao diện, các tool) để bản web giống hệt extension.
+// Khác biệt duy nhất: tools/redirect/engine.js được thay bằng node/redirect-engine.js —
+// trình duyệt ngầm (Playwright) chạy ở đây, trang nhận kết quả qua SSE.
 
 const http = require('http');
 const fs = require('fs');
@@ -14,14 +15,20 @@ const { traceOne, hostOf, hostChain } = require('./trace.js');
 const PORT = Number(process.env.PORT) || 3000;
 const EXT_DIR = path.join(__dirname, '..', 'extension');
 const WEB_ENGINE = path.join(__dirname, 'redirect-engine.js');
-const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.png': 'image/png', '.svg': 'image/svg+xml' };
+const TYPES = {
+  '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8',
+  '.json': 'application/json; charset=utf-8', '.png': 'image/png', '.svg': 'image/svg+xml', '.ico': 'image/x-icon',
+};
+// File chỉ dành cho extension, không phục vụ trên web
+const EXT_ONLY = new Set(['/background.js']);
 
-// Phục vụ file tĩnh trong extension/shared và extension/tools/redirect (chặn đi ra ngoài thư mục)
+// Phục vụ file tĩnh trong extension/ (chặn đi ra ngoài thư mục)
 function serveStatic(res, pathname) {
   if (pathname === '/tools/redirect/engine.js') return sendFile(res, WEB_ENGINE);
-  if (pathname === '/tools/redirect/') pathname += 'index.html';
-  if (!/^\/(shared|tools\/redirect)\//.test(pathname)) return false;
-  const file = path.normalize(path.join(EXT_DIR, decodeURIComponent(pathname)));
+  if (EXT_ONLY.has(pathname)) return false;
+  if (pathname.endsWith('/')) pathname += 'index.html';
+  let file;
+  try { file = path.normalize(path.join(EXT_DIR, decodeURIComponent(pathname))); } catch { return false; }
   if (!file.startsWith(EXT_DIR + path.sep)) return false;
   return sendFile(res, file);
 }
@@ -132,10 +139,11 @@ const server = http.createServer((req, res) => {
       return res.end();
     }
   }
-  if (u.pathname === '/' || u.pathname === '/index.html' || u.pathname === '/tools/redirect') {
-    res.writeHead(302, { Location: '/tools/redirect/' });
+  if (u.pathname === '/' || u.pathname === '/index.html') {
+    res.writeHead(302, { Location: '/hub.html' });
     return res.end();
   }
+  if (u.pathname === '/favicon.ico') return sendFile(res, path.join(EXT_DIR, 'icons', 'icon32.png'));
   if (u.pathname === '/api/run') return handleRun(req, res, parseRunParams(u));
   if (serveStatic(res, u.pathname)) return;
   res.writeHead(404).end('Not found');

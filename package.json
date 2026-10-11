@@ -1,17 +1,25 @@
 {
-  "name": "bo-cong-cu",
+  "name": "qa-toolkit",
+  "displayName": "Bộ công cụ",
   "version": "1.2.0",
   "private": true,
-  "description": "Bộ công cụ hỗ trợ test dạng Chrome extension. Công cụ đầu tiên: Kiểm tra Redirect, có thêm bản web và bản dòng lệnh chạy bằng Node.",
+  "description": "A Manifest V3 Chrome extension that bundles everyday QA and testing utilities into one hub, starting with a redirect-chain inspector that traces every hop of a link and pinpoints where affiliate and tracking parameters appear. Ships with an optional Playwright-powered web UI and CLI.",
   "keywords": [
     "chrome-extension",
     "manifest-v3",
-    "redirect",
-    "affiliate",
+    "qa",
     "testing",
-    "qa"
+    "toolkit",
+    "redirect",
+    "redirect-chain",
+    "affiliate",
+    "utm",
+    "playwright"
   ],
-  "author": "viet.vd",
+  "author": {
+    "name": "vietvd13",
+    "url": "https://github.com/vietvd13"
+  },
   "license": "MIT",
   "engines": {
     "node": ">=20"

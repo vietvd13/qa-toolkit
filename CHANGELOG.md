@@ -4,6 +4,20 @@ Ghi theo [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/), đánh số t
 
 ## [Chưa phát hành]
 
+### Thêm
+- Đầu trang mới: tìm công cụ (Ctrl K hoặc /), nút chuyển nhanh Theo hệ thống / Sáng / Tối, nút mở Giao diện.
+- Trang **Tất cả công cụ** có đếm số và lọc theo nhóm; thanh bên có nhóm "Công cụ" thu gọn được.
+- Trường `category` và `platforms` trong `tools/registry.js`.
+- Thang chữ, khoảng cách (bội số 4px) và bo góc dùng chung trong `shared/theme.css`.
+
+### Thay đổi
+- Font Inter cho toàn bộ giao diện, mono của hệ điều hành cho link và mã.
+- Bản web (`npm run ui`) dùng nguyên khung bộ công cụ, giao diện giống hệt extension.
+- Tên gói `qa-toolkit`, tác giả [vietvd13](https://github.com/vietvd13).
+
+### Sửa
+- Đổi sáng/tối không còn thoáng thấy nền cũ với chữ mới trên thẻ công cụ.
+
 ## [1.2.0] - 2026-10-11
 
 ### Thêm

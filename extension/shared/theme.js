@@ -131,6 +131,9 @@
 
   function apply(prefs = get()) {
     const root = document.documentElement;
+    // Tắt hiệu ứng chuyển màu trong lúc đổi giao diện để mọi màu đổi cùng lúc (không bị nền cũ + chữ mới)
+    root.classList.add('theme-switching');
+    requestAnimationFrame(() => requestAnimationFrame(() => root.classList.remove('theme-switching')));
     if (prefs.mode === 'light' || prefs.mode === 'dark') root.dataset.theme = prefs.mode;
     else delete root.dataset.theme; // theo hệ thống: CSS tự đổi khi hệ điều hành đổi
     let el = document.getElementById('bcc-custom-theme');

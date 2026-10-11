@@ -17,12 +17,13 @@ Khi có bản mới: chép đè thư mục `extension`, rồi bấm nút tải l
 
 ## Sử dụng
 
-- Bấm icon extension, bộ công cụ mở trong tab mới. Thanh bên trái liệt kê các công cụ.
+- Bấm icon extension, bộ công cụ mở trong tab mới. Thanh bên trái liệt kê các công cụ (bấm "Công cụ" để thu gọn nhóm, nút ☰ để thu gọn cả thanh bên).
+- Tìm công cụ bằng ô tìm kiếm trên đầu trang (phím tắt **Ctrl K** hoặc **/**), bấm Enter để mở công cụ đầu tiên khớp. Trang "Tất cả công cụ" có lọc theo nhóm.
 - Mỗi công cụ chạy riêng. Đang chạy dở một cái vẫn chuyển sang cái khác được, quay lại kết quả vẫn còn. Công cụ đang chạy có chấm nhấp nháy ở thanh bên.
 
 ### Giao diện
 
-Bấm **Giao diện** ở cuối thanh bên:
+Nút ở góc phải đầu trang: biểu tượng mặt trời/mặt trăng để chuyển nhanh *Theo hệ thống → Sáng → Tối*, biểu tượng bảng màu để mở **Giao diện**:
 
 - **Chế độ màu:** Theo hệ thống (tự đổi khi máy chuyển sáng/tối), Sáng, hoặc Tối.
 - **Màu chủ đạo** (nút chính, mục đang chọn, thanh tiến độ) và **màu phụ** (nhãn, biểu đồ tỉ lệ): chọn màu có sẵn, bấm ô cầu vồng để chọn tự do, hoặc gõ mã màu `#RRGGBB`.
@@ -57,7 +58,7 @@ Hệ màu mặc định: *Feminine Work OS* (`shared/theme.css`). Trong giao di�
 extension/
   manifest.json        khai báo extension + quyền
   background.js        bấm icon → mở hub.html
-  hub.html/.css/.js    khung bộ công cụ (thanh bên, trang chủ)
+  hub.html/.css/.js    khung bộ công cụ (đầu trang + tìm kiếm, thanh bên, danh mục công cụ, cài đặt giao diện)
   shared/              giao diện dùng chung (theme.css, theme.js, embed.js)
   tools/
     registry.js        danh sách công cụ
@@ -66,4 +67,4 @@ extension/
   icons/
 ```
 
-Tool Kiểm tra Redirect còn có bản chạy trên máy bằng Node (`npm run ui` ở thư mục gốc), dùng chung giao diện trong `tools/redirect/`, chỉ thay `engine.js` bằng `node/redirect-engine.js`.
+Bản web chạy bằng Node (`npm run ui` ở thư mục gốc) phục vụ nguyên thư mục này nên giao diện giống hệt extension; chỉ `tools/redirect/engine.js` được thay bằng `node/redirect-engine.js`. Tool nào chỉ chạy được trong extension thì ghi `platforms: ['extension']` trong `tools/registry.js` để bản web tự ẩn.
