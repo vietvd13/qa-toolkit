@@ -14,8 +14,10 @@ const store = {
 const PLATFORM = globalThis.chrome?.runtime?.id ? 'extension' : 'web';
 const tools = TOOLS.filter(t => !t.platforms || t.platforms.includes(PLATFORM));
 
-if (PLATFORM === 'extension') $('#ver').textContent = 'v' + chrome.runtime.getManifest().version;
-else fetch('manifest.json').then(r => r.json()).then(m => { $('#ver').textContent = `v${m.version} · bản web`; }).catch(() => {});
+const versionP = PLATFORM === 'extension'
+  ? Promise.resolve(chrome.runtime.getManifest().version)
+  : fetch('manifest.json').then(r => r.json()).then(m => m.version);
+versionP.then(v => { $('#ver').textContent = PLATFORM === 'extension' ? 'v' + v : `v${v} · bản web`; }).catch(() => {});
 
 // ---------- Tìm kiếm & lọc theo nhóm ----------
 const filter = { q: '', cat: '' };
@@ -261,10 +263,133 @@ $('#btnThemeReset').addEventListener('click', () => { Theme.reset(); renderTheme
 addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#themeDlg').classList.contains('hidden')) closeTheme(); });
 addEventListener('storage', e => { if (e.key === 'bcc-theme' && !$('#themeDlg').classList.contains('hidden')) renderThemeStatus(); });
 
+// ---------- Cập nhật phiên bản (GitHub Releases) ----------
+// Tự kiểm tra tối đa 6 giờ/lần (GitHub giới hạn 60 lượt/giờ cho mỗi IP), bấm "Kiểm tra cập nhật" để kiểm tra ngay.
+const REPO = 'vietvd13/qa-toolkit';
+const RELEASES = `https://github.com/${REPO}/releases`;
+const UPDATE_EVERY = 6 * 3600e3;
+const upd = { current: '', latest: null, state: 'idle' }; // state: idle | loading | ok | error
+
+const newer = (a, b) => { // a > b theo semver (x.y.z)
+  const pa = String(a).replace(/^v/, '').split('.').map(Number), pb = String(b).replace(/^v/, '').split('.').map(Number);
+  for (let i = 0; i < 3; i++) if ((pa[i] || 0) !== (pb[i] || 0)) return (pa[i] || 0) > (pb[i] || 0);
+  return false;
+};
+const hasUpdate = () => !!(upd.current && upd.latest && newer(upd.latest.version, upd.current));
+
+// Ghi chú phát hành (Markdown đơn giản: tiêu đề, gạch đầu dòng, **đậm**, `mã`, [link](url))
+function mdLite(md) {
+  const inline = s => esc(s).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/`(.+?)`/g, '<code>$1</code>').replace(/\[(.+?)\]\((.+?)\)/g, '$1');
+  let html = '', list = false;
+  for (const line of String(md || '').split(/\r?\n/)) {
+    const li = line.match(/^\s*[-*] (.*)/), h = line.match(/^#{1,4} (.*)/);
+    if (!li && list) { html += '</ul>'; list = false; }
+    if (li) { if (!list) { html += '<ul>'; list = true; } html += `<li>${inline(li[1])}</li>`; }
+    else if (h) html += `<h4>${inline(h[1])}</h4>`;
+    else if (line.trim()) html += `<p>${inline(line)}</p>`;
+  }
+  return html + (list ? '</ul>' : '');
+}
+
+function renderUpdate() {
+  const on = hasUpdate();
+  $('#btnUpdate').classList.toggle('hidden', !on);
+  if (on) {
+    $('#updPillText').textContent = `Bản mới v${upd.latest.version}`;
+    $('#btnUpdate').setAttribute('aria-label', `Có bản mới v${upd.latest.version}, bấm để xem cách cập nhật`);
+  }
+  if ($('#updDlg').classList.contains('hidden')) return;
+
+  const L = upd.latest, cur = upd.current ? `v${upd.current}` : '';
+  $('#updSub').textContent = on ? `${cur} → v${L.version}` + (L.date ? ` · phát hành ${new Date(L.date).toLocaleDateString('vi-VN')}` : '') : `Đang dùng ${cur}`;
+  const btnCheck = `<button class="btn btn-ghost btn-sm" type="button" data-act="check"><span class="ms sm" aria-hidden="true">refresh</span>Kiểm tra lại</button>`;
+
+  if (upd.state === 'loading' && !L) {
+    $('#updBody').innerHTML = `<p class="muted"><span class="ms sm spin" aria-hidden="true">progress_activity</span> Đang kiểm tra bản mới…</p>`;
+  } else if (upd.state === 'error' && !L) {
+    $('#updBody').innerHTML = `
+      <div class="verdict miss"><span class="ms sm" aria-hidden="true">cloud_off</span><span>Không kiểm tra được lúc này (mất mạng hoặc GitHub tạm giới hạn). Thử lại sau, hoặc xem trực tiếp trên GitHub.</span></div>
+      <div class="upd-actions">${btnCheck}<a class="btn btn-sm" href="${RELEASES}" target="_blank" rel="noopener">Mở trang Releases</a></div>`;
+  } else if (!on) {
+    $('#updBody').innerHTML = `
+      <div class="verdict ok"><span class="ms sm" aria-hidden="true">check_circle</span><span>Bạn đang dùng bản mới nhất${cur ? ` (${cur})` : ''}.</span></div>
+      <div class="upd-actions">${btnCheck}<a class="btn btn-ghost btn-sm" href="${RELEASES}" target="_blank" rel="noopener">Xem các bản đã phát hành</a></div>`;
+  } else {
+    const steps = PLATFORM === 'extension' ? `
+      <ol class="upd-steps">
+        <li><strong>Tải file .zip</strong> bản mới bằng nút bên dưới.</li>
+        <li><strong>Giải nén đè</strong> vào đúng thư mục extension đang dùng (chọn <em>Replace</em> khi được hỏi). Giữ nguyên thư mục cũ để không mất cài đặt.</li>
+        <li>Bấm <strong>Tải lại extension</strong>. Tab này sẽ đóng, bấm icon extension để mở lại.</li>
+      </ol>
+      <div class="upd-actions">
+        ${L.zip ? `<a class="btn btn-primary btn-sm" href="${esc(L.zip)}"><span class="ms sm" aria-hidden="true">download</span>Tải v${esc(L.version)} (.zip)</a>` : ''}
+        <button class="btn btn-sm" type="button" data-act="reload"><span class="ms sm" aria-hidden="true">restart_alt</span>Tải lại extension</button>
+        <button class="btn btn-ghost btn-sm" type="button" data-act="ext-page">Mở trang tiện ích</button>
+      </div>` : `
+      <ol class="upd-steps">
+        <li>Trong thư mục dự án, chạy <code>git pull</code> rồi <code>npm install</code>.</li>
+        <li>Tắt và chạy lại <code>npm run ui</code>, sau đó tải lại trang này.</li>
+      </ol>`;
+    $('#updBody').innerHTML = `
+      ${L.notes ? `<div class="upd-notes">${mdLite(L.notes)}</div>` : ''}
+      <h4 class="upd-h">Cách cập nhật</h4>
+      ${steps}
+      <p class="muted upd-foot"><a href="${esc(L.url)}" target="_blank" rel="noopener">Xem bản phát hành trên GitHub</a></p>`;
+  }
+}
+
+async function checkUpdate(force) {
+  let cached = null;
+  try { cached = JSON.parse(store.get('hub-update') || 'null'); } catch {}
+  if (cached?.latest) upd.latest = cached.latest;
+  if (!force && cached && Date.now() - cached.at < UPDATE_EVERY) return renderUpdate();
+  upd.state = 'loading'; renderUpdate();
+  try {
+    const r = await fetch(`https://api.github.com/repos/${REPO}/releases/latest`, { headers: { Accept: 'application/vnd.github+json' }, cache: 'no-store' });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const j = await r.json();
+    upd.latest = {
+      version: String(j.tag_name || '').replace(/^v/, ''),
+      date: j.published_at,
+      url: j.html_url || RELEASES,
+      zip: (j.assets || []).find(a => /\.zip$/i.test(a.name))?.browser_download_url || '',
+      notes: String(j.body || '').slice(0, 4000),
+    };
+    upd.state = 'ok';
+    store.set('hub-update', JSON.stringify({ at: Date.now(), latest: upd.latest }));
+  } catch {
+    upd.state = 'error';
+  }
+  renderUpdate();
+}
+
+let updOpener = null;
+function openUpdate() {
+  updOpener = document.activeElement;
+  $('#updDlg').classList.remove('hidden');
+  renderUpdate();
+  $('#updDlg .x').focus();
+}
+function closeUpdate() {
+  $('#updDlg').classList.add('hidden');
+  updOpener?.focus();
+}
+$('#btnUpdate').addEventListener('click', openUpdate);
+$('#btnCheckUpdate').addEventListener('click', () => { openUpdate(); checkUpdate(true); });
+$('#updDlg').addEventListener('click', e => {
+  if (e.target === $('#updDlg') || e.target.closest('[data-close]')) return closeUpdate();
+  const act = e.target.closest('[data-act]')?.dataset.act;
+  if (act === 'check') checkUpdate(true);
+  if (act === 'reload') chrome.runtime.reload();
+  if (act === 'ext-page') chrome.tabs.create({ url: `chrome://extensions/?id=${chrome.runtime.id}` });
+});
+addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#updDlg').classList.contains('hidden')) closeUpdate(); });
+
 // ---------- Khởi động: mở lại tool dùng lần trước ----------
 renderNav();
 renderHome();
 renderModeBtn();
+versionP.then(v => { upd.current = v; checkUpdate(); }).catch(() => {});
 if (!location.hash) {
   let last = store.get('hub-last') || '';
   if (tools.length === 1 && !last) last = tools[0].id; // mới có 1 tool thì vào thẳng

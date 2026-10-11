@@ -31,6 +31,9 @@
     </div>
 
     <div class="top-actions">
+      <button class="btn btn-sm upd-pill hidden" type="button" id="btnUpdate" aria-haspopup="dialog">
+        <span class="ms sm" aria-hidden="true">upgrade</span><span class="upd-pill-t" id="updPillText">Bản mới</span>
+      </button>
       <button class="icon-btn" type="button" id="btnMode" aria-label="Chế độ màu"><span class="ms" aria-hidden="true">brightness_auto</span></button>
       <button class="icon-btn" type="button" id="btnTheme" aria-haspopup="dialog" aria-label="Giao diện"><span class="ms" aria-hidden="true">palette</span></button>
     </div>
@@ -50,6 +53,7 @@
     </nav>
     <div class="side-foot">
       <span class="ver nav-label" id="ver"></span>
+      <button class="link-btn" type="button" id="btnCheckUpdate" aria-haspopup="dialog">Kiểm tra cập nhật</button>
     </div>
   </aside>
 
@@ -137,6 +141,20 @@
         <button class="btn btn-primary" type="button" data-close style="padding:9px 22px">Xong</button>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- Bảng cập nhật phiên bản -->
+<div class="modal-bg hidden" id="updDlg">
+  <div class="modal upd-modal" role="dialog" aria-modal="true" aria-labelledby="updTitle">
+    <div class="modal-h">
+      <div>
+        <h3 id="updTitle">Cập nhật</h3>
+        <div class="muted" id="updSub"></div>
+      </div>
+      <button class="x" type="button" data-close aria-label="Đóng"><span class="ms" aria-hidden="true">close</span></button>
+    </div>
+    <div class="modal-b" id="updBody" aria-live="polite"></div>
   </div>
 </div>
 

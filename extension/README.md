@@ -13,7 +13,7 @@ Kho công cụ hỗ trợ test, gói trong một extension. Không cần cài No
 3. Bấm **Load unpacked** (Tải tiện ích đã giải nén) rồi chọn thư mục `extension` này.
 4. Ghim icon **Bộ công cụ** lên thanh công cụ cho tiện.
 
-Khi có bản mới: chép đè thư mục `extension`, rồi bấm nút tải lại (⟳) của extension trong `chrome://extensions`.
+Khi có bản mới, đầu trang hiện nút **Bản mới vX.Y.Z** (tự kiểm tra GitHub Releases, tối đa 6 giờ/lần; muốn kiểm tra ngay thì bấm **Kiểm tra cập nhật** ở cuối thanh bên). Bấm vào để xem thay đổi, tải file .zip, giải nén đè vào thư mục cũ rồi bấm **Tải lại extension**.
 
 ## Sử dụng
 

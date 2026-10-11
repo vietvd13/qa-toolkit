@@ -43,7 +43,7 @@ Các công cụ tiếp theo sẽ được thêm dần vào cùng extension.
 4. Bấm **Load unpacked**, chọn thư mục vừa giải nén.
 5. Ghim icon **Bộ công cụ** lên thanh công cụ.
 
-Cập nhật bản mới: giải nén đè vào thư mục cũ, rồi bấm nút tải lại ⟳ của extension trong `chrome://extensions`.
+Cập nhật bản mới: khi có bản mới, đầu trang bộ công cụ hiện nút **Bản mới**. Bấm vào để tải file .zip, giải nén đè vào thư mục cũ rồi bấm **Tải lại extension**.
 
 ## Tính năng chung
 

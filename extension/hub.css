@@ -140,3 +140,23 @@ table.contrast td.r { white-space: nowrap; font: 500 12.5px var(--mono); }
 .adj-note:empty { display: none; }
 .adj-note code { font: 500 12px var(--mono); padding: 1px 5px; border-radius: 4px; background: var(--surface); }
 .theme-actions { display: flex; justify-content: space-between; gap: 10px; padding-top: 4px; }
+
+/* ---------- Cập nhật phiên bản ---------- */
+.upd-pill { gap: var(--space-1); background: var(--primary-subtle); border-color: transparent; color: var(--primary-strong); font-weight: var(--weight-semibold); border-radius: var(--radius-full); white-space: nowrap; }
+.upd-pill:hover { background: var(--primary-subtle); filter: brightness(.96); }
+.side-foot { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); }
+.link-btn { border: 0; background: none; padding: 0; color: var(--primary-strong); font: var(--weight-medium) var(--text-xs) var(--font); cursor: pointer; white-space: nowrap; }
+.link-btn:hover { text-decoration: underline; }
+.upd-modal { width: min(560px, 100%); }
+.upd-notes { max-height: 260px; overflow-y: auto; border: 1px solid var(--border); border-radius: var(--radius-lg); padding: var(--space-3) var(--space-4); background: var(--background); font-size: 13px; }
+.upd-notes h4 { margin: var(--space-3) 0 var(--space-1); font: var(--weight-semibold) 13px var(--font); }
+.upd-notes h4:first-child { margin-top: 0; }
+.upd-notes ul { margin: 0; padding-left: 18px; }
+.upd-notes li { margin-bottom: 2px; }
+.upd-notes p { margin: 0 0 var(--space-1); }
+.upd-h { margin: var(--space-1) 0 0; font: var(--weight-semibold) 13px var(--font); }
+.upd-steps { margin: 0; padding-left: 20px; display: grid; gap: var(--space-1); font-size: 13px; }
+.upd-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.upd-foot { margin: 0; font-size: 12.5px; }
+@media (max-width: 560px) { .upd-pill-t { display: none; } }
+.upd-foot a { color: var(--primary-strong); }
