@@ -47,6 +47,8 @@ body { overflow: hidden; }
 .nav-list { display: grid; gap: 2px; margin-top: var(--space-1); }
 .busy-dot { margin-left: auto; width: 8px; height: 8px; border-radius: var(--radius-full); background: var(--primary); flex: none; animation: busy 1.4s infinite; }
 @keyframes busy { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--primary) 60%, transparent); } 100% { box-shadow: 0 0 0 8px transparent; } }
+.side-links { padding: var(--space-2); border-top: 1px solid var(--border); }
+.side-links .ext { margin-left: auto; font-size: 15px; color: var(--text-muted); }
 .side-foot { border-top: 1px solid var(--border); padding: var(--space-3) var(--space-4); }
 .ver { font: var(--text-xs) var(--mono); color: var(--text-secondary); }
 

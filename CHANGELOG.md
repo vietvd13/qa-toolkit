@@ -6,6 +6,7 @@ Ghi theo [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/), đánh số t
 
 ### Thêm
 - Tự kiểm tra bản mới trên GitHub Releases: đầu trang hiện nút **Bản mới**, bảng **Cập nhật** có ghi chú thay đổi, nút tải .zip và tải lại extension; nút **Kiểm tra cập nhật** ở cuối thanh bên.
+- Link **Mã nguồn trên GitHub** ở thanh bên; link repo trong `manifest.json` (homepage_url) và `package.json`.
 
 ### Thay đổi
 - Icon và logo mới cho extension, đầu trang bộ công cụ và README (có bản logo cho nền tối).

@@ -265,7 +265,7 @@ addEventListener('storage', e => { if (e.key === 'bcc-theme' && !$('#themeDlg').
 
 // ---------- Cập nhật phiên bản (GitHub Releases) ----------
 // Tự kiểm tra tối đa 6 giờ/lần (GitHub giới hạn 60 lượt/giờ cho mỗi IP), bấm "Kiểm tra cập nhật" để kiểm tra ngay.
-const REPO = 'vietvd13/qa-toolkit';
+const REPO = 'vietvd13/qa-toolkit'; // đổi cùng link trong hub.html, manifest.json, package.json
 const RELEASES = `https://github.com/${REPO}/releases`;
 const UPDATE_EVERY = 6 * 3600e3;
 const upd = { current: '', latest: null, state: 'idle' }; // state: idle | loading | ok | error

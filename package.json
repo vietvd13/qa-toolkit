@@ -18,6 +18,14 @@
     "url": "https://github.com/vietvd13"
   },
   "license": "MIT",
+  "homepage": "https://github.com/vietvd13/qa-toolkit#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vietvd13/qa-toolkit.git"
+  },
+  "bugs": {
+    "url": "https://github.com/vietvd13/qa-toolkit/issues"
+  },
   "engines": {
     "node": ">=20"
   },
