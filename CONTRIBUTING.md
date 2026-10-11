@@ -121,7 +121,7 @@ Sau đó `git commit` (không kèm `-m`) sẽ mở trình soạn thảo với g�
 ### Pull Request
 
 - Mỗi Pull Request một việc. Mô tả thay đổi gì và vì sao, đổi giao diện thì kèm ảnh chụp.
-- **Tiêu đề Pull Request cũng theo quy tắc trên**, vì khi gộp bằng *Squash and merge*, tiêu đề này trở thành lời nhắn commit trên `main`.
+- **Tiêu đề Pull Request cũng theo quy tắc trên**, vì khi gộp bằng *Squash and merge*, tiêu đề này trở thành lời nhắn commit trên `master`.
 
 ## Phát hành (dành cho người quản lý repo)
 
