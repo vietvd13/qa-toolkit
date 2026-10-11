@@ -39,5 +39,5 @@ module.exports = {
     'body-max-line-length': [1, 'always', 100],
     'footer-max-line-length': [0],
   },
-  helpUrl: 'https://github.com/vietvd13/qa-toolkit/blob/main/CONTRIBUTING.md#quy-tắc-commit',
+  helpUrl: 'https://github.com/vietvd13/qa-toolkit/blob/master/CONTRIBUTING.md#quy-tắc-commit',
 };
