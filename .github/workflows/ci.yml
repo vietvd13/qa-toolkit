@@ -38,7 +38,7 @@ jobs:
       - name: Đóng gói extension
         run: npm run ext:zip
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: bo-cong-cu-extension
           path: dist/*.zip
