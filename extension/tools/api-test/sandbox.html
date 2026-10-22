@@ -1,0 +1,12 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Script sandbox</title>
+<!-- Trang sandbox (manifest.json → sandbox.pages): origin riêng, không có API chrome.*, CSP chặn mọi kết nối mạng.
+     Chỉ chạy script trước / sau request của tester; nhận và trả dữ liệu qua postMessage với tools/api-test/index.html. -->
+</head>
+<body>
+<script src="sandbox.js"></script>
+</body>
+</html>

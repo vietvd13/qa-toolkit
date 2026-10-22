@@ -29,7 +29,10 @@ module.exports = [
     languageOptions: {
       ecmaVersion: 2023,
       sourceType: 'script',
-      globals: { ...globals.browser, ...globals.webextensions, RedirectEngine: 'readonly', Theme: 'readonly', TOOLS: 'readonly' },
+      globals: { ...globals.browser, ...globals.webextensions, RedirectEngine: 'readonly', Theme: 'readonly', TOOLS: 'readonly',
+        Xlsx: 'readonly', ApiCheck: 'readonly', ApiTransport: 'readonly', ApiReport: 'readonly', ApiSchema: 'readonly', ApiCurl: 'readonly',
+        ApiRedact: 'readonly', ApiPolicy: 'readonly', ApiRunner: 'readonly', ApiPrompt: 'readonly', ApiLegacy: 'readonly', ApiScript: 'readonly',
+        ApiStore: 'readonly', ApiWorkspace: 'readonly', ApiEngine: 'readonly', Ui: 'readonly' },
     },
   },
   { files: ['extension/background.js'], languageOptions: { globals: { ...globals.serviceworker } } },

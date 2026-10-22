@@ -21,8 +21,9 @@ Cài một lần, không cần Node hay máy chủ, gửi file là cả team dù
 | Công cụ | Làm gì |
 |---|---|
 | **Kiểm tra Redirect** | Mở một link nhiều lần, ghi lại **từng link nó đi qua** (302, JavaScript, meta refresh, mở app) và chỉ ra `sub3`, `sub4`, `Sub_id`, `affiliate_id`, `utm_content` nằm ở link nào. Tự thống kê tỉ lệ từng giá trị và giải thích vì sao các lượt cho kết quả khác nhau. |
+| **Kiểm thử API** | Client API kiểu Postman tối giản cho QA: **Collection › Folder › Request**, **Send** ngay (dán cURL / fetch), **Environment** tự tạo (DEV / STAGING / PROD…), test case không cần code (form, Excel, hoặc JSON do AI chuyển từ Excel), **Runner** chạy cả collection theo đúng thứ tự phụ thuộc (Login → lấy TOKEN → request sau), **Preset** để chạy lại một chạm, xuất **Excel / ZIP** evidence PASS / FAIL / ERROR / SKIPPED. Lưu trên máy, không cần tài khoản; che token trong báo cáo, chặn host ngoài danh sách cho phép. |
 
-Các công cụ tiếp theo sẽ được thêm dần vào cùng extension.
+Các công cụ tiếp theo sẽ được thêm dần vào cùng extension. Hướng dẫn dùng từng công cụ: [extension/README.md](extension/README.md).
 
 <table>
   <tr>
@@ -89,6 +90,7 @@ extension/            Chrome extension (sản phẩm chính)
   tools/registry.js   danh sách công cụ
   tools/_template/    khung để tạo công cụ mới
   tools/redirect/     Kiểm tra Redirect
+  tools/api-test/     Kiểm thử API
 node/                 bản web (server.js, phục vụ nguyên extension/) và dòng lệnh (trace.js) chạy bằng Playwright
 scripts/              đóng gói, kiểm tra, đồng bộ phiên bản
 extras/               script dán vào Console

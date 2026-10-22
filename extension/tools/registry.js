@@ -14,4 +14,14 @@ window.TOOLS = [
     platforms: ['extension', 'web'],
     path: 'tools/redirect/index.html',
   },
+  {
+    id: 'api-test',
+    name: 'Kiểm thử API',
+    icon: 'api',
+    category: 'API',
+    desc: 'Collection, Environment và Send như Postman; test case không cần code (form, Excel, AI); chạy cả collection theo thứ tự phụ thuộc, lưu Preset, xuất Excel / ZIP evidence.',
+    tags: ['API', 'cURL', 'Postman', 'Excel', 'Tự động'],
+    platforms: ['extension', 'web'],
+    path: 'tools/api-test/index.html',
+  },
 ];

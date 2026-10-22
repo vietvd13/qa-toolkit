@@ -59,32 +59,34 @@
     ctx.last = Date.now();
     const old = ctx.hops.find(h => h.url === url);
     if (old) return old;
-    const h = { step: ctx.hops.length + 1, type, status: null, url, location: null, error: null, ...extra };
+    const h = { step: ctx.hops.length + 1, type, status: null, url, location: null, error: null, at: ctx.last - ctx.t0, ...extra };
     ctx.hops.push(h);
     return h;
   }
   const ctxOf = d => watched.get(d.tabId);
   const MAIN = { urls: ['<all_urls>'], types: ['main_frame'] };
+  // Ghi thêm IP máy chủ và dòng trạng thái gốc (vd "HTTP/1.1 503 Service Unavailable") để dễ tra lỗi
+  const netInfo = (h, d) => { if (d.ip) h.ip = d.ip; if (d.statusLine) h.statusLine = d.statusLine; };
 
   chrome.webRequest.onBeforeRequest.addListener(d => { const c = ctxOf(d); if (c) record(c, d.url, 'request'); }, MAIN);
   chrome.webRequest.onBeforeRedirect.addListener(d => {
     const c = ctxOf(d);
     if (!c) return;
     const h = record(c, d.url, 'request');
-    if (h) { h.status = d.statusCode; h.location = d.redirectUrl; }
+    if (h) { h.status = d.statusCode; h.location = d.redirectUrl; netInfo(h, d); }
     if (!isHttp(d.redirectUrl)) record(c, d.redirectUrl, 'failed', { error: 'Chuyển sang app (không mở được trong trình duyệt)' });
   }, MAIN);
   chrome.webRequest.onCompleted.addListener(d => {
     const c = ctxOf(d);
     if (!c) return;
     const h = record(c, d.url, 'request');
-    if (h && h.status == null) h.status = d.statusCode;
+    if (h && h.status == null) { h.status = d.statusCode; netInfo(h, d); }
   }, MAIN);
   chrome.webRequest.onErrorOccurred.addListener(d => {
     const c = ctxOf(d);
     if (!c) return;
     const h = record(c, d.url, 'failed');
-    if (h && !h.status && d.error !== 'net::ERR_ABORTED') h.error = d.error;
+    if (h && !h.status && d.error !== 'net::ERR_ABORTED') { h.error = d.error; netInfo(h, d); }
   }, MAIN);
   // Bắt cả điều hướng không đi qua webRequest (deep link app, chuyển trang bằng JS)
   chrome.webNavigation.onBeforeNavigate.addListener(d => {
@@ -121,7 +123,7 @@
     }
   }
 
-  function buildRow(stt, ctx, startUrl, t0, params, error) {
+  function buildRow(stt, ctx, startUrl, t0, params, error, timedOut) {
     const hops = ctx.hops.map(h => ({ ...h, params: pickParams(h.url, params) }));
     const values = {}, found = {};
     for (const p of params) {
@@ -133,7 +135,7 @@
       stt, startedAt: new Date(t0).toISOString(), durationMs: Date.now() - t0,
       finalUrl: hops.length ? hops[hops.length - 1].url : '',
       error: error || (hops.length ? null : 'Không ghi nhận được link nào'),
-      chain: hostChain(hops), values, found, hops,
+      chain: hostChain(hops), values, found, hops, timedOut: timedOut || null,
     };
   }
 
@@ -178,8 +180,8 @@
         while (!aborted && next <= opts.repeat) {
           const stt = next++;
           const t0 = Date.now();
-          const ctx = { hops: [], last: t0 };
-          let tabId = null, error = null;
+          const ctx = { hops: [], last: t0, t0 };
+          let tabId = null, error = null, timedOut = null;
           try {
             const tab = await chrome.tabs.create({ windowId, url: 'about:blank', active: false });
             tabId = tab.id;
@@ -194,8 +196,13 @@
               const t = await chrome.tabs.get(tabId).catch(() => null);
               if (!t || t.status === 'complete' || quiet >= opts.idle * 2) break;
             }
+            // Hết giờ mà trang vẫn đang tải / vẫn đang chuyển hướng → ghi lại để báo người dùng
+            if (!aborted && Date.now() - t0 >= opts.timeout) {
+              const t = await chrome.tabs.get(tabId).catch(() => null);
+              timedOut = { ms: opts.timeout, loading: t?.status === 'loading' };
+            }
           } catch (e) {
-            error = e.message;
+            error = 'Lỗi trình duyệt khi mở tab kiểm tra: ' + e.message;
           } finally {
             if (tabId != null) {
               watched.delete(tabId);
@@ -205,7 +212,7 @@
           }
           if (aborted) break;
           if (opts.clearCookies) await clearCookiesOf(ctx.hops);
-          handlers.row(buildRow(stt, ctx, opts.url, t0, opts.params, error));
+          handlers.row(buildRow(stt, ctx, opts.url, t0, opts.params, error, timedOut));
         }
       };
       await Promise.all(Array.from({ length: Math.min(opts.concurrency, opts.repeat) }, worker));
