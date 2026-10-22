@@ -44,10 +44,13 @@ const walk = dir => {
   }
 };
 walk(ext);
+// Trang sandbox (manifest.sandbox.pages) không có giao diện và CSP chặn mọi tài nguyên ngoài script → không cần theme
+const sandboxPages = new Set((manifest.sandbox?.pages || []).map(p => path.join(ext, p)));
+for (const p of sandboxPages) if (!fs.existsSync(p)) fail(`Thiếu trang sandbox: ${rel(p)}`);
 for (const file of htmlFiles) {
   const html = fs.readFileSync(file, 'utf8').replace(/<!--[\s\S]*?-->/g, ''); // bỏ phần chú thích
-  if (!/theme\.css"/.test(html)) fail(`${rel(file)}: chưa nạp shared/theme.css`);
-  if (!/theme\.js"/.test(html)) fail(`${rel(file)}: chưa nạp shared/theme.js (sáng/tối + màu tự chọn)`);
+  if (!sandboxPages.has(file) && !/theme\.css"/.test(html)) fail(`${rel(file)}: chưa nạp shared/theme.css`);
+  if (!sandboxPages.has(file) && !/theme\.js"/.test(html)) fail(`${rel(file)}: chưa nạp shared/theme.js (sáng/tối + màu tự chọn)`);
   if (/<script(?![^>]*\ssrc=)[^>]*>\s*\S/i.test(html)) fail(`${rel(file)}: có <script> viết trực tiếp trong HTML — extension MV3 sẽ chặn, hãy chuyển sang file .js`);
   if (/\son[a-z]+\s*=\s*["']/i.test(html)) fail(`${rel(file)}: có thuộc tính onclick/onload… — extension MV3 sẽ chặn`);
   for (const [, ref] of html.matchAll(/\s(?:src|href)="([^"#?]+)"/g)) {

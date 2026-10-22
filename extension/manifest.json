@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Bộ công cụ",
   "version": "1.3.0",
-  "description": "Bộ công cụ hỗ trợ test. Hiện có: Kiểm tra Redirect (ghi lại từng bước chuyển hướng và vị trí các tham số affiliate).",
+  "description": "Bộ công cụ hỗ trợ test. Hiện có: Kiểm tra Redirect (ghi lại từng bước chuyển hướng và vị trí các tham số affiliate), Kiểm thử API (cURL + test case JSON, xuất Excel bằng chứng).",
   "homepage_url": "https://github.com/vietvd13/qa-toolkit",
   "icons": {
     "16": "icons/icon16.png",
@@ -25,9 +25,18 @@
     "webNavigation",
     "tabs",
     "cookies",
+    "storage",
     "declarativeNetRequestWithHostAccess"
   ],
   "host_permissions": [
     "<all_urls>"
-  ]
+  ],
+  "sandbox": {
+    "pages": [
+      "tools/api-test/sandbox.html"
+    ]
+  },
+  "content_security_policy": {
+    "sandbox": "sandbox allow-scripts; default-src 'none'; script-src 'self' 'unsafe-eval'; worker-src blob:"
+  }
 }

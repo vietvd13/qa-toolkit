@@ -5,6 +5,7 @@ Kho công cụ hỗ trợ test, gói trong một extension. Không cần cài No
 | Công cụ | Làm gì |
 |---|---|
 | **Kiểm tra Redirect** | Mở một link nhiều lần, ghi lại từng link nó đi qua (302, JavaScript, meta refresh, mở app) và chỉ ra `sub3`, `sub4`, `Sub_id`, `affiliate_id`, `utm_content` nằm ở link nào. |
+| **Kiểm thử API** | Client API kiểu Postman tối giản cho QA: **Collection › Folder › Request**, **Send** ngay (dán cURL / fetch), **Environment** tự tạo (DEV / STAGING / PROD…), test case không cần code (form, Excel, hoặc JSON do AI chuyển từ Excel), **Runner** chạy cả collection theo đúng thứ tự phụ thuộc (Login → lấy TOKEN → request sau), **Preset** để chạy lại một chạm, xuất **Excel / ZIP** evidence PASS / FAIL / ERROR / SKIPPED. Lưu trên máy, không cần tài khoản; che token trong báo cáo, chặn host ngoài danh sách cho phép. |
 
 ## Cài đặt
 
@@ -31,6 +32,23 @@ Nút ở góc phải đầu trang: biểu tượng mặt trời/mặt trăng đ�
 - Đổi là áp dụng ngay cho mọi công cụ. Cài đặt lưu trên máy, không ảnh hưởng người khác.
 
 Hệ màu mặc định: *Feminine Work OS* (`shared/theme.css`). Trong giao diện sáng, chữ và nút dùng rose-600 `#AD4168` thay vì rose-500 `#C6537B` vì rose-500 chỉ đạt 4.26:1 với chữ trắng.
+
+### Kiểm thử API
+
+Thanh trên cùng có ba khu vực **Requests · Environments · Runner**, trạng thái lưu (*Đã lưu*) và ô chọn environment. Thanh bên trái là cây **Collection › Folder › Request** (tìm bằng Ctrl + K, chuột phải hoặc nút ⋯ để đổi tên / nhân bản / di chuyển / tắt khi chạy / xoá).
+
+1. **Request đầu tiên:** *Dán cURL / Fetch* (Postman: `</>` Code → cURL; Chrome: F12 → Network → Copy as cURL / Copy as fetch). Tool đọc chữ, không chạy lệnh, rồi cho **xem lại** các thay đổi đề xuất trước khi áp dụng: tắt header trình duyệt, chuyển token / cookie thành biến bí mật `{{TOKEN}}`, tách `{{baseUrl}}`, cho phép host. Bấm **Send** (Ctrl + Enter) để xem response ngay, chưa cần collection hay environment.
+2. **Lưu và tổ chức:** *Lưu vào collection*, tạo folder theo chức năng. Mọi thay đổi tự lưu trên máy.
+3. **Environment:** khu vực *Environments* để tạo / nhân bản / đổi tên environment, sửa biến (khoá 🔒 = secret: chỉ giữ trong phiên trình duyệt, che trong báo cáo), Allowed hosts, header chung. Đổi environment ở thanh trên là đổi máy chủ / token cho mọi request.
+4. **Lấy token cho request sau:** trong Response bấm tên field (vd `access_token`) → *Lưu thành biến* `TOKEN`. Request khác dùng `{{TOKEN}}`; Runner tự chạy request sinh ra biến trước.
+5. **Test case:** tab **Tests** của request. Chọn *Thêm thủ công* (form: HTTP status, kiểm tra field / kiểu / giá trị, thời gian phản hồi tối đa, lưu biến), *Excel → JSON bằng AI* (Copy prompt → gửi AI kèm Excel → dán JSON), *Upload Excel* (map cột, xem trước), hoặc *Import JSON*. Tool báo số case hợp lệ / cần review / lỗi; case thiếu Expected rõ ràng để tắt kèm `NEEDS_REVIEW`.
+6. **Runner:** chọn collection + tích folder / request (hoặc chọn **Preset**), environment, chế độ chạy. Tool kiểm tra trước khi chạy (thiếu biến nhập ngay tại chỗ, host chưa được phép, script lỗi…), hỏi xác nhận khi PRODUCTION hoặc có POST / PUT / PATCH / DELETE. Kết quả gom theo request, lọc theo trạng thái / folder / request; bấm một dòng mở **Evidence**. *Chạy lại FAIL / ERROR*, **Export Excel / ZIP**, *Lưu cấu hình thành preset* để lần sau chỉ cần **chọn Preset → Run**.
+
+Cách chấm: **PASS** khi HTTP status thuộc Expected và mọi kiểm tra đạt (4xx/5xx vẫn PASS nếu đó là mong đợi của case negative); **FAIL** khi có response nhưng sai; **ERROR** khi không kiểm thử được (thiếu biến, request phụ thuộc chưa lấy được biến, host bị chặn, timeout, script lỗi…); **SKIPPED** khi case tắt / không được chọn hoặc bấm Stop. Request chưa có test case được chạy với kỳ vọng mặc định HTTP 2xx.
+
+Sao lưu / chuyển máy: menu ⋮ → **Export / Import workspace** (mặc định không kèm token). Dữ liệu của phiên bản trước được tự chuyển sang collection *“Chuyển từ phiên bản trước”* khi mở lần đầu.
+
+Mô hình dữ liệu, thứ tự ưu tiên biến, pipeline chạy, bảo mật và giới hạn: [docs/api-test.md](../docs/api-test.md). Bối cảnh UI/UX: [docs/api-test-ux.md](../docs/api-test-ux.md).
 
 ### Lưu ý với Kiểm tra Redirect
 
@@ -64,7 +82,8 @@ extension/
     registry.js        danh sách công cụ
     _template/         khung để tạo tool mới
     redirect/          Kiểm tra Redirect (index.html, style.css, app.js, engine.js)
+    api-test/          Kiểm thử API: workspace.js / engine.js / runner.js / schema.js (domain), store.js / transport.js / report.js / script-host.js (services), app*.js + ui.js (giao diện)
   icons/
 ```
 
-Bản web chạy bằng Node (`npm run ui` ở thư mục gốc) phục vụ nguyên thư mục này nên giao diện giống hệt extension; chỉ `tools/redirect/engine.js` được thay bằng `node/redirect-engine.js`. Tool nào chỉ chạy được trong extension thì ghi `platforms: ['extension']` trong `tools/registry.js` để bản web tự ẩn.
+Bản web chạy bằng Node (`npm run ui` ở thư mục gốc) phục vụ nguyên thư mục này nên giao diện giống hệt extension; chỉ `tools/redirect/engine.js` được thay bằng `node/redirect-engine.js`, còn Kiểm thử API gửi request qua `/api/proxy` của máy chủ. Tool nào chỉ chạy được trong extension thì ghi `platforms: ['extension']` trong `tools/registry.js` để bản web tự ẩn.

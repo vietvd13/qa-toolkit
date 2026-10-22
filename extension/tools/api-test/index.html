@@ -1,0 +1,342 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kiểm thử API</title>
+<link rel="stylesheet" href="../../shared/theme.css">
+<link rel="stylesheet" href="style.css">
+<script src="../../shared/theme.js"></script>
+<script src="../../shared/embed.js"></script>
+</head>
+<body>
+<div class="app" id="app">
+  <!-- ================= THANH ỨNG DỤNG ================= -->
+  <header class="appbar">
+    <button type="button" class="icon-btn sb-toggle" id="btnSidebar" aria-controls="sidebar" aria-expanded="true" aria-label="Ẩn / hiện danh sách request" title="Ẩn / hiện danh sách request"><span class="ms" aria-hidden="true">left_panel_close</span></button>
+    <div class="ab-brand"><span class="ms" aria-hidden="true">api</span><b>Kiểm thử API</b></div>
+    <nav class="ab-nav" role="tablist" aria-label="Khu vực">
+      <button type="button" role="tab" class="ab-tab" id="nav-requests" data-nav="requests" aria-selected="true"><span class="ms sm" aria-hidden="true">folder_open</span><span class="lbl">Requests</span></button>
+      <button type="button" role="tab" class="ab-tab" id="nav-envs" data-nav="envs" aria-selected="false"><span class="ms sm" aria-hidden="true">dns</span><span class="lbl">Environments</span></button>
+      <button type="button" role="tab" class="ab-tab" id="nav-run" data-nav="run" aria-selected="false"><span class="ms sm" aria-hidden="true">play_circle</span><span class="lbl">Runner</span><span class="ab-dot hidden" id="navRunDot" aria-hidden="true"></span></button>
+    </nav>
+    <span class="spacer"></span>
+    <span class="save-state" id="saveState" role="status" aria-live="polite"></span>
+    <div class="env-pick-top" id="envPickTop">
+      <span class="env-dot" id="envTopDot" aria-hidden="true"></span>
+      <label class="visually-hidden" for="envSelect">Environment đang dùng</label>
+      <select id="envSelect" class="env-select"></select>
+    </div>
+    <button type="button" class="guide-pill hidden" id="btnGuide" aria-haspopup="dialog"><span class="ms sm" aria-hidden="true">flag</span><span class="lbl">Bắt đầu</span></button>
+    <button type="button" class="icon-btn" id="btnHelp" aria-haspopup="dialog" aria-label="Hướng dẫn sử dụng (phím ?)" title="Hướng dẫn sử dụng (phím ?)"><span class="ms" aria-hidden="true">help</span></button>
+    <button type="button" class="icon-btn" id="btnWsMenu" aria-haspopup="menu" aria-expanded="false" aria-label="Workspace: import, export, cài đặt" title="Workspace"><span class="ms" aria-hidden="true">more_vert</span></button>
+  </header>
+
+  <div class="shell" id="shell">
+    <!-- ================= SIDEBAR: COLLECTION ================= -->
+    <aside class="sidebar" id="sidebar" aria-label="Collections">
+      <div class="sb-head">
+        <div class="search-box sb-search"><span class="ms sm" aria-hidden="true">search</span><input type="search" id="sbSearch" placeholder="Tìm request, URL…" aria-label="Tìm request"></div>
+        <button type="button" class="icon-btn" id="btnNew" aria-haspopup="menu" aria-expanded="false" aria-label="Tạo mới" title="Tạo mới"><span class="ms" aria-hidden="true">add</span></button>
+      </div>
+      <div class="sb-tree" id="tree" role="tree" aria-label="Collections và request"></div>
+      <div class="sb-foot">
+        <button type="button" class="btn btn-sm btn-ghost" id="btnPasteCurl"><span class="ms sm" aria-hidden="true">content_paste</span>Dán cURL / fetch</button>
+      </div>
+    </aside>
+    <div class="sb-resizer" id="sbResizer" role="separator" aria-orientation="vertical" aria-controls="sidebar" aria-label="Kéo để đổi độ rộng danh sách" tabindex="0"></div>
+    <div class="sb-scrim hidden" id="sbScrim"></div>
+
+    <main class="main" id="main">
+      <!-- ================= CHƯA CÓ GÌ / CHƯA CHỌN ================= -->
+      <section class="view view-welcome" id="view-welcome">
+        <div class="welcome">
+          <span class="welcome-ic"><span class="ms lg" aria-hidden="true">api</span></span>
+          <h1 id="welcomeTitle">Bắt đầu kiểm thử API</h1>
+          <p class="muted" id="welcomeSub">Dán một request từ Postman hoặc DevTools, gửi thử ngay, rồi lưu vào collection để chạy lại bất cứ lúc nào. Không cần tạo collection hay environment trước.</p>
+          <div class="welcome-acts">
+            <button type="button" class="welcome-act primary" data-act="paste"><span class="ms" aria-hidden="true">content_paste</span><b>Dán cURL / Fetch</b><span>Postman: Code &lt;/&gt; → cURL · DevTools: Copy as cURL / fetch</span></button>
+            <button type="button" class="welcome-act" data-act="new-request"><span class="ms" aria-hidden="true">add_box</span><b>Tạo request</b><span>Nhập method, URL, header, body bằng tay</span></button>
+            <button type="button" class="welcome-act" data-act="import"><span class="ms" aria-hidden="true">upload_file</span><b>Import workspace</b><span>File .json đã export từ tool này</span></button>
+          </div>
+          <div class="welcome-ob" id="welcomeOb"></div>
+          <p class="welcome-help"><button type="button" class="link-btn" data-help="start"><span class="ms sm" aria-hidden="true">menu_book</span>Xem hướng dẫn sử dụng</button> <span class="muted small">· phím <kbd>?</kbd> mở hướng dẫn ở bất kỳ đâu</span></p>
+          <p class="muted small welcome-foot" id="welcomeFoot">Dữ liệu chỉ lưu trên máy này. Token / password chỉ giữ trong phiên trình duyệt.</p>
+        </div>
+      </section>
+
+      <!-- ================= REQUEST ================= -->
+      <section class="view view-request hidden" id="view-request" aria-labelledby="rqName">
+        <div class="rq-top">
+          <nav class="crumbs" id="rqCrumbs" aria-label="Vị trí"></nav>
+          <div class="rq-title-row">
+            <input id="rqName" class="title-in" type="text" aria-label="Tên request" spellcheck="false">
+            <span class="badge badge-warning hidden" id="rqDraft"><span class="ms sm" aria-hidden="true">draft</span> Chưa lưu vào collection</span>
+            <span class="spacer"></span>
+            <button type="button" class="btn btn-sm hidden" id="btnSaveTo"><span class="ms sm" aria-hidden="true">save</span>Lưu vào collection</button>
+            <button type="button" class="btn btn-sm" id="btnRunReq" title="Chạy mọi test case của request này"><span class="ms sm" aria-hidden="true">play_arrow</span><span class="lbl">Run tests</span></button>
+            <button type="button" class="help-q" data-help="request" aria-label="Hướng dẫn tạo & gửi request" title="Hướng dẫn tạo & gửi request"><span class="ms sm" aria-hidden="true">help</span></button>
+            <button type="button" class="icon-btn" id="btnReqMenu" aria-haspopup="menu" aria-expanded="false" aria-label="Thao tác với request"><span class="ms" aria-hidden="true">more_horiz</span></button>
+          </div>
+          <div class="url-bar">
+            <label class="visually-hidden" for="rqMethod">Method</label>
+            <select id="rqMethod" class="method-select"><option>GET</option><option>POST</option><option>PUT</option><option>PATCH</option><option>DELETE</option><option>HEAD</option><option>OPTIONS</option></select>
+            <label class="visually-hidden" for="rqUrl">URL</label>
+            <input id="rqUrl" type="text" class="mono-in" spellcheck="false" autocomplete="off" placeholder="https://api.example.com/v1/users  hoặc  {{baseUrl}}/users" aria-describedby="rqUrlNote">
+            <button type="button" class="btn btn-primary send-btn" id="btnSend" title="Gửi request (Ctrl + Enter)"><span class="ms sm fill" aria-hidden="true">send</span><span class="lbl">Send</span></button>
+          </div>
+          <p class="url-note" id="rqUrlNote"></p>
+        </div>
+
+        <div class="rq-split" id="rqSplit">
+          <div class="rq-editor" id="rqEditor">
+            <div class="tabs rq-tabs" role="tablist" aria-label="Cấu hình request">
+              <button class="tab" role="tab" id="rt-tab-params" aria-controls="rt-params" data-rt="params">Params <span class="n" id="cntParams"></span></button>
+              <button class="tab" role="tab" id="rt-tab-auth" aria-controls="rt-auth" data-rt="auth">Authorization <span class="n" id="cntAuth"></span></button>
+              <button class="tab" role="tab" id="rt-tab-headers" aria-controls="rt-headers" data-rt="headers">Headers <span class="n" id="cntHeaders"></span></button>
+              <button class="tab" role="tab" id="rt-tab-body" aria-controls="rt-body" data-rt="body">Body <span class="n" id="cntBody"></span></button>
+              <button class="tab" role="tab" id="rt-tab-scripts" aria-controls="rt-scripts" data-rt="scripts">Scripts <span class="n" id="cntScripts"></span></button>
+              <button class="tab" role="tab" id="rt-tab-tests" aria-controls="rt-tests" data-rt="tests">Tests <span class="n" id="cntTests"></span></button>
+            </div>
+            <div class="rt-panel" role="tabpanel" id="rt-params" aria-labelledby="rt-tab-params">
+              <p class="muted small">Query string của URL. Dùng được <code>{{biến}}</code>.</p>
+              <div class="kv" id="rqQuery"></div>
+            </div>
+            <div class="rt-panel hidden" role="tabpanel" id="rt-auth" aria-labelledby="rt-tab-auth"><div id="rqAuth"></div></div>
+            <div class="rt-panel hidden" role="tabpanel" id="rt-headers" aria-labelledby="rt-tab-headers">
+              <p class="muted small" id="rqHeadersNote"></p>
+              <div class="kv" id="rqHeaders"></div>
+            </div>
+            <div class="rt-panel hidden" role="tabpanel" id="rt-body" aria-labelledby="rt-tab-body">
+              <div class="body-head">
+                <div class="seg body-seg" id="bodySeg" role="radiogroup" aria-label="Kiểu body">
+                  <button type="button" role="radio" data-mode="none">none</button>
+                  <button type="button" role="radio" data-mode="json">JSON</button>
+                  <button type="button" role="radio" data-mode="text">Text</button>
+                  <button type="button" role="radio" data-mode="xml">XML</button>
+                  <button type="button" role="radio" data-mode="form-urlencoded">x-www-form-urlencoded</button>
+                </div>
+                <span class="small" id="bodyHint" role="status"></span>
+                <span class="spacer"></span>
+                <button type="button" class="btn btn-ghost btn-sm" id="btnPrettyBody"><span class="ms sm" aria-hidden="true">format_align_left</span>Format</button>
+              </div>
+              <textarea id="rqBody" rows="12" class="mono-in code-input" spellcheck="false" aria-label="Request body"></textarea>
+              <p class="muted small hidden" id="bodyNone">Request không có body. Chọn JSON, Text, XML hoặc x-www-form-urlencoded để thêm. <span class="muted">multipart/form-data (upload file) chưa hỗ trợ.</span></p>
+            </div>
+            <div class="rt-panel hidden" role="tabpanel" id="rt-scripts" aria-labelledby="rt-tab-scripts">
+              <p class="muted small" id="scriptIntro">Giống Pre-request / Post-response Script của Postman. Chạy trong sandbox, không có mạng trừ <code>pm.sendRequest</code> tới Allowed hosts. Không bắt buộc. <button type="button" class="link-btn" data-help="scripts">Hướng dẫn Scripts</button></p>
+              <div class="seg script-seg" role="tablist" aria-label="Loại script">
+                <button class="tab-seg" role="tab" id="tab-pre" aria-controls="panel-script" data-script="pre"><span class="ms sm" aria-hidden="true">outbox</span>Pre-request <span class="n" id="preCount"></span></button>
+                <button class="tab-seg" role="tab" id="tab-post" aria-controls="panel-script" data-script="post"><span class="ms sm" aria-hidden="true">move_to_inbox</span>Post-response <span class="n" id="postCount"></span></button>
+              </div>
+              <p class="script-when small muted" id="scriptWhen"></p>
+              <div role="tabpanel" id="panel-script">
+                <div class="code-box">
+                  <div class="code-gutter" id="codeGutter" aria-hidden="true"></div>
+                  <textarea id="scriptCode" class="code-area" spellcheck="false" autocomplete="off" wrap="off" aria-label="Script" aria-describedby="scriptKeys"></textarea>
+                </div>
+                <div class="script-bar">
+                  <span class="script-status" id="scriptStatus" role="status"></span>
+                  <span class="spacer"></span>
+                  <button class="btn btn-sm hidden" type="button" id="btnTryPre" title="Chạy riêng Pre-request script, không gửi request chính"><span class="ms sm" aria-hidden="true">science</span>Dry run</button>
+                  <button class="btn btn-ghost btn-sm" type="button" id="btnClearScript"><span class="ms sm" aria-hidden="true">delete</span>Xoá</button>
+                </div>
+                <p class="muted small" id="scriptKeys"><kbd>Tab</kbd> thụt lề · <kbd>Esc</kbd> rồi <kbd>Tab</kbd> để rời ô · Dùng <code>pm.environment.get('TOKEN')</code>, đừng ghi token vào script.</p>
+                <div class="try-out hidden" id="tryOut" aria-live="polite"></div>
+                <details class="adv snip-adv">
+                  <summary><span class="ms sm chev" aria-hidden="true">chevron_right</span><span class="ms sm" aria-hidden="true">bolt</span>Snippets <span class="muted small">bấm để chèn</span></summary>
+                  <div class="snippets" id="snippets"></div>
+                </details>
+                <details class="adv">
+                  <summary><span class="ms sm chev" aria-hidden="true">chevron_right</span><span class="ms sm" aria-hidden="true">menu_book</span>API reference</summary>
+                  <ul class="api-ref" id="apiRef"></ul>
+                </details>
+              </div>
+            </div>
+            <div class="rt-panel hidden" role="tabpanel" id="rt-tests" aria-labelledby="rt-tab-tests"><div id="rqTests"></div></div>
+          </div>
+          <div class="split-handle" id="splitHandle" role="separator" aria-orientation="horizontal" aria-controls="rqResponse" aria-label="Kéo để đổi chiều cao vùng Response" tabindex="0"></div>
+          <div class="rq-response" id="rqResponse" aria-label="Response"></div>
+        </div>
+      </section>
+
+      <!-- ================= COLLECTION / FOLDER ================= -->
+      <section class="view view-node hidden" id="view-node"></section>
+
+      <!-- ================= ENVIRONMENTS ================= -->
+      <section class="view view-envs hidden" id="view-envs"></section>
+
+      <!-- ================= RUNNER ================= -->
+      <section class="view view-run hidden" id="view-run"></section>
+    </main>
+  </div>
+
+  <!-- ================= DRAWER: SỬA / TẠO TEST CASE ================= -->
+  <div class="drawer drawer-wide hidden" id="caseDrawer" role="dialog" aria-modal="true" aria-labelledby="caseTitle">
+    <div class="drawer-h">
+      <div class="min0"><h2><span id="caseTitle">Test case</span> <button type="button" class="help-q" data-help="tests" aria-label="Hướng dẫn viết test case" title="Hướng dẫn viết test case"><span class="ms sm" aria-hidden="true">help</span></button></h2><p class="muted small" id="caseSub"></p></div>
+      <button type="button" class="x" data-close aria-label="Đóng"><span class="ms" aria-hidden="true">close</span></button>
+    </div>
+    <div class="tabs drawer-tabs" role="tablist" aria-label="Chế độ sửa">
+      <button class="tab" role="tab" id="ce-tab-form" aria-controls="ce-form" data-ce="form"><span class="ms sm" aria-hidden="true">edit_note</span>Form</button>
+      <button class="tab" role="tab" id="ce-tab-json" aria-controls="ce-json" data-ce="json"><span class="ms sm" aria-hidden="true">data_object</span>Raw JSON</button>
+    </div>
+    <div class="drawer-b">
+      <div role="tabpanel" id="ce-form" aria-labelledby="ce-tab-form"></div>
+      <div role="tabpanel" id="ce-json" aria-labelledby="ce-tab-json" class="hidden">
+        <p class="muted small">Dành cho người dùng nâng cao. Phải đúng Test Suite JSON v1.0 / 1.1.</p>
+        <textarea id="ceJsonText" class="mono-in code-input" rows="24" spellcheck="false" aria-label="JSON của test case"></textarea>
+      </div>
+      <div class="validation hidden" id="ceErrors" role="alert"></div>
+    </div>
+    <div class="drawer-f">
+      <span class="small muted" id="ceHint"></span>
+      <span class="spacer"></span>
+      <button type="button" class="btn" data-close>Huỷ</button>
+      <button type="button" class="btn btn-primary" id="btnSaveCase"><span class="ms sm" aria-hidden="true">check</span>Lưu</button>
+    </div>
+  </div>
+
+  <!-- ================= DRAWER: NHẬP TEST CASE (AI / EXCEL / JSON) ================= -->
+  <div class="drawer drawer-wide hidden" id="importDrawer" role="dialog" aria-modal="true" aria-labelledby="impTitle">
+    <div class="drawer-h">
+      <div class="min0"><h2 id="impTitle">Nhập test case <button type="button" class="help-q" data-help="excel" aria-label="Hướng dẫn nhập từ Excel / AI" title="Hướng dẫn nhập từ Excel / AI"><span class="ms sm" aria-hidden="true">help</span></button></h2><p class="muted small" id="impSub"></p></div>
+      <button type="button" class="x" data-close aria-label="Đóng"><span class="ms" aria-hidden="true">close</span></button>
+    </div>
+    <div class="tabs drawer-tabs" role="tablist" aria-label="Nguồn test case">
+      <button class="tab" role="tab" id="src-tab-ai" aria-controls="src-ai" data-src="ai"><span class="ms sm" aria-hidden="true">auto_awesome</span>Excel → JSON bằng AI</button>
+      <button class="tab" role="tab" id="src-tab-excel" aria-controls="src-excel" data-src="excel"><span class="ms sm" aria-hidden="true">table_view</span>Upload Excel</button>
+      <button class="tab" role="tab" id="src-tab-json" aria-controls="src-json" data-src="json"><span class="ms sm" aria-hidden="true">data_object</span>Import JSON</button>
+    </div>
+    <div class="drawer-b">
+      <div role="tabpanel" id="src-ai" aria-labelledby="src-tab-ai">
+        <ol class="flow">
+          <li class="flow-step">
+            <div class="flow-h"><span class="flow-n">1</span><b>Copy prompt</b></div>
+            <p class="muted small">Prompt chuẩn để AI trả về đúng JSON tool đọc được. Không chứa token, header hay URL của bạn.</p>
+            <div class="row-actions">
+              <button class="btn btn-primary" type="button" id="btnCopyPrompt"><span class="ms sm" aria-hidden="true">content_copy</span><span class="lbl">Copy prompt</span></button>
+              <details class="inline-details"><summary>Xem prompt</summary><textarea id="promptText" class="mono-in" rows="12" readonly aria-label="Prompt chuyển Excel sang JSON"></textarea></details>
+            </div>
+          </li>
+          <li class="flow-step">
+            <div class="flow-h"><span class="flow-n">2</span><b>Gửi cho AI</b></div>
+            <p class="muted small">Mở ChatGPT, Claude, Gemini hoặc Copilot → dán prompt → <b>đính kèm file Excel</b> (hoặc dán bảng) → gửi. Copy toàn bộ JSON AI trả về.</p>
+          </li>
+          <li class="flow-step">
+            <div class="flow-h"><span class="flow-n">3</span><b>Dán kết quả</b></div>
+            <textarea id="aiJson" class="mono-in code-input" rows="8" spellcheck="false" aria-label="JSON AI trả về" placeholder='{ "schemaVersion": "1.0", "suite": { … }, "cases": [ … ] }'></textarea>
+            <div class="row-actions">
+              <button class="btn btn-primary" type="button" data-load="aiJson"><span class="ms sm" aria-hidden="true">fact_check</span>Kiểm tra &amp; nạp</button>
+              <button class="btn" type="button" data-json-file="aiJson"><span class="ms sm" aria-hidden="true">upload_file</span>Upload .json</button>
+            </div>
+          </li>
+        </ol>
+      </div>
+      <div role="tabpanel" id="src-excel" aria-labelledby="src-tab-excel" class="hidden">
+        <label class="drop" for="xlsFile" id="xlsDrop">
+          <input type="file" id="xlsFile" accept=".xlsx,.csv" class="visually-hidden">
+          <span class="ms lg" aria-hidden="true">upload_file</span>
+          <span><b>Chọn file</b> hoặc kéo thả .xlsx / .csv vào đây</span>
+          <span class="muted small" id="xlsName"></span>
+        </label>
+        <p class="muted small">Chưa có file theo mẫu cột? <button type="button" class="link-btn" data-sample-xlsx>Tải file Excel mẫu</button> (có sheet hướng dẫn cách ghi Expected). File Excel viết tự do thì dùng tab <b>Excel → JSON bằng AI</b>.</p>
+        <div class="hidden" id="xlsMapping">
+          <div class="map-top">
+            <div><label for="sheet">Sheet</label><select id="sheet"></select></div>
+            <div><label for="headerRow">Dòng tiêu đề</label><input id="headerRow" type="number" min="1" value="1" inputmode="numeric"></div>
+            <p class="small" id="xlsSummary"></p>
+          </div>
+          <details class="adv" id="mapDetails">
+            <summary><span class="ms sm chev" aria-hidden="true">chevron_right</span>Column mapping <span class="muted small" id="mapCount"></span></summary>
+            <div class="map-grid" id="mapGrid"></div>
+          </details>
+          <div class="xls-preview" id="xlsPreview"></div>
+          <p class="muted small">Expected viết bằng lời hoặc thiếu status code sẽ thành case <b>tắt</b> kèm <code>NEEDS_REVIEW</code>: tool không tự đoán và không tự bật.</p>
+          <div class="row-actions"><button class="btn btn-primary" type="button" id="btnConvert"><span class="ms sm" aria-hidden="true">sync_alt</span>Chuyển &amp; kiểm tra</button></div>
+        </div>
+      </div>
+      <div role="tabpanel" id="src-json" aria-labelledby="src-tab-json" class="hidden">
+        <textarea id="jsonText" rows="12" class="mono-in code-input" spellcheck="false" aria-label="Test suite JSON" placeholder='{ "schemaVersion": "1.0", "suite": { "name": "..." }, "cases": [ ... ] }'></textarea>
+        <div class="row-actions">
+          <button class="btn btn-primary" type="button" data-load="jsonText"><span class="ms sm" aria-hidden="true">fact_check</span>Kiểm tra &amp; nạp</button>
+          <button class="btn" type="button" data-json-file="jsonText"><span class="ms sm" aria-hidden="true">upload_file</span>Upload .json</button>
+          <button class="btn btn-ghost" type="button" data-example><span class="ms sm" aria-hidden="true">download</span>Tải JSON mẫu</button>
+        </div>
+      </div>
+      <div class="import-result hidden" id="importResult" aria-live="polite"></div>
+    </div>
+    <div class="drawer-f hidden" id="importFoot">
+      <span class="small muted" id="importFootHint"></span>
+      <span class="spacer"></span>
+      <button type="button" class="btn" data-close>Huỷ</button>
+      <button type="button" class="btn btn-primary" id="btnImportSave"><span class="ms sm" aria-hidden="true">save</span>Lưu vào request</button>
+    </div>
+  </div>
+
+  <!-- ================= DRAWER: EVIDENCE ================= -->
+  <div class="drawer drawer-wide hidden" id="evDrawer" role="dialog" aria-modal="true" aria-labelledby="evTitle">
+    <div class="drawer-h">
+      <div class="min0"><h2 id="evTitle">Evidence</h2><p class="muted small" id="evSub"></p></div>
+      <div class="ev-nav">
+        <button type="button" class="icon-btn" id="evPrev" aria-label="Case trước" title="Case trước (Alt + ←)"><span class="ms" aria-hidden="true">chevron_left</span></button>
+        <button type="button" class="icon-btn" id="evNext" aria-label="Case sau" title="Case sau (Alt + →)"><span class="ms" aria-hidden="true">chevron_right</span></button>
+        <button type="button" class="x" data-close aria-label="Đóng"><span class="ms" aria-hidden="true">close</span></button>
+      </div>
+    </div>
+    <div class="ev-summary" id="evSummary"></div>
+    <div class="tabs drawer-tabs" role="tablist" aria-label="Evidence">
+      <button class="tab" role="tab" id="ev-tab-assert" aria-controls="ev-assert" data-ev="assert">Kiểm tra <span class="n" id="evCntAssert"></span></button>
+      <button class="tab" role="tab" id="ev-tab-req" aria-controls="ev-req" data-ev="req">Request</button>
+      <button class="tab" role="tab" id="ev-tab-res" aria-controls="ev-res" data-ev="res">Response</button>
+      <button class="tab" role="tab" id="ev-tab-console" aria-controls="ev-console" data-ev="console">Console <span class="n" id="evCntConsole"></span></button>
+    </div>
+    <div class="drawer-b">
+      <div role="tabpanel" id="ev-assert" aria-labelledby="ev-tab-assert"></div>
+      <div role="tabpanel" id="ev-req" aria-labelledby="ev-tab-req" class="hidden"></div>
+      <div role="tabpanel" id="ev-res" aria-labelledby="ev-tab-res" class="hidden"></div>
+      <div role="tabpanel" id="ev-console" aria-labelledby="ev-tab-console" class="hidden"></div>
+    </div>
+  </div>
+
+  <!-- ================= DRAWER: HƯỚNG DẪN ================= -->
+  <div class="drawer drawer-wide hidden" id="helpDrawer" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+    <div class="drawer-h">
+      <div class="min0"><h2 id="helpTitle"><span class="ms" aria-hidden="true">menu_book</span>Hướng dẫn sử dụng</h2><p class="muted small">Chọn chủ đề bên trái hoặc tìm theo từ khoá.</p></div>
+      <button type="button" class="x" data-close aria-label="Đóng"><span class="ms" aria-hidden="true">close</span></button>
+    </div>
+    <div class="help-layout">
+      <nav class="help-nav" aria-label="Chủ đề hướng dẫn">
+        <div class="search-box"><span class="ms sm" aria-hidden="true">search</span><input type="search" id="helpSearch" placeholder="Tìm: token, Excel, preset…" aria-label="Tìm trong hướng dẫn" data-autofocus></div>
+        <div id="helpNav"></div>
+      </nav>
+      <div class="help-body" id="helpBody" tabindex="-1"></div>
+    </div>
+  </div>
+
+  <div class="drawer-bg hidden" id="drawerBg"></div>
+  <div class="toasts" id="toasts" aria-live="polite" aria-atomic="false"></div>
+</div>
+
+<script src="xlsx.js"></script>
+<script src="check.js"></script>
+<script src="schema.js"></script>
+<script src="curl.js"></script>
+<script src="redact.js"></script>
+<script src="runner.js"></script>
+<script src="transport.js"></script>
+<script src="script-host.js"></script>
+<script src="report.js"></script>
+<script src="prompt.js"></script>
+<script src="legacy.js"></script>
+<script src="store.js"></script>
+<script src="workspace.js"></script>
+<script src="engine.js"></script>
+<script src="ui.js"></script>
+<script src="app.js"></script>
+<script src="app-request.js"></script>
+<script src="app-tests.js"></script>
+<script src="app-run.js"></script>
+<script src="help.js"></script>
+</body>
+</html>
