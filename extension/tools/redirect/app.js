@@ -160,6 +160,135 @@ const statusCls = h => (!h.status ? 'sx' : h.status < 300 ? 's2' : h.status < 40
 const hostOfUrl = u => { try { const x = new URL(u); return x.host || x.protocol; } catch { return u; } };
 const typeLabel = t => ({ request: 'Mở link', navigated: 'Chuyển trang', js: 'JavaScript', failed: 'Mở app / lỗi', error: 'Lỗi' }[t] || t.replace('popup-', 'Tab mới · '));
 
+// ---------- Giải thích lỗi ----------
+// t: tên lỗi dễ hiểu · why: nguyên nhân thường gặp · fix: nên kiểm tra gì
+const NET_ERRORS = {
+  NAME_NOT_RESOLVED: ['Không tìm thấy tên miền', 'Tên miền không tồn tại, gõ sai, đã hết hạn hoặc DNS chưa cập nhật.', 'Kiểm tra chính tả domain trong link, thử mở bằng tay hoặc tra DNS (nslookup).'],
+  NAME_RESOLUTION_FAILED: ['Không tra được DNS', 'Máy chủ DNS của mạng đang dùng không trả lời.', 'Thử lại, đổi mạng hoặc đổi DNS (8.8.8.8 / 1.1.1.1).'],
+  CONNECTION_REFUSED: ['Máy chủ từ chối kết nối', 'Tên miền có IP nhưng máy chủ không mở cổng web (server tắt hoặc sai cổng).', 'Báo bên quản lý link / server, kiểm tra cổng 80/443 có chạy không.'],
+  CONNECTION_RESET: ['Kết nối bị cắt ngang', 'Máy chủ, tường lửa hoặc nhà mạng ngắt kết nối giữa chừng (thường do chặn bot / chặn theo vùng).', 'Thử lại với ít luồng hơn, đổi mạng/VPN, so với khi mở bằng tay.'],
+  CONNECTION_CLOSED: ['Máy chủ đóng kết nối', 'Máy chủ đóng kết nối trước khi gửi trả lời.', 'Thử lại; nếu lặp lại nhiều lượt, máy chủ có thể đang quá tải hoặc chặn.'],
+  CONNECTION_TIMED_OUT: ['Hết giờ khi kết nối', 'Máy chủ không phản hồi (quá tải, sập, hoặc tường lửa lặng lẽ chặn).', 'Mở bằng tay xem có chậm không, giảm số luồng chạy cùng lúc.'],
+  TIMED_OUT: ['Hết giờ chờ phản hồi', 'Máy chủ nhận kết nối nhưng trả lời quá chậm.', 'Giảm số luồng, tăng thời gian chờ, kiểm tra máy chủ có quá tải không.'],
+  CONNECTION_FAILED: ['Không kết nối được', 'Không tạo được kết nối tới máy chủ.', 'Kiểm tra mạng và thử mở link bằng tay.'],
+  ADDRESS_UNREACHABLE: ['Không tới được địa chỉ máy chủ', 'IP của máy chủ không truy cập được từ mạng này.', 'Đổi mạng/VPN hoặc báo bên quản lý server.'],
+  INTERNET_DISCONNECTED: ['Mất mạng', 'Máy đang chạy tool bị mất kết nối Internet.', 'Kiểm tra mạng rồi chạy lại.'],
+  NETWORK_CHANGED: ['Mạng thay đổi giữa chừng', 'Mạng của máy bị đổi (wifi chuyển, VPN bật/tắt) trong lúc mở link.', 'Giữ mạng ổn định rồi chạy lại.'],
+  NETWORK_ACCESS_DENIED: ['Bị chặn truy cập mạng', 'Tường lửa / phần mềm diệt virus trên máy chặn Chrome.', 'Kiểm tra tường lửa, phần mềm bảo mật.'],
+  EMPTY_RESPONSE: ['Máy chủ không trả dữ liệu', 'Máy chủ kết nối được nhưng trả về rỗng (lỗi server hoặc chặn bot).', 'Thử lại, mở bằng tay để so sánh.'],
+  TOO_MANY_REDIRECTS: ['Chuyển hướng vòng lặp', 'Các link chuyển qua lại lẫn nhau không dừng (thường do cấu hình redirect sai hoặc cần cookie).', 'Xem chuỗi link bên dưới để tìm đoạn lặp; thử tắt “Xoá cookie”.'],
+  INVALID_REDIRECT: ['Link chuyển hướng không hợp lệ', 'Máy chủ trả về địa chỉ chuyển hướng sai định dạng.', 'Xem header Location của bước trước, báo bên cấu hình link.'],
+  UNSAFE_REDIRECT: ['Chuyển hướng không an toàn bị chặn', 'Chrome chặn chuyển hướng sang địa chỉ không được phép.', 'Xem link đích ở bước trước.'],
+  UNKNOWN_URL_SCHEME: ['Không hiểu loại link', 'Link dạng app (vd shopeevn://, intent://) mà trình duyệt không mở được.', 'Bình thường với link mở app; kiểm tra trên điện thoại thật nếu cần.'],
+  INVALID_URL: ['Link sai định dạng', 'Link có ký tự hoặc cấu trúc không hợp lệ.', 'Kiểm tra lại link (dấu cách, ký tự lạ, mã hoá %).'],
+  BLOCKED_BY_CLIENT: ['Bị tiện ích trình duyệt chặn', 'Một tiện ích (chặn quảng cáo, bảo mật…) chặn link này.', 'Tắt tiện ích chặn quảng cáo rồi chạy lại.'],
+  BLOCKED_BY_ADMINISTRATOR: ['Bị chính sách quản trị chặn', 'Chrome do công ty quản lý đã chặn địa chỉ này.', 'Liên hệ IT hoặc chạy trên máy khác.'],
+  BLOCKED_BY_RESPONSE: ['Trang từ chối hiển thị', 'Máy chủ gửi header bảo mật không cho mở trang theo cách này.', 'Thường không ảnh hưởng chuỗi redirect; xem link trước đó.'],
+  BLOCKED_BY_ORB: ['Trình duyệt chặn phản hồi', 'Chrome chặn phản hồi vì nghi ngờ không an toàn.', 'Mở bằng tay để so sánh.'],
+  HTTP2_PROTOCOL_ERROR: ['Lỗi giao thức HTTP/2', 'Máy chủ trả dữ liệu sai chuẩn, hoặc proxy/CDN ở giữa bị lỗi.', 'Thử lại; nếu lặp lại hãy báo bên quản lý server.'],
+  QUIC_PROTOCOL_ERROR: ['Lỗi giao thức QUIC', 'Kết nối HTTP/3 bị lỗi (thường do mạng chặn UDP).', 'Đổi mạng hoặc tắt QUIC trong chrome://flags.'],
+  SSL_PROTOCOL_ERROR: ['Lỗi kết nối bảo mật (SSL)', 'Máy chủ cấu hình HTTPS sai hoặc kết nối bị can thiệp.', 'Thử mở bằng http/https khác, báo bên quản lý server.'],
+  SSL_VERSION_OR_CIPHER_MISMATCH: ['SSL không tương thích', 'Máy chủ dùng chuẩn mã hoá quá cũ mà Chrome không còn hỗ trợ.', 'Báo bên quản lý server nâng cấp TLS.'],
+  BAD_SSL_CLIENT_AUTH_CERT: ['Máy chủ đòi chứng chỉ máy khách', 'Trang yêu cầu chứng chỉ riêng để truy cập.', 'Link này không dành cho người dùng thường.'],
+  CERT_COMMON_NAME_INVALID: ['Chứng chỉ SSL sai tên miền', 'Chứng chỉ HTTPS không khớp với tên miền đang mở.', 'Báo bên quản lý domain cập nhật chứng chỉ.'],
+  CERT_DATE_INVALID: ['Chứng chỉ SSL hết hạn', 'Chứng chỉ HTTPS đã hết hạn (hoặc giờ trên máy sai).', 'Kiểm tra đồng hồ máy; nếu đúng giờ thì báo gia hạn chứng chỉ.'],
+  CERT_AUTHORITY_INVALID: ['Chứng chỉ SSL không đáng tin', 'Chứng chỉ tự ký hoặc không do tổ chức uy tín cấp.', 'Báo bên quản lý domain dùng chứng chỉ hợp lệ.'],
+  CERT_: ['Chứng chỉ SSL có vấn đề', 'Chứng chỉ HTTPS của trang không hợp lệ.', 'Mở bằng tay để xem cảnh báo chi tiết của Chrome.'],
+  PROXY_CONNECTION_FAILED: ['Không kết nối được proxy', 'Máy đang cài proxy nhưng proxy không hoạt động.', 'Kiểm tra cài đặt proxy / VPN.'],
+  TUNNEL_CONNECTION_FAILED: ['Proxy không mở được kết nối', 'Proxy / VPN không cho đi tới máy chủ đích.', 'Kiểm tra proxy / VPN.'],
+  CONTENT_DECODING_FAILED: ['Không giải nén được nội dung', 'Máy chủ gửi dữ liệu nén bị hỏng.', 'Báo bên quản lý server.'],
+  RESPONSE_HEADERS_TOO_BIG: ['Header trả về quá lớn', 'Thường do cookie tích luỹ quá nhiều.', 'Bật “Xoá cookie” rồi chạy lại.'],
+  FILE_NOT_FOUND: ['Không tìm thấy tệp', 'Link trỏ tới tệp không tồn tại.', 'Kiểm tra lại link.'],
+  INSECURE_RESPONSE: ['Phản hồi không an toàn', 'Chrome từ chối phản hồi vì vấn đề bảo mật.', 'Mở bằng tay để xem cảnh báo.'],
+  ABORTED: ['Tải trang bị huỷ', 'Trang bị huỷ giữa chừng (thường do trang khác thay thế, hoặc là tệp tải về).', 'Thường không phải lỗi thật nếu sau đó vẫn có link tiếp theo.'],
+};
+const HTTP_ERRORS = {
+  400: ['Yêu cầu không hợp lệ (400)', 'Link thiếu hoặc sai tham số mà máy chủ cần.', 'So link với link mẫu đúng, kiểm tra tham số bị mã hoá sai.'],
+  401: ['Cần đăng nhập (401)', 'Trang yêu cầu xác thực.', 'Link này cần tài khoản; kiểm tra lại quyền truy cập.'],
+  403: ['Bị từ chối truy cập (403)', 'Máy chủ chặn: theo IP/quốc gia, chặn bot, hoặc link đã bị khoá.', 'Thử mở bằng tay, đổi mạng/VPN, giảm số luồng chạy.'],
+  404: ['Không tìm thấy trang (404)', 'Đường dẫn không tồn tại: link sai, đã bị xoá hoặc chiến dịch đã kết thúc.', 'Kiểm tra lại đường dẫn của link ở bước này.'],
+  405: ['Phương thức không được phép (405)', 'Máy chủ không chấp nhận kiểu truy cập này.', 'Báo bên quản lý link.'],
+  408: ['Máy chủ hết giờ chờ (408)', 'Máy chủ chờ yêu cầu quá lâu.', 'Thử lại.'],
+  410: ['Trang đã bị gỡ (410)', 'Link đã bị xoá vĩnh viễn (thường là chiến dịch đã đóng).', 'Lấy link mới từ bên cung cấp.'],
+  429: ['Quá nhiều yêu cầu (429)', 'Máy chủ giới hạn tốc độ vì tool mở link quá nhanh / quá nhiều.', 'Giảm số luồng chạy cùng lúc và số lượt.'],
+  451: ['Bị chặn vì lý do pháp lý (451)', 'Nội dung bị chặn tại khu vực của bạn.', 'Thử từ mạng/quốc gia khác.'],
+  500: ['Lỗi máy chủ (500)', 'Máy chủ gặp lỗi nội bộ khi xử lý link.', 'Lỗi phía server; báo bên quản lý link kèm thời điểm lỗi.'],
+  502: ['Cổng trung gian lỗi (502)', 'Proxy/CDN không nhận được phản hồi hợp lệ từ máy chủ gốc.', 'Thường tạm thời; thử lại sau, nếu kéo dài thì báo server.'],
+  503: ['Máy chủ tạm ngưng (503)', 'Máy chủ quá tải hoặc đang bảo trì.', 'Thử lại sau, giảm số luồng chạy.'],
+  504: ['Cổng trung gian hết giờ (504)', 'Máy chủ gốc trả lời quá chậm.', 'Thử lại sau; nếu kéo dài thì báo server.'],
+  520: ['Cloudflare: lỗi không xác định (520)', 'Máy chủ gốc trả phản hồi lạ cho Cloudflare.', 'Báo bên quản lý server.'],
+  521: ['Cloudflare: máy chủ gốc tắt (521)', 'Cloudflare không kết nối được tới máy chủ gốc.', 'Báo bên quản lý server.'],
+  522: ['Cloudflare: kết nối hết giờ (522)', 'Máy chủ gốc không phản hồi Cloudflare kịp.', 'Báo bên quản lý server.'],
+  523: ['Cloudflare: không tới được máy chủ gốc (523)', 'Đường đi tới máy chủ gốc bị lỗi.', 'Báo bên quản lý server.'],
+  524: ['Cloudflare: máy chủ xử lý quá lâu (524)', 'Máy chủ gốc xử lý quá 100 giây.', 'Báo bên quản lý server.'],
+  525: ['Cloudflare: lỗi SSL với máy chủ gốc (525)', 'Cloudflare không bắt tay SSL được với máy chủ gốc.', 'Báo bên quản lý server.'],
+  526: ['Cloudflare: chứng chỉ máy chủ gốc sai (526)', 'Chứng chỉ SSL của máy chủ gốc không hợp lệ.', 'Báo bên quản lý server.'],
+};
+const mk = (code, [t, why, fix]) => ({ code, t, why, fix });
+
+// Đọc chuỗi lỗi gốc (net::ERR_…, lỗi Playwright, lỗi tool) → lời giải thích
+function explainError(raw) {
+  const s = String(raw || '');
+  const net = s.match(/(?:net::)?ERR_([A-Z0-9_]+)/);
+  if (net) {
+    const key = Object.keys(NET_ERRORS).find(k => net[1] === k) || (net[1].startsWith('CERT_') ? 'CERT_' : null);
+    return key ? mk('ERR_' + net[1], NET_ERRORS[key]) : { code: 'ERR_' + net[1], t: 'Lỗi mạng ' + net[1].toLowerCase().replace(/_/g, ' '), why: 'Chrome báo lỗi khi tải link này.', fix: 'Tra mã lỗi bên cạnh hoặc mở link bằng tay để xem Chrome hiển thị gì.' };
+  }
+  const to = s.match(/Timeout (\d+)ms exceeded/i);
+  if (to) return { code: 'TIMEOUT', t: `Quá ${Math.round(to[1] / 1000)} giây chưa tải xong`, why: 'Trang tải quá chậm hoặc cứ chuyển hướng mãi không dừng.', fix: 'Tăng “Thời gian chờ tối đa” hoặc giảm số luồng chạy cùng lúc.' };
+  if (/Chuyển sang app/.test(s)) return { code: 'APP', t: 'Chuyển sang app', why: 'Link cuối là link mở ứng dụng (deep link), trình duyệt không đi tiếp được.', fix: 'Thường là bình thường. Muốn xem trong app thì thử trên điện thoại thật.' };
+  if (/bị chặn|chính sách bảo mật/i.test(s)) return { code: 'BLOCKED', t: 'Bị chặn bởi chính sách của tool', why: s, fix: 'Link trỏ tới địa chỉ nội bộ/không được phép.' };
+  if (/Quá \d+ lần redirect/.test(s)) return mk('TOO_MANY_REDIRECTS', NET_ERRORS.TOO_MANY_REDIRECTS);
+  if (/Không ghi nhận được link nào/.test(s)) return { code: 'NO_HOPS', t: 'Không ghi nhận được link nào', why: 'Tab kiểm tra không bắt đầu tải link (tab bị đóng sớm, link bị chặn ngay từ đầu).', fix: 'Thử mở link bằng tay; kiểm tra tiện ích chặn quảng cáo.' };
+  return { code: null, t: s || 'Lỗi không rõ', why: '', fix: '' };
+}
+function explainHttp(status) {
+  // Mã đã hiện riêng cạnh tên lỗi nên bỏ "(404)" trong tên cho khỏi lặp
+  if (HTTP_ERRORS[status]) { const [t, why, fix] = HTTP_ERRORS[status]; return { code: 'HTTP ' + status, t: t.replace(/ \(\d{3}\)$/, ''), why, fix }; }
+  return status >= 500
+    ? { code: 'HTTP ' + status, t: 'Lỗi máy chủ', why: 'Máy chủ gặp lỗi khi xử lý link.', fix: 'Lỗi phía server; báo bên quản lý link kèm thời điểm lỗi.' }
+    : { code: 'HTTP ' + status, t: 'Lỗi yêu cầu', why: 'Máy chủ từ chối link này.', fix: 'Kiểm tra lại link ở bước này.' };
+}
+
+// Mọi vấn đề của 1 lượt. level: err (lỗi thật) · warn (đáng chú ý) · info (thông tin)
+function rowIssues(r) {
+  if (r._issues) return r._issues;
+  const out = [];
+  if (r.error) out.push({ level: 'err', step: null, ...explainError(r.error), raw: r.error });
+  r.hops.forEach((h, i) => {
+    const last = i === r.hops.length - 1;
+    if (h.error) {
+      const e = explainError(h.error);
+      out.push({ level: e.code === 'APP' ? 'info' : e.code === 'ERR_ABORTED' && !last ? 'info' : 'err', step: h.step, host: hostOfUrl(h.url), ...e, raw: h.error });
+    } else if (h.status >= 400) {
+      // Lỗi ở link cuối là lỗi thật; ở giữa chuỗi mà vẫn đi tiếp được thì chỉ cảnh báo
+      out.push({ level: last ? 'err' : 'warn', step: h.step, host: hostOfUrl(h.url), ...explainHttp(h.status), raw: h.statusLine || null });
+    }
+  });
+  if (r.timedOut) {
+    out.push({ level: 'warn', step: null, code: 'TIMEOUT', raw: null,
+      t: `Hết ${Math.round(r.timedOut.ms / 1000)} giây chờ${r.timedOut.loading ? ', trang vẫn đang tải' : ', vẫn còn chuyển hướng'}`,
+      why: 'Tool dừng lượt này khi chưa chắc đã tới link cuối cùng. Các tham số có thể chưa đầy đủ.',
+      fix: 'Tăng “Thời gian chờ tối đa” hoặc giảm số luồng chạy cùng lúc.' });
+  }
+  return (r._issues = out);
+}
+const hasErr = r => rowIssues(r).some(i => i.level === 'err');
+const hasWarn = r => rowIssues(r).some(i => i.level === 'warn');
+const hopIssue = (r, h) => rowIssues(r).find(i => i.step === h.step);
+const issueWhere = i => (i.step ? `Link thứ ${i.step}${i.host ? ' · ' + i.host : ''}` : 'Cả lượt');
+const ISSUE_ICON = { err: 'error', warn: 'warning', info: 'info' };
+function issueBox(i) {
+  return `<div class="issue-box ${i.level}">
+    <div class="ib-h"><span class="ms sm fill" aria-hidden="true">${ISSUE_ICON[i.level]}</span><b>${esc(i.t)}</b>${i.code ? ` <code>${esc(i.code)}</code>` : ''}</div>
+    <div class="ib-w">${esc(issueWhere(i))}</div>
+    ${i.why ? `<div><span class="ib-k">Nguyên nhân thường gặp:</span> ${esc(i.why)}</div>` : ''}
+    ${i.fix ? `<div><span class="ib-k">Nên kiểm tra:</span> ${esc(i.fix)}</div>` : ''}
+    ${i.raw && i.raw !== i.t ? `<div class="ib-raw">Thông báo gốc: ${esc(i.raw)}</div>` : ''}
+  </div>`;
+}
+const issueText = i => `[${issueWhere(i)}] ${i.t}${i.code ? ` (${i.code})` : ''}${i.why ? ' - ' + i.why : ''}${i.fix ? ' Nên kiểm tra: ' + i.fix : ''}`;
+
 function addRow(r) {
   state.rows.push(r);
   state.byStt.set(r.stt, r);
@@ -192,7 +321,12 @@ function urlShort(u) {
 
 // Điểm nhấn: đường đi vẽ như một tuyến, tham số gắn tại link chứa nó
 function routeHtml(r) {
-  if (isFail(r)) return `<div class="route-err"><span class="ms sm" aria-hidden="true">error</span> Không mở được link: ${esc(r.error)}</div>`;
+  if (isFail(r)) {
+    const e = rowIssues(r)[0];
+    return `<div class="route-err"><span class="ms sm" aria-hidden="true">error</span> Không mở được link: <b>${esc(e.t)}</b>${e.code ? ` <code>${esc(e.code)}</code>` : ''}${e.why ? `<div class="re-why">${esc(e.why)}</div>` : ''}<div class="re-more">Bấm vào dòng để xem cách kiểm tra</div></div>`;
+  }
+  const issues = rowIssues(r).filter(i => i.level !== 'info')
+    .map(i => `<div class="issue-line ${i.level}"><span class="ms sm" aria-hidden="true">${ISSUE_ICON[i.level]}</span>${i.step ? `Link ${i.step}: ` : ''}<b>${esc(i.t)}</b>${i.code ? ` <code>${esc(i.code)}</code>` : ''}</div>`).join('');
   const missing = state.params.filter(p => !r.found[p].length);
   const miss = missing.length
     ? `<div class="missing"><span class="ms sm" aria-hidden="true">warning</span>Thiếu ${missing.map(p => `<button type="button" class="miss-chip" data-proof="${esc(p)}">${esc(p)}</button>`).join('')}</div>`
@@ -207,7 +341,7 @@ function routeHtml(r) {
       <span class="pchips">${chips}</span>
     </li>`;
   }).join('');
-  return `${miss}<ol class="route">${stops || '<li class="muted">Không ghi nhận được link nào.</li>'}</ol>`;
+  return `${issues}${miss}<ol class="route">${stops || '<li class="muted">Không ghi nhận được link nào.</li>'}</ol>`;
 }
 
 function insertRowEl(r) {
@@ -288,7 +422,8 @@ $('#resTable').addEventListener('mouseover', e => {
     if (!h) return;
     tip.innerHTML = `<div class="t-h">Link thứ ${h.step} / ${r.hops.length} · ${h.status ?? typeLabel(h.type)}</div>
       <div class="t-u">${highlightUrl(h.url)}</div>
-      ${h.location ? `<div class="t-f"><span class="ms sm" aria-hidden="true">subdirectory_arrow_right</span> chuyển tiếp đến: ${esc(h.location)}</div>` : ''}`;
+      ${h.location ? `<div class="t-f"><span class="ms sm" aria-hidden="true">subdirectory_arrow_right</span> chuyển tiếp đến: ${esc(h.location)}</div>` : ''}
+      ${(i => (i ? `<div class="t-e ${i.level}"><b>${esc(i.t)}</b>${i.code ? ` · ${esc(i.code)}` : ''}${i.why ? `<br>${esc(i.why)}` : ''}</div>` : ''))(hopIssue(r, h))}`;
     return placeTip(el);
   }
   const p = el.dataset.proof;
@@ -333,6 +468,7 @@ function openProof(r, p, opener) {
       <div class="proof-url">${u.html}</div>
       ${u.decoded ? `<div class="proof-note">${esc(p)} nằm trong một link lồng đã mã hoá, bên trên là link sau khi giải mã.</div>` : ''}
       ${h.location ? `<div class="proof-note"><span class="ms sm" aria-hidden="true">subdirectory_arrow_right</span> máy chủ chuyển tiếp đến: ${esc(h.location)}</div>` : ''}
+      ${(i => (i ? `<div class="proof-note">${issueBox(i)}</div>` : ''))(hopIssue(r, h))}
     </div>`;
   }).join('');
 
@@ -373,6 +509,14 @@ function openProof(r, p, opener) {
 }
 
 // ---------- Chi tiết (link đầy đủ) ----------
+// Thông tin mạng của 1 link: lúc nào, IP máy chủ, dòng trạng thái gốc
+function hopMeta(h) {
+  const bits = [];
+  if (h.at != null) bits.push(`sau ${(h.at / 1000).toFixed(1)} giây`);
+  if (h.ip) bits.push(`IP máy chủ ${esc(h.ip)}`);
+  if (h.statusLine) bits.push(esc(h.statusLine));
+  return bits.length ? `<div class="loc">${bits.join(' · ')}</div>` : '';
+}
 function toggleDetail(tb, r) {
   const open = tb.classList.toggle('open');
   if (!open) return tb.querySelector('tr.detail')?.remove();
@@ -382,13 +526,15 @@ function toggleDetail(tb, r) {
       <div>
         <div class="u">${highlightUrl(h.url)}</div>
         ${h.location ? `<div class="loc"><span class="ms sm" aria-hidden="true">subdirectory_arrow_right</span> máy chủ chuyển tiếp đến: ${esc(h.location)}</div>` : ''}
-        ${h.error ? `<div class="loc" style="color:var(--error)"><span class="ms sm" aria-hidden="true">error</span> ${esc(h.error)}</div>` : ''}
+        ${hopMeta(h)}
+        ${(i => (i ? issueBox(i) : ''))(hopIssue(r, h))}
       </div>
     </div>`).join('');
   const meta = `Bắt đầu lúc ${new Date(r.startedAt).toLocaleTimeString('vi-VN')} · mất ${(r.durationMs / 1000).toFixed(1)} giây · ${r.hops.length} link · phần tô vàng là tham số`;
+  const rowLevel = rowIssues(r).filter(i => !i.step).map(issueBox).join('');
   const tr = document.createElement('tr');
   tr.className = 'detail';
-  tr.innerHTML = `<td colspan="${state.params.length + 2}"><div class="detail-meta">${meta}</div>${hops || '<span class="muted">Không ghi nhận được link nào.</span>'}</td>`;
+  tr.innerHTML = `<td colspan="${state.params.length + 2}"><div class="detail-meta">${meta}</div>${rowLevel}${hops || (rowLevel ? '' : '<span class="muted">Không ghi nhận được link nào.</span>')}</td>`;
   tb.appendChild(tr);
 }
 
@@ -399,11 +545,12 @@ function matches(r) {
     const { p, v } = state.valueFilter;
     if (v === null ? hasParam(r, p) : !(r.values[p] || []).includes(v)) return false;
   }
-  if (state.filter === 'err' && !r.error) return false;
+  if (state.filter === 'err' && !hasErr(r)) return false;
+  if (state.filter === 'warn' && !hasWarn(r)) return false;
   if (state.filter.startsWith('has:') && !hasParam(r, state.filter.slice(4))) return false;
   if (state.filter.startsWith('miss:') && hasParam(r, state.filter.slice(5))) return false;
   if (state.search) {
-    const hay = (state.params.map(p => valText(r.values[p])).join(' ') + ' ' + r.chain + ' ' + r.hops.map(h => h.url).join(' ')).toLowerCase();
+    const hay = (state.params.map(p => valText(r.values[p])).join(' ') + ' ' + r.chain + ' ' + r.hops.map(h => h.url).join(' ') + ' ' + rowIssues(r).map(i => `${i.t} ${i.code}`).join(' ')).toLowerCase();
     if (!hay.includes(state.search)) return false;
   }
   return true;
@@ -470,7 +617,7 @@ function render() {
 }
 
 function renderKpis(done) {
-  const errors = state.rows.filter(isFail).length;
+  const errors = state.rows.filter(hasErr).length;
   $('#kpis').innerHTML = state.params.map(p => {
     const n = state.rows.filter(r => hasParam(r, p)).length;
     const pc = pct(n, done);
@@ -480,7 +627,7 @@ function renderKpis(done) {
       <div class="d">có ở ${n}/${done} lượt</div>
       <div class="meter"><div style="width:${pc}%"></div></div>
     </div>`;
-  }).join('') + (errors ? `<div class="kpi err"><div class="k">lỗi</div><div class="v">${errors}</div><div class="d">lượt không mở được link</div></div>` : '');
+  }).join('') + (errors ? `<div class="kpi err"><div class="k">lỗi</div><div class="v">${errors}</div><div class="d">lượt gặp lỗi · xem “Nhận xét” để biết lỗi gì</div></div>` : '');
 }
 
 // Mỗi tham số: từng giá trị xuất hiện bao nhiêu lượt, chiếm bao nhiêu %
@@ -555,6 +702,23 @@ function renderInsights(done) {
   if (!done) { $('#insights').innerHTML = '<li>Đang chờ các lượt đầu tiên…</li>'; return; }
   const ran = state.rows.filter(r => r.hops.length);
   const codes = ps => ps.map(p => `<code>${esc(p)}</code>`).join(', ');
+  // Tóm tắt lỗi: cùng loại lỗi ở cùng tên miền gộp lại, kèm nguyên nhân + cách kiểm tra
+  const errMap = new Map();
+  for (const r of state.rows) {
+    for (const i of rowIssues(r)) {
+      if (i.level === 'info') continue;
+      const k = [i.level, i.code, i.t, i.host || ''].join('|');
+      const g = errMap.get(k) || { i, stts: new Set() };
+      g.stts.add(r.stt);
+      errMap.set(k, g);
+    }
+  }
+  [...errMap.values()].sort((a, b) => (a.i.level === b.i.level ? b.stts.size - a.stts.size : a.i.level === 'err' ? -1 : 1)).slice(0, 6).forEach(({ i, stts }) => {
+    const list = [...stts].sort((a, b) => a - b);
+    out.push([i.level === 'err' ? 'err' : 'strong', `<b>${stts.size}/${done}</b> lượt ${i.level === 'err' ? 'lỗi' : 'cảnh báo'}: <b>${esc(i.t)}</b>${i.code ? ` <code>${esc(i.code)}</code>` : ''}${i.host ? ` tại <code>${esc(i.host)}</code>` : ''}.`
+      + (i.why ? `<br>Nguyên nhân thường gặp: ${esc(i.why)}` : '') + (i.fix ? `<br>Nên kiểm tra: ${esc(i.fix)}` : '')
+      + `<br><span class="muted">Lượt #${list.slice(0, 12).join(', #')}${list.length > 12 ? ` … (+${list.length - 12})` : ''}</span>`]);
+  });
   // Gom các tham số luôn có/thiếu cùng lúc (vd sub3 và sub4) để nói 1 lần
   const bySig = new Map();
   for (const p of state.params) {
@@ -606,8 +770,11 @@ function renderFilters() {
     if (n === done || n === 0) continue; // chỉ hiện bộ lọc cho tham số lúc có lúc không
     html += `<span class="chip-sep"></span>` + chip(`has:${p}`, `Có ${esc(p)} ${n}`, active === `has:${p}`) + chip(`miss:${p}`, `Thiếu ${esc(p)} ${done - n}`, active === `miss:${p}`);
   }
-  const errs = state.rows.filter(r => r.error).length;
-  if (errs) html += `<span class="chip-sep"></span>` + chip('err', `Lỗi ${errs}`, active === 'err');
+  const errs = state.rows.filter(hasErr).length;
+  const warns = state.rows.filter(hasWarn).length;
+  if (errs || warns) html += `<span class="chip-sep"></span>`;
+  if (errs) html += chip('err', `Lỗi ${errs}`, active === 'err');
+  if (warns) html += chip('warn', `Cảnh báo ${warns}`, active === 'warn');
   if (state.groupFilter) html += `<span class="chip-sep"></span><button type="button" class="chip on clear" data-f="all">Đang xem 1 nhóm <span class="ms sm" aria-hidden="true">close</span></button>`;
   if (state.valueFilter) html += `<span class="chip-sep"></span><button type="button" class="chip on clear" data-f="all">${esc(state.valueFilter.p)} = ${esc(state.valueFilter.v ?? 'không có')} <span class="ms sm" aria-hidden="true">close</span></button>`;
   $('#filters').innerHTML = html;
@@ -625,7 +792,8 @@ $('#btnCsv').addEventListener('click', () => {
     }).join('; ');
     lines.push([r.stt, ...state.params.map(p => valText(r.values[p]) ?? ''),
       ...state.params.map(p => { const f = proofFor(r, p).found; return f.length ? f.map(h => `Link ${h.step}: ${h.url}`).join('\n') : `KHÔNG CÓ ${p} - đã kiểm tra ${r.hops.length} link:\n` + r.hops.map(h => `Link ${h.step}: ${h.url}`).join('\n'); }),
-      ev, r.chain, r.startedAt, r.hops.map(h => `Link ${h.step} [${h.status ?? h.type}] ${h.url}`).join('\n'), r.error].map(q).join(','));
+      ev, r.chain, r.startedAt, r.hops.map(h => `Link ${h.step} [${h.status ?? h.type}]${h.ip ? ` (IP ${h.ip})` : ''} ${h.url}`).join('\n'),
+      rowIssues(r).map(issueText).join('\n')].map(q).join(','));
   }
   const blob = new Blob(['﻿' + lines.join('\n')], { type: 'text/csv;charset=utf-8' });
   const a = document.createElement('a');
