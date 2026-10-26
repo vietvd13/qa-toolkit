@@ -1,7 +1,7 @@
 {
   "name": "qa-toolkit",
   "displayName": "Bộ công cụ",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "private": true,
   "description": "A modular Chrome extension (Manifest V3) that brings everyday QA and testing utilities together in one hub, with a shared design system, light/dark themes and an optional local web version.",
   "keywords": [

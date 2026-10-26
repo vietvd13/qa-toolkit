@@ -4,6 +4,8 @@ Ghi theo [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/), đánh số t
 
 ## [Chưa phát hành]
 
+## [1.4.0] - 2026-10-26
+
 ### Thêm
 - Công cụ **Kiểm thử API**: client API kiểu Postman tối giản cho QA kèm test runner tự động (`docs/api-test.md`, `docs/api-test-ux.md`):
   - **Workspace trên máy** (không tài khoản, không máy chủ): Collection › Folder lồng nhau › Request, mục *Chưa lưu*. Tạo / đổi tên / nhân bản / di chuyển / sắp xếp / tắt khi chạy / xoá có hoàn tác. Tìm kiếm, menu ngữ cảnh, cây dùng được bằng bàn phím. Tự lưu theo từng bản ghi (`chrome.storage.local`, bản web dùng `localStorage`), báo *Đang lưu / Đã lưu / Lưu thất bại / Bộ nhớ đầy*, tự sửa dữ liệu hỏng một phần.
@@ -88,7 +90,8 @@ Ghi theo [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/), đánh số t
 - Tổng quan, tỉ lệ từng giá trị, nhóm kết quả, nhận xét tự động, xem bằng chứng, xuất CSV.
 - Bản dòng lệnh và bản web chạy bằng Playwright; script dán vào Console.
 
-[Chưa phát hành]: ../../compare/v1.3.0...HEAD
+[Chưa phát hành]: ../../compare/v1.4.0...HEAD
+[1.4.0]: ../../releases/tag/v1.4.0
 [1.3.0]: ../../releases/tag/v1.3.0
 [1.2.0]: ../../releases/tag/v1.2.0
 [1.1.0]: ../../releases/tag/v1.1.0
