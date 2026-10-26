@@ -146,6 +146,7 @@ Mô tả giao diện hiện tại của công cụ **Kiểm thử API** (qa-tool
 - **Kết quả:**
   - Thẻ tiến độ: đang chạy request nào, %, **Stop**.
   - Chạy xong: *Chạy lại FAIL* / *Chạy lại ERROR* / *Run lại* / Export Excel / Export ZIP / Xoá.
+  - Export khi đang lọc: nút ghi `(N/M)`, bấm mở menu *Theo bộ lọc hiện tại (N case)* / *Toàn bộ kết quả (M case)*. Không lọc thì xuất ngay.
   - 6 KPI (PASS, FAIL, ERROR, SKIPPED bấm để lọc · Pass rate · Thời gian chạy theo thời gian thực).
   - Chip lọc trạng thái, lọc Folder, lọc Request, tìm kiếm.
   - Bảng **gom theo request** (dòng tiêu đề có method, tên, folder, số PASS / FAIL…); dòng FAIL / ERROR có vạch màu, cột lý do có nhãn loại lỗi. Chạy xong mà có lỗi → tự lọc FAIL + ERROR.

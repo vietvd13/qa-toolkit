@@ -498,6 +498,8 @@ pm.test('Có data.id', () => pm.expect(body.data).to.have.property('id'));` },
     const box = $('#rqResponse');
     if (!n) return;
     const s = sends.get(n.id);
+    // Chưa có response (chưa gửi / chưa gửi được) → thu gọn vùng response, nhường chỗ cho vùng soạn
+    $('#rqSplit').classList.toggle('resp-compact', !s?.running && !s?.result?.response);
     const btn = $('#btnSend');
     btn.classList.toggle('stop', !!s?.running);
     btn.querySelector('.ms').textContent = s?.running ? 'stop' : 'send';

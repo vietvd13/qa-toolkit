@@ -127,6 +127,16 @@
     App.initRun?.();
     setNav(['requests', 'envs', 'run'].includes(ui.nav) ? ui.nav : 'requests', { initial: true });
     App.renderGuidePill?.();
+    // Màu {{biến}} trong ô nhập: có giá trị · chưa có · sẽ có khi chạy request sinh ra biến
+    let vcache = null;
+    Ui.setVarState(name => {
+      const id = S.sel && W.get(S.sel) ? S.sel : null;
+      if (!vcache) vcache = W.resolveVars(W.layers(id)).vars;
+      if (name in vcache) return 'ok';
+      return W.producers(name).length ? 'later' : 'missing';
+    });
+    App.revar = () => { vcache = null; Ui.repaintVars(); };
+    for (const ev of ['vars', 'env', 'tree', 'suite']) App.on(ev, App.revar);
     addEventListener('pagehide', () => { ApiStore.flush(); ApiTransport.cleanup(); });
   }
   document.addEventListener('DOMContentLoaded', () => { boot().catch(e => { console.error(e); toast('Lỗi khởi động: ' + e.message, 'err', 15000); }); });
@@ -181,6 +191,7 @@
     if (tab && n?.type === 'request') App.setRequestTab?.(tab, { silent: true });
     renderTree();
     if (nav) setNav('requests'); else if (S.nav === 'requests') showSelection();
+    App.revar?.();
     App.saveUi();
   };
   App.refreshSelection = showSelection;
@@ -781,30 +792,59 @@
   // node.auth = { type: inherit | none | bearer | basic | apikey, … }
   App.authEditor = (box, node, { onChange, inheritNote = '' } = {}) => {
     const W = App.W;
+    // Biến trong ô (vd {{TOKEN}}) đã có giá trị chưa, lấy từ đâu
+    const varStatus = v => {
+      const names = ApiCheck.varsIn(v);
+      if (!names.length) return '';
+      const { vars, from } = W.resolveVars(W.layers(node.id));
+      const env = W.activeEnv();
+      const SRC = { runtime: 'Runtime (phiên)', environment: env ? env.name : 'Environment', collection: 'Collection', global: 'Globals' };
+      return names.map(n => (n in vars
+        ? `<span class="ok-t"><span class="ms sm" aria-hidden="true">check_circle</span> <code>{{${esc(n)}}}</code> có giá trị · ${esc(SRC[from[n]] || '')}</span>`
+        : `<span class="warn-t"><span class="ms sm" aria-hidden="true">error</span> <code>{{${esc(n)}}}</code> chưa có giá trị${env ? ` trong ${esc(env.name)}` : ''}</span>
+           <button type="button" class="link-btn" data-au-fill="${esc(n)}">Nhập giá trị</button>${W.producers(n).length ? `<span class="muted"> hoặc Send request <b>${esc(W.producers(n)[0].name)}</b> để lấy</span>` : ''}`)).join('<br>');
+    };
     const draw = () => {
       const a = node.auth;
       const allowInherit = node.type !== 'collection';
       const eff = a.type === 'inherit' ? W.effectiveAuth(node.id) : null;
       const opts = [...(allowInherit ? [['inherit', 'Kế thừa từ cấp trên']] : []), ['none', 'Không xác thực'], ['bearer', 'Bearer Token'], ['basic', 'Basic Auth'], ['apikey', 'API Key']];
-      const field = (f, label, ph, type = 'text') => `<div><label for="au-${f}">${label}</label><div class="fill-in"><input id="au-${f}" type="${type}" class="mono-in" data-au="${f}" value="${esc(a[f] || '')}" placeholder="${esc(ph)}" autocomplete="off" spellcheck="false"${App.isBusy() ? ' disabled' : ''}>${type === 'password' ? '<button type="button" class="kv-eye" data-au-eye aria-label="Hiện / ẩn"><span class="ms sm" aria-hidden="true">visibility</span></button>' : ''}</div></div>`;
+      // Ô bí mật: tên biến ({{TOKEN}}) hoặc ô trống thì hiện chữ thường; chỉ che khi là giá trị thật
+      const field = (f, label, ph, secret = false, wide = false) => {
+        const v = a[f] || '';
+        const masked = secret && !!v && !/\{\{/.test(v);
+        return `<div class="au-field${wide ? ' wide' : ''}"><label for="au-${f}">${label}</label>
+          <div class="fill-in"><input id="au-${f}" type="${masked ? 'password' : 'text'}" class="mono-in" data-au="${f}"${secret ? ' data-au-secret' : ''} value="${esc(v)}" placeholder="${esc(ph)}" autocomplete="off" spellcheck="false"${App.isBusy() ? ' disabled' : ''}>
+          ${secret ? `<button type="button" class="kv-eye${masked ? '' : ' hidden'}" data-au-eye aria-label="Hiện / ẩn giá trị" title="Hiện / ẩn giá trị"><span class="ms sm" aria-hidden="true">visibility</span></button>` : ''}</div>
+          ${secret ? `<p class="au-var small" data-au-var="${f}">${varStatus(v)}</p>` : ''}</div>`;
+      };
       const literal = v => v && !/\{\{/.test(v);
       const lit = (a.type === 'bearer' && literal(a.token)) || (a.type === 'basic' && literal(a.password)) || (a.type === 'apikey' && literal(a.value));
       box.innerHTML = `<div class="auth-grid">
           <div><label for="au-type">Kiểu xác thực</label><select id="au-type" data-au="type"${App.isBusy() ? ' disabled' : ''}>${opts.map(([v, l]) => `<option value="${v}"${a.type === v ? ' selected' : ''}>${l}</option>`).join('')}</select></div>
-          ${a.type === 'bearer' ? field('token', 'Token', '{{TOKEN}}', 'password') : ''}
-          ${a.type === 'basic' ? field('username', 'Username', '{{USERNAME}}') + field('password', 'Password', '{{PASSWORD}}', 'password') : ''}
-          ${a.type === 'apikey' ? field('key', 'Tên header / param', 'X-API-Key') + field('value', 'Giá trị', '{{API_KEY}}', 'password')
+          ${a.type === 'bearer' ? field('token', 'Token', '{{TOKEN}}', true, true) : ''}
+          ${a.type === 'basic' ? field('username', 'Username', '{{USERNAME}}') + field('password', 'Password', '{{PASSWORD}}', true) : ''}
+          ${a.type === 'apikey' ? field('key', 'Tên header / param', 'X-API-Key') + field('value', 'Giá trị', '{{API_KEY}}', true)
             + `<div><label for="au-in">Gửi ở</label><select id="au-in" data-au="in"><option value="header"${a.in !== 'query' ? ' selected' : ''}>Header</option><option value="query"${a.in === 'query' ? ' selected' : ''}>Query param</option></select></div>` : ''}
         </div>
         ${a.type === 'inherit' ? `<p class="muted small auth-note"><span class="ms sm" aria-hidden="true">subdirectory_arrow_right</span>${eff.from ? `Dùng <b>${esc({ none: 'Không xác thực', bearer: 'Bearer Token', basic: 'Basic Auth', apikey: 'API Key' }[eff.auth.type])}</b> của ${eff.from.type} <b>${esc(eff.from.name)}</b>.` : 'Cấp trên chưa đặt xác thực: request gửi không kèm Authorization.'}${inheritNote}</p>` : ''}
         ${a.type === 'none' ? '<p class="muted small auth-note">Không gửi header xác thực. Header Authorization ghi tay ở tab Headers vẫn được gửi.</p>' : ''}
-        ${lit ? '<p class="warn-t small auth-note"><span class="ms sm" aria-hidden="true">info</span> Giá trị đang ghi thẳng: chỉ giữ trong phiên trình duyệt (không lưu bền, không export). Nên dùng biến, vd <code>{{TOKEN}}</code>, và nhập giá trị ở Environment.</p>' : ''}
+        <p class="warn-t small auth-note${lit ? '' : ' hidden'}" data-au-lit><span class="ms sm" aria-hidden="true">info</span> Giá trị đang ghi thẳng: chỉ giữ trong phiên trình duyệt (không lưu bền, không export). Nên dùng biến, vd <code>{{TOKEN}}</code>, và nhập giá trị ở Environment.</p>
         ${['bearer', 'basic', 'apikey'].includes(a.type) ? '<p class="muted small auth-note">Header Authorization / API key ghi tay ở tab Headers (nếu có) sẽ thắng phần này.</p>' : ''}`;
     };
     box.addEventListener('input', e => {
       const f = e.target.dataset.au;
       if (!f || f === 'type' || f === 'in') return;
       node.auth[f] = e.target.value;
+      if (e.target.dataset.auSecret != null) {
+        // Đổi che / hiện theo nội dung (trừ khi tester đang bấm mắt để xem)
+        const literal = !!e.target.value && !/\{\{/.test(e.target.value);
+        const eye = e.target.parentElement.querySelector('[data-au-eye]');
+        eye.classList.toggle('hidden', !literal);
+        if (!literal) e.target.type = 'text';
+        else if (!eye.dataset.revealed) e.target.type = 'password';
+        box.querySelector(`[data-au-var="${f}"]`).innerHTML = varStatus(e.target.value);
+      }
       onChange?.();
     });
     box.addEventListener('change', e => {
@@ -817,13 +857,22 @@
         draw();
         box.querySelector('[data-au]:not([data-au="type"])')?.focus();
       } else if (f === 'in') { node.auth.in = e.target.value; onChange?.(); }
-      else if (f) draw();
+    });
+    // Chỉ cập nhật cảnh báo "ghi thẳng", không vẽ lại cả khung (vẽ lại lúc ô mất focus sẽ nuốt cú bấm vào nút bên dưới)
+    box.addEventListener('input', () => {
+      const a = node.auth;
+      const literal = v => v && !/\{\{/.test(v);
+      const lit = (a.type === 'bearer' && literal(a.token)) || (a.type === 'basic' && literal(a.password)) || (a.type === 'apikey' && literal(a.value));
+      box.querySelector('[data-au-lit]')?.classList.toggle('hidden', !lit);
     });
     box.addEventListener('click', e => {
+      const fill = e.target.closest('[data-au-fill]');
+      if (fill) { App.showFillBox?.([fill.dataset.auFill]); return; }
       const eye = e.target.closest('[data-au-eye]');
       if (!eye) return;
       const inp = eye.parentElement.querySelector('input');
       inp.type = inp.type === 'password' ? 'text' : 'password';
+      if (inp.type === 'text') eye.dataset.revealed = '1'; else delete eye.dataset.revealed;
       eye.firstElementChild.textContent = inp.type === 'password' ? 'visibility' : 'visibility_off';
     });
     draw();

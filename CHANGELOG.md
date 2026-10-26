@@ -33,6 +33,13 @@ Ghi theo [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/), đánh số t
 
 ### Thay đổi
 - Icon và logo mới cho extension, đầu trang bộ công cụ và README (có bản logo cho nền tối).
+- Bỏ kiểm tra tự động lời nhắn commit (commitlint ở husky và trên CI). Conventional Commits chỉ còn là quy ước khuyến khích.
+- Kiểm thử API:
+  - tô màu `{{biến}}` ngay trong ô nhập theo trạng thái (có giá trị / chưa có / sẽ có khi chạy / biến sinh sẵn);
+  - Export Excel / ZIP theo bộ lọc đang dùng;
+  - ô Token gọn và rõ hơn, kèm trạng thái biến;
+  - chữ tiếng Việt không còn dùng font mono, cỡ chữ lớn hơn;
+  - vùng Response thu gọn khi chưa có response; Runner đưa nút Run lên đầu khi màn hẹp.
 
 ## [1.3.0] - 2026-10-11
 

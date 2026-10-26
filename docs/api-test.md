@@ -241,6 +241,11 @@ Giống Postman, đặt ở **từng request** (tab Scripts) và ở **collectio
 
 Ô dài hơn 30.000 ký tự được cắt kèm dòng `TRUNCATED: … Bản đầy đủ: evidence/<id>.json trong file ZIP`. **Export ZIP** gồm file Excel, `evidence/<evidence-id>.json` đầy đủ, `suites/<nn>-<request>.json` và scripts của từng request, `README.txt`. Ô bắt đầu bằng `=` `+` `-` `@` được đánh dấu là văn bản (chặn formula injection). Kết quả mở lại từ bộ nhớ máy vẫn export được.
 
+**Xuất theo bộ lọc:**
+- Khi bảng kết quả đang lọc (trạng thái, folder, request, từ khoá), nút Export ghi `(N/M)`. Bấm vào sẽ hỏi *Theo bộ lọc hiện tại* hay *Toàn bộ kết quả*.
+- File theo bộ lọc chỉ gồm các case đó, kèm suite / scripts của các request liên quan. Summary có dòng **Bộ lọc khi xuất** (điều kiện lọc, N / M case); số liệu PASS / FAIL / pass rate tính lại theo phần đã lọc.
+- Tên file thêm hậu tố `-loc`, vd `qa-api-report-<run-id>-loc.xlsx`.
+
 ## Import / Export workspace
 
 Menu ⋮ → **Export workspace**: file `.json` (`"format": "qa-api-workspace"`, `"version": 1`) gồm collection, folder, request, test suite, scripts, environment (không kèm secret), Globals, preset. Tuỳ chọn *Kèm giá trị bí mật* (mặc định tắt, có cảnh báo).

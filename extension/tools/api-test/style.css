@@ -168,8 +168,9 @@ button.crumb:hover { color: var(--primary-strong); text-decoration: underline; }
 .title-in:focus { border-color: var(--input-focus) !important; background: var(--input-bg) !important; }
 .url-bar { display: flex; gap: 0; align-items: stretch; border: 1px solid var(--input-border); border-radius: var(--r-sm); background: var(--input-bg); }
 .url-bar:focus-within { border-color: var(--input-focus); box-shadow: 0 0 0 3px var(--primary-subtle); }
-.url-bar select, .url-bar input { border: 0 !important; box-shadow: none !important; background: transparent; border-radius: 0; }
-.url-bar input { flex: 1; min-width: 0; border-left: 1px solid var(--border) !important; }
+.url-bar select, .url-bar input, .url-bar .vh { border: 0 !important; box-shadow: none !important; background: transparent; border-radius: 0; }
+.url-bar input, .url-bar .vh { flex: 1; min-width: 0; border-left: 1px solid var(--border) !important; }
+.url-bar .vh input { border-left: 0 !important; }
 .method-select { width: auto; min-width: 104px; font: 700 13px var(--mono); }
 .method-select[data-m=get] { color: var(--info); } .method-select[data-m=post] { color: var(--success); }
 .method-select[data-m=put], .method-select[data-m=patch] { color: var(--warning); } .method-select[data-m=delete] { color: var(--error); }
@@ -655,7 +656,8 @@ body.drawer-open { overflow: hidden; }
   .rq-top, .rq-editor, .rq-response { padding-left: 12px; padding-right: 12px; }
   .view-node, .view-envs, .view-run { padding: 12px 12px 48px; }
   .url-bar { flex-wrap: wrap; }
-  .url-bar input { flex-basis: 100%; order: 3; border-left: 0 !important; border-top: 1px solid var(--border) !important; }
+  .url-bar input, .url-bar .vh { flex-basis: 100%; order: 3; border-left: 0 !important; border-top: 1px solid var(--border) !important; }
+  .url-bar .vh input { border-top: 0 !important; }
   .url-bar .send-btn { margin-left: auto; border-radius: 0 calc(var(--r-sm) - 1px) 0 0; }
   .send-btn { min-width: 0; }
   .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -866,3 +868,92 @@ table.data td { padding-top: 11px; padding-bottom: 11px; }
 /* Theme đặt .btn-primary { padding: 12px 18px } ở màn ≤ 640px, đè cả nút nhỏ → giữ đúng cỡ nhỏ */
 .btn-primary.btn-sm, .btn-danger.btn-sm { padding: 5px 11px; }
 .rq-title-row .btn, .rq-title-row .icon-btn, .sec-h.row .btn { min-height: 32px; }
+
+/* Ô mật khẩu: theme chỉ style text / url / number / search → ô password giữ kiểu mặc định của trình duyệt */
+input[type=password] { width: 100%; padding: 10px 12px; border: 1px solid var(--input-border); border-radius: var(--r-sm); background: var(--input-bg); color: var(--input-text); font: inherit; outline: none; }
+input[type=password]:focus { border-color: var(--input-focus); box-shadow: 0 0 0 3px var(--primary-subtle); }
+/* Ô nhập có nút mắt: ô giãn hết, nút sát mép phải, cao bằng select bên cạnh */
+.fill-in input { flex: 1; min-width: 0; padding: 10px 12px; border-radius: 0; }
+.fill-in .kv-eye { width: 40px; border-left: 1px solid var(--border); }
+.fill-in .kv-eye.hidden { display: none; }
+/* Authorization: Kiểu xác thực | Token (rộng) */
+.auth-grid { grid-template-columns: minmax(200px, 240px) minmax(0, 1fr); max-width: 860px; align-items: start; }
+.auth-grid .au-field.wide { grid-column: 2 / -1; }
+.au-var { margin: 6px 0 0; line-height: 1.6; }
+.au-var:empty { display: none; }
+.au-var .ms { font-size: 15px; vertical-align: -3px; }
+@container main (max-width: 640px) { .auth-grid { grid-template-columns: 1fr; } .auth-grid .au-field.wide { grid-column: auto; } }
+
+/* ================= TÔ MÀU {{BIẾN}} TRONG Ô NHẬP ================= */
+/* .vh bọc ô; .vh-bd vẽ lại chữ (có màu) nằm sau; chữ của ô trong suốt khi có biến */
+.vh { position: relative; display: block; min-width: 0; }
+.vh.vh-area { display: block; }
+.kv-row > .vh, .kv-val > .vh, .fill-in > .vh { display: flex; flex: 1; }
+.kv-row > .vh > input, .kv-val > .vh > input, .fill-in > .vh > input { flex: 1; }
+.vh-bd { position: absolute; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; white-space: pre; color: var(--input-text); box-sizing: border-box; }
+.vh-area > .vh-bd { white-space: pre-wrap; overflow-wrap: break-word; right: auto; }
+.vh > input, .vh > textarea { position: relative; z-index: 1; }
+.vh > .vh-on { color: transparent !important; caret-color: var(--input-text); background-color: transparent !important; }
+.vh > .vh-on::selection { color: transparent; background: color-mix(in srgb, var(--primary) 30%, transparent); }
+.vh > .vh-on:disabled { opacity: 1; }
+/* Nền của ô: lớp vẽ lại phải có nền thay cho ô (ô đã trong suốt) */
+.vh:has(> .vh-on) > .vh-bd { background: var(--input-bg); }
+.kv-row .vh:has(> .vh-on) > .vh-bd { background: transparent; }
+.kv-row .vh:focus-within > .vh-bd { background: var(--primary-subtle); }
+.url-bar .vh-bd { background: transparent !important; }
+/* Màu theo trạng thái biến (không đổi độ rộng chữ: chỉ màu + nền, không đậm / padding) */
+.vh-var { border-radius: 3px; }
+.vh-var.ok { color: var(--success); background: var(--success-bg); }
+.vh-var.missing { color: var(--warning); background: var(--warning-bg); text-decoration: underline wavy color-mix(in srgb, var(--warning) 60%, transparent); text-underline-offset: 3px; }
+.vh-var.later { color: var(--secondary-strong); background: var(--secondary-subtle); }
+.vh-var.dyn { color: var(--info); background: var(--info-bg); }
+.vh > input, .vh > textarea { display: block; }
+.mi-h { max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ================= CỠ CHỮ & FONT (bản rà bằng ảnh chụp) ================= */
+/* Theme dùng chung đặt th / .badge bằng font mono → dấu tiếng Việt trong Consolas trông lởm chởm. Chữ dùng font giao diện,
+   chỉ giữ mono cho mã / đường dẫn / giá trị kỹ thuật */
+th { font: 600 12.5px var(--font); color: var(--text-secondary); letter-spacing: 0; }
+.badge { font: 600 12px/1.5 var(--font); padding: 1px 8px; border-radius: var(--radius-full); white-space: nowrap; }
+.badge .ms { font-size: 14px; vertical-align: -3px; }
+.http-badge, .badge.http-badge { font: 700 12.5px/1.5 var(--mono); border-radius: var(--radius-sm); }
+.tab .n, .tab-seg .n { font: 600 11.5px var(--font); }
+.tr-n { font: 600 11px var(--font); }
+.kpi-l, .stat-l { font-size: 12.5px; }
+
+/* Cỡ chữ chung lớn hơn một nấc */
+.app { font-size: 14px; }
+.small, .muted.small { font-size: 13px; }
+label, .label { font-size: 13px; }
+.mono-in { font-size: 13.5px !important; }
+code { font-size: 13px; }
+.sec-h h3, .set-h h3, .node-list-h h3 { font-size: 15px; }
+.view-head h2 { font-size: 22px; }
+.title-in { font-size: 20px !important; }
+.d-msg, .tip, .blockers li { font-size: 13.5px; }
+.kv-row input[type=text], .kv-row input[type=password] { min-height: 38px; }
+
+/* Cây request: dễ đọc, dễ bấm */
+.tr-row { min-height: 34px; gap: 7px; }
+.tr-name { font-size: 14px; }
+.tr-m { font-size: 10.5px; min-width: 34px; }
+.tr-section { font-size: 12.5px; }
+
+/* Response: chưa có response thì thu gọn, nhường chỗ cho vùng soạn (tab Tests / Scripts không bị cắt) */
+.rq-split.resp-compact { grid-template-rows: minmax(160px, 1fr) 7px auto; }
+.rq-split.resp-compact .rq-response { max-height: 300px; }
+.resp-empty { min-height: 0; padding: 18px 12px; }
+.resp-empty .mini-steps { margin-top: 2px; }
+.resp-empty > .ms.lg { width: 40px; height: 40px; font-size: 20px; }
+
+/* Runner: một cột thì đưa "Kiểm tra trước khi chạy" + nút Run lên đầu */
+@container main (max-width: 1100px) { .run-wrap > .prerun { order: -1; } }
+
+/* Evidence: ô Expected → Actual không dùng mono cho chữ */
+.ev-meta dd { font-size: 13.5px; }
+.ev-meta .mono { font-size: 13px; }
+/* Hộp "Chưa gửi / Lỗi" gọn: không chiếm chỗ của vùng soạn */
+.resp-err { padding: 10px 14px; gap: 3px; }
+.resp-err h3 { font-size: 14.5px; }
+.resp-err .row-actions { margin-top: 4px; }
+.rq-split.resp-compact .rq-response { max-height: 240px; }

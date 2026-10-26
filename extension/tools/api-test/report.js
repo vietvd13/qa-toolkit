@@ -126,6 +126,7 @@
     const summary = [
       [H('Field'), H('Giá trị')],
       ['Run ID', run.runId],
+      ...(run.filterLabel ? [['Bộ lọc khi xuất', `${run.filterLabel} — ${results.length} / ${run.totalAll} case của lần chạy. Số liệu bên dưới chỉ tính các case này.`]] : []),
       ...(run.presetName ? [['Preset', run.presetName]] : []),
       ...(items.length ? [['Phạm vi', run.scopeLabel || ''], ['Số request', items.length], ['Requests', items.map(x => `${x.method} ${x.path}`).join('\n')]]
         : [['Suite', run.suite?.suite.name || ''], ['Mô tả suite', run.suite?.suite.description || ''], ['Base Request', run.baseRequest ? `${run.baseRequest.method} ${run.baseRequest.url}` : '']]),
@@ -187,6 +188,7 @@
     }
     entries.push(['README.txt', [
       `QA API Toolkit — Run ${run.runId}`,
+      ...(run.filterLabel ? [`Xuất theo bộ lọc: ${run.filterLabel} (${run.results.length} / ${run.totalAll} case)`] : []),
       `${run.items?.length ? `Phạm vi: ${run.scopeLabel || ''}` : `Suite: ${run.suite?.suite.name || ''}`} · Environment: ${run.envName}`,
       '',
       `qa-api-report-${run.runId}.xlsx: Summary, Results, Evidence.`,

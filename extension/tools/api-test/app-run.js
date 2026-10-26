@@ -567,6 +567,7 @@
     $('#rEmpty').classList.toggle('hidden', rows.length > 0);
     if (!rows.length) $('#rEmpty').innerHTML = R.run.results.length ? 'Không có case nào khớp bộ lọc. <button type="button" class="link-btn" data-rf="all">Xem tất cả</button>' : R.run.running ? 'Đang chạy case đầu tiên…' : 'Chưa có kết quả.';
     renderPager(rows.length);
+    renderExportLabels();
   }
   function renderPager(total) {
     const el = $('#rPager');
@@ -607,9 +608,42 @@
   });
 
   // ---------- Export ----------
-  async function exportRun(btn, kind) {
+  // Mô tả bộ lọc đang dùng (rỗng = không lọc)
+  function filterLabel() {
+    const f = R.f, run = R.run;
+    const STATUS = { issues: 'FAIL + ERROR', FAIL: 'FAIL', ERROR: 'ERROR', PASS: 'PASS', SKIPPED: 'SKIPPED' };
+    return [
+      STATUS[f.status] ? `Trạng thái: ${STATUS[f.status]}` : '',
+      f.folder != null ? `Folder: ${f.folder || '(ngay trong collection)'}` : '',
+      f.request ? `Request: ${run.items.find(x => x.requestId === f.request)?.requestName || f.request}` : '',
+      f.q ? `Tìm: “${f.q}”` : '',
+    ].filter(Boolean).join(' · ');
+  }
+  // Nhãn nút export cho biết đang lọc bao nhiêu case
+  function renderExportLabels() {
     const run = R.run;
     if (!run || run.running) return;
+    const n = filtered().length, all = run.results.length;
+    for (const [act, text] of [['xlsx', 'Export Excel'], ['zip', 'Export ZIP']]) {
+      const b = $(`#runActions [data-run-act="${act}"]`);
+      if (!b) continue;
+      b.lastChild.textContent = n < all ? `${text} (${n}/${all})` : text;
+      b.setAttribute('aria-haspopup', n < all ? 'menu' : 'false');
+    }
+  }
+  // Đang lọc → hỏi xuất theo bộ lọc hay toàn bộ
+  function exportRun(btn, kind) {
+    const run = R.run;
+    if (!run || run.running) return;
+    const n = filtered().length, all = run.results.length;
+    if (n === all) { doExport(btn, kind, false); return; }
+    Ui.menu(btn, [
+      { label: `Theo bộ lọc hiện tại (${n} case)`, icon: 'filter_alt', hint: filterLabel(), disabled: !n, action: () => doExport(btn, kind, true) },
+      { label: `Toàn bộ kết quả (${all} case)`, icon: 'select_all', action: () => doExport(btn, kind, false) },
+    ]);
+  }
+  async function doExport(btn, kind, onlyFiltered) {
+    const run = R.run;
     const W = App.W;
     // Che thêm giá trị bí mật đang biết trong suite / scripts trước khi đưa vào file
     const secrets = [...W.envList().flatMap(e => e.vars.filter(v => v.secret || ApiRedact.isSecretName(v.key)).map(v => v.value)),
@@ -617,7 +651,14 @@
       ...Object.entries(W.runtime()).filter(([k]) => ApiRedact.isSecretName(k)).map(([, v]) => String(v))].filter(v => v && v.length >= 4);
     const red = ApiRedact.create(secrets);
     const data = { ...run, redactSuite: t => red.text(t) };
-    const name = `qa-api-report-${run.runId}.${kind}`;
+    if (onlyFiltered) {
+      data.results = filtered();
+      const ids = new Set(data.results.map(r => r.requestId));
+      data.items = run.items.filter(x => ids.has(x.requestId));
+      data.filterLabel = filterLabel();
+      data.totalAll = run.results.length;
+    }
+    const name = `qa-api-report-${run.runId}${onlyFiltered ? '-loc' : ''}.${kind}`;
     btn.disabled = true;
     const icon = btn.querySelector('.ms'), old = icon.textContent;
     icon.textContent = 'progress_activity';
@@ -686,12 +727,14 @@
     $('#evTitle').innerHTML = `${esc(k.id)} ${badge(r.status)}`;
     $('#evSub').textContent = k.name;
     const sc = r.statusCheck;
-    const expected = k.synthetic ? '2xx (mặc định: request chưa có test case)' : ApiReport.fmtCodes(k.expect?.statusCodes) + (k.expect?.maxTimeMs ? ` · ≤ ${k.expect.maxTimeMs} ms` : '');
+    // Mã HTTP dùng font mono, phần chú thích tiếng Việt dùng font giao diện
+    const expected = k.synthetic ? '2xx' : ApiReport.fmtCodes(k.expect?.statusCodes) + (k.expect?.maxTimeMs ? ` · ≤ ${k.expect.maxTimeMs} ms` : '');
+    const expectedNote = k.synthetic ? '<span class="muted small"> (mặc định, request chưa có test case)</span>' : '';
     const failedRows = r.assertions.filter(a => !a.pass);
     $('#evSummary').innerHTML = `
       <dl class="ev-meta">
         <div><dt>Request</dt><dd>${r.method ? Ui.methodTag(r.method) : ''} ${esc(r.requestName || '—')}${r.folderPath || r.collectionName ? `<span class="muted small"> · ${esc([r.collectionName, r.folderPath].filter(Boolean).join(' / '))}</span>` : ''}</dd></div>
-        <div><dt>Expected → Actual</dt><dd><span class="mono">${esc(expected)}</span> → ${res ? `<span class="mono http-${String(res.status)[0]}">${res.status}</span> ${sc ? (sc.pass ? '<span class="ok-t">✓</span>' : '<span class="err-t">✗</span>') : ''}` : '<span class="muted">không có response</span>'}</dd></div>
+        <div><dt>Expected → Actual</dt><dd><span class="mono">${esc(expected)}</span>${expectedNote} → ${res ? `<span class="mono http-${String(res.status)[0]}">${res.status}</span> ${sc ? (sc.pass ? '<span class="ok-t">✓</span>' : '<span class="err-t">✗</span>') : ''}` : '<span class="muted">không có response</span>'}</dd></div>
         <div><dt>Thời gian</dt><dd>${Ui.fmtDur(r.durationMs)} · ${esc(Ui.fmtTime(r.startedAt))}</dd></div>
         <div><dt>Evidence ID</dt><dd><code>${esc(r.evidenceId)}</code>${k.priority ? ` · ${esc(k.priority)}` : ''}</dd></div>
       </dl>
