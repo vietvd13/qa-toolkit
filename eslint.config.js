@@ -15,7 +15,7 @@ module.exports = [
   },
   // Bản chạy bằng Node (CLI, server web, script build)
   {
-    files: ['node/**/*.js', 'scripts/**/*.js', 'eslint.config.js', 'commitlint.config.js'],
+    files: ['node/**/*.js', 'scripts/**/*.js', 'eslint.config.js'],
     languageOptions: { ecmaVersion: 2023, sourceType: 'commonjs', globals: { ...globals.node } },
   },
   // Engine của bản web chạy trong trình duyệt

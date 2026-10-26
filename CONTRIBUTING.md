@@ -45,7 +45,7 @@ npm run verify
 
 ## Quy tắc commit
 
-Repo dùng chuẩn [Conventional Commits](https://www.conventionalcommits.org/vi/v1.0.0/). Lời nhắn commit được kiểm tra tự động khi commit (husky + commitlint) và trên mỗi Pull Request (GitHub Actions). Commit sai quy tắc sẽ bị chặn.
+Nên viết lời nhắn commit theo chuẩn [Conventional Commits](https://www.conventionalcommits.org/vi/v1.0.0/) để lịch sử dễ đọc và dễ soạn CHANGELOG. Đây là quy ước, **không có kiểm tra tự động**: commit sai quy tắc vẫn được nhận.
 
 ### Cấu trúc
 
@@ -91,7 +91,7 @@ Thay đổi không tương thích ngược (vd đổi cấu trúc `registry.js` 
 | `cli` | Bản dòng lệnh (`node/trace.js`) |
 | `console` | Script dán vào Console (`extras/`) |
 | `deps` · `ci` · `docs` · `release` | Thư viện · GitHub Actions · tài liệu · phát hành |
-| `<id công cụ>` | Một công cụ cụ thể, vd `redirect`. Tự có khi thêm công cụ vào `registry.js` |
+| `<id công cụ>` | Một công cụ cụ thể, vd `redirect`, `api-test` (id trong `registry.js`) |
 
 ### Ví dụ
 
@@ -106,7 +106,7 @@ build(deps): nâng playwright lên 1.65
 chore(release): 1.3.0
 ```
 
-Không hợp lệ: `Thêm tính năng mới` (thiếu loại), `Feat: thêm…` (loại viết hoa), `feat(abc): …` (phạm vi không có trong danh sách), `fix: sửa lỗi.` (dấu chấm cuối).
+Nên tránh: `Thêm tính năng mới` (thiếu loại), `Feat: thêm…` (loại viết hoa), `fix: sửa lỗi.` (dấu chấm cuối).
 
 ### Mẫu commit
 
@@ -121,7 +121,7 @@ Sau đó `git commit` (không kèm `-m`) sẽ mở trình soạn thảo với g�
 ### Pull Request
 
 - Mỗi Pull Request một việc. Mô tả thay đổi gì và vì sao, đổi giao diện thì kèm ảnh chụp.
-- **Tiêu đề Pull Request cũng theo quy tắc trên**, vì khi gộp bằng *Squash and merge*, tiêu đề này trở thành lời nhắn commit trên `master`.
+- Tiêu đề Pull Request nên theo quy ước trên, vì khi gộp bằng *Squash and merge*, tiêu đề này trở thành lời nhắn commit trên `master`.
 
 ## Phát hành (dành cho người quản lý repo)
 
