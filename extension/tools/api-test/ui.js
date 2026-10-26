@@ -330,8 +330,76 @@
     return out.join('\n');
   }
 
+  // ---------- Tô màu {{biến}} ngay trong ô nhập ----------
+  // Ô input / textarea không tô màu từng phần chữ được → đặt một lớp nền vẽ lại đúng chữ đó (có tô màu) ngay sau ô,
+  // chữ của ô để trong suốt (con trỏ, chọn chữ, gõ vẫn như thường). Tự gắn vào ô khớp VAR_TARGETS, kể cả ô vẽ lại sau.
+  // Ui.varState(name) → 'ok' | 'missing' | 'dyn' (app đặt theo environment đang dùng).
+  const VAR_TARGETS = '#rqUrl, #rqBody, .kv-row input[data-f="value"], .au-field input, #ceUrl, #ceBody';
+  const VAR_RE = /\{\{\s*([^{}]+?)\s*\}\}/g;
+  const COPY = ['fontFamily', 'fontSize', 'fontWeight', 'lineHeight', 'letterSpacing', 'paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft',
+    'borderTopWidth', 'borderRightWidth', 'borderBottomWidth', 'borderLeftWidth', 'textIndent', 'tabSize', 'textAlign'];
+  const varApi = { state: () => 'ok' };
+  function paintVars(el) {
+    const bd = el._vhBd;
+    if (!bd) return;
+    const text = el.value;
+    if (el.type === 'password' || !text.includes('{{')) { bd.textContent = ''; el.classList.remove('vh-on'); return; }
+    el.classList.add('vh-on');
+    let html = '', last = 0;
+    for (const m of text.matchAll(VAR_RE)) {
+      const st = m[1].startsWith('$') ? 'dyn' : varApi.state(m[1]);
+      html += esc(text.slice(last, m.index)) + `<span class="vh-var ${st}">${esc(m[0])}</span>`;
+      last = m.index + m[0].length;
+    }
+    html += esc(text.slice(last));
+    // Dòng cuối của textarea kết thúc bằng xuống dòng thì phải có ký tự để lớp nền cao bằng ô
+    bd.innerHTML = html + (el.tagName === 'TEXTAREA' && text.endsWith('\n') ? ' ' : '');
+    syncVars(el);
+  }
+  function syncVars(el) {
+    const bd = el._vhBd;
+    if (!bd) return;
+    const cs = getComputedStyle(el);
+    for (const k of COPY) bd.style[k] = cs[k];
+    bd.style.borderColor = 'transparent';
+    bd.style.borderStyle = 'solid';
+    if (el.tagName === 'TEXTAREA') bd.style.width = el.clientWidth + parseFloat(cs.borderLeftWidth) + parseFloat(cs.borderRightWidth) + 'px'; // trừ thanh cuộn dọc
+    bd.scrollTop = el.scrollTop;
+    bd.scrollLeft = el.scrollLeft;
+  }
+  function attachVars(el) {
+    if (el._vhBd || el.closest('.vh') || !el.isConnected) return;
+    const wrap = document.createElement('span');
+    wrap.className = 'vh' + (el.tagName === 'TEXTAREA' ? ' vh-area' : '');
+    const bd = document.createElement('span');
+    bd.className = 'vh-bd';
+    bd.setAttribute('aria-hidden', 'true');
+    el.replaceWith(wrap);
+    wrap.append(bd, el);
+    el._vhBd = bd;
+    // Gán value bằng code (vd vẽ lại request) cũng phải vẽ lại lớp nền
+    const proto = Object.getPrototypeOf(el);
+    const desc = Object.getOwnPropertyDescriptor(proto, 'value');
+    Object.defineProperty(el, 'value', { configurable: true, get() { return desc.get.call(this); }, set(v) { desc.set.call(this, v); paintVars(this); } });
+    for (const ev of ['input', 'change', 'focus']) el.addEventListener(ev, () => paintVars(el));
+    el.addEventListener('scroll', () => syncVars(el));
+    for (const ev of ['keyup', 'click', 'select']) el.addEventListener(ev, () => syncVars(el));
+    if (window.ResizeObserver) new ResizeObserver(() => syncVars(el)).observe(el);
+    new MutationObserver(() => paintVars(el)).observe(el, { attributes: true, attributeFilter: ['type'] });
+    paintVars(el);
+  }
+  const scanVars = root => { if (root.matches?.(VAR_TARGETS)) attachVars(root); root.querySelectorAll?.(VAR_TARGETS).forEach(attachVars); };
+  document.addEventListener('DOMContentLoaded', () => {
+    scanVars(document.body);
+    new MutationObserver(list => { for (const m of list) for (const n of m.addedNodes) if (n.nodeType === 1) scanVars(n); }).observe(document.body, { childList: true, subtree: true });
+  });
+  // App gọi khi environment / biến đổi để tô lại màu
+  const repaintVars = () => document.querySelectorAll('.vh-bd').forEach(bd => paintVars(bd.nextElementSibling));
+  const setVarState = fn => { varApi.state = fn; repaintVars(); };
+
   window.Ui = {
     $, $$, esc, debounce, norm, slug, fmtDur, fmtBytes, fmtTime, methodTag, download, pickFile, toast, copyText,
     modal, confirmBox, promptBox, chooseBox, openDrawer, closeDrawer, currentDrawer, menu, closeMenu, kvEditor, jsonView, visibleFocusables,
+    setVarState, repaintVars,
   };
 })();
