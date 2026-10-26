@@ -40,7 +40,7 @@ jobs:
       - name: Lấy ghi chú phát hành từ CHANGELOG
         run: node scripts/release-notes.js "$GITHUB_REF_NAME" > dist/RELEASE_NOTES.md
 
-      - uses: softprops/action-gh-release@v2
+      - uses: softprops/action-gh-release@v3
         with:
           files: dist/*.zip
           body_path: dist/RELEASE_NOTES.md
