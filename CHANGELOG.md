@@ -4,6 +4,8 @@ Ghi theo [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/), đánh số t
 
 ## [Chưa phát hành]
 
+## [1.5.0] - 2026-10-28
+
 ### Thay đổi
 - Hệ thiết kế mới **Dao động ký** cho cả bộ công cụ, thay *Feminine Work OS*:
   - vỏ máy xám, mặt hiển thị than chì cho điều hướng và vùng đọc kết quả, **một màu tín hiệu** (cam);
@@ -117,7 +119,8 @@ Ghi theo [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/), đánh số t
 - Tổng quan, tỉ lệ từng giá trị, nhóm kết quả, nhận xét tự động, xem bằng chứng, xuất CSV.
 - Bản dòng lệnh và bản web chạy bằng Playwright; script dán vào Console.
 
-[Chưa phát hành]: ../../compare/v1.4.0...HEAD
+[Chưa phát hành]: ../../compare/v1.5.0...HEAD
+[1.5.0]: ../../releases/tag/v1.5.0
 [1.4.0]: ../../releases/tag/v1.4.0
 [1.3.0]: ../../releases/tag/v1.3.0
 [1.2.0]: ../../releases/tag/v1.2.0
