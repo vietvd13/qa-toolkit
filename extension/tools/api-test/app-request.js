@@ -511,13 +511,9 @@ pm.test('Có data.id', () => pm.expect(body.data).to.have.property('id'));` },
     }
     const r = s?.result;
     if (!r) {
-      box.innerHTML = `<div class="resp-empty"><span class="ms lg" aria-hidden="true">send</span><p><b>Chưa gửi</b></p>
-        <ol class="mini-steps">
-          <li>Kiểm tra method + URL (dùng được <code>{{baseUrl}}</code>), thêm Headers / Body nếu API cần.</li>
-          <li>Bấm <b>Send</b> (hoặc <kbd>Ctrl</kbd> + <kbd>Enter</kbd>): response hiện ở đây, không cần test case.</li>
-          <li>Sau đó: bấm tên field để lưu thành biến, hoặc sang tab <b>Tests</b> để thêm test case.</li>
-        </ol>
-        <button type="button" class="link-btn" data-help="request">Hướng dẫn chi tiết</button></div>`;
+      box.innerHTML = `<div class="resp-line"><span class="ms sm" aria-hidden="true">send</span>
+        <span>Bấm <b>Send</b> (<kbd>Ctrl</kbd> + <kbd>Enter</kbd>) để xem response ở đây. Sau đó bấm tên field để lưu thành biến.</span>
+        <button type="button" class="link-btn" data-help="request">Hướng dẫn</button></div>`;
       return;
     }
     const res = r.response;
@@ -533,9 +529,11 @@ pm.test('Có data.id', () => pm.expect(body.data).to.have.property('id'));` },
         const p = App.W.producers(v).filter(x => x.id !== n.id);
         return p.length ? `<p class="muted small"><code>{{${esc(v)}}}</code> do request <button type="button" class="link-btn" data-open-req="${esc(p[0].id)}">${esc(p[0].name)}</button> sinh ra: Send request đó trước, hoặc nhập giá trị trong Environment.</p>` : '';
       }).join('') : '';
-      box.innerHTML = `<div class="resp-head"><span class="badge ${notSent ? 'badge-warning' : 'badge-error'}"><span class="ms sm" aria-hidden="true">${notSent ? 'block' : 'cloud_off'}</span> ${notSent ? 'Chưa gửi' : 'Lỗi'}</span>${s.at ? `<span class="muted small">${esc(Ui.fmtTime(s.at))}</span>` : ''}</div>
-        <div class="resp-err"><h3>${esc(KIND_TITLE[r.errorKind] || 'Lỗi')}</h3><p>${esc(r.reason)}</p>${notSent ? '<p class="muted small">Request <b>chưa được gửi</b> tới máy chủ.</p>' : ''}${hintVar}
-          ${acts ? `<div class="row-actions">${acts}</div>` : ''}
+      box.innerHTML = `<div class="resp-err ${notSent ? 'not-sent' : 'failed'}">
+          <div class="re-main"><span class="badge ${notSent ? 'badge-warning' : 'badge-error'}"><span class="ms sm" aria-hidden="true">${notSent ? 'block' : 'cloud_off'}</span> ${notSent ? 'Chưa gửi' : 'Lỗi'}</span>
+            <h3>${esc(KIND_TITLE[r.errorKind] || 'Lỗi')}</h3><span class="re-why">${esc(r.reason)}</span>
+            ${acts ? `<span class="row-actions">${acts}</span>` : ''}</div>
+          ${hintVar}
           ${r.scriptLogs?.length || r.warnings?.length ? `<details class="adv"><summary><span class="ms sm chev" aria-hidden="true">chevron_right</span>Chi tiết kỹ thuật</summary><pre class="code-view">${esc([...r.warnings, ...r.scriptLogs].join('\n'))}</pre></details>` : ''}</div>`;
       return;
     }

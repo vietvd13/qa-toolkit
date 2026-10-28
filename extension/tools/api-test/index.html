@@ -68,8 +68,8 @@
       <!-- ================= REQUEST ================= -->
       <section class="view view-request hidden" id="view-request" aria-labelledby="rqName">
         <div class="rq-top">
-          <nav class="crumbs" id="rqCrumbs" aria-label="Vị trí"></nav>
           <div class="rq-title-row">
+            <nav class="crumbs" id="rqCrumbs" aria-label="Vị trí"></nav>
             <input id="rqName" class="title-in" type="text" aria-label="Tên request" spellcheck="false">
             <span class="badge badge-warning hidden" id="rqDraft"><span class="ms sm" aria-hidden="true">draft</span> Chưa lưu vào collection</span>
             <span class="spacer"></span>
@@ -99,7 +99,6 @@
               <button class="tab" role="tab" id="rt-tab-tests" aria-controls="rt-tests" data-rt="tests">Tests <span class="n" id="cntTests"></span></button>
             </div>
             <div class="rt-panel" role="tabpanel" id="rt-params" aria-labelledby="rt-tab-params">
-              <p class="muted small">Query string của URL. Dùng được <code>{{biến}}</code>.</p>
               <div class="kv" id="rqQuery"></div>
             </div>
             <div class="rt-panel hidden" role="tabpanel" id="rt-auth" aria-labelledby="rt-tab-auth"><div id="rqAuth"></div></div>
@@ -302,7 +301,7 @@
   <!-- ================= DRAWER: HƯỚNG DẪN ================= -->
   <div class="drawer drawer-wide hidden" id="helpDrawer" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
     <div class="drawer-h">
-      <div class="min0"><h2 id="helpTitle"><span class="ms" aria-hidden="true">menu_book</span>Hướng dẫn sử dụng</h2><p class="muted small">Chọn chủ đề bên trái hoặc tìm theo từ khoá.</p></div>
+      <div class="min0"><h2 id="helpTitle">Hướng dẫn sử dụng</h2><label class="check help-tips"><input type="checkbox" id="helpTips"> Hiện mẹo ngay trong giao diện</label></div>
       <button type="button" class="x" data-close aria-label="Đóng"><span class="ms" aria-hidden="true">close</span></button>
     </div>
     <div class="help-layout">

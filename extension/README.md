@@ -31,7 +31,7 @@ Nút ở góc phải đầu trang: biểu tượng mặt trời/mặt trăng đ�
 - Tool tự tính các sắc độ còn lại và tự chỉnh đậm hơn nếu màu quá nhạt khiến chữ khó đọc. Bảng **Độ dễ đọc** cho biết từng cặp màu có đạt chuẩn 4.5:1 không.
 - Đổi là áp dụng ngay cho mọi công cụ. Cài đặt lưu trên máy, không ảnh hưởng người khác.
 
-Hệ màu mặc định: *Feminine Work OS* (`shared/theme.css`). Trong giao diện sáng, chữ và nút dùng rose-600 `#AD4168` thay vì rose-500 `#C6537B` vì rose-500 chỉ đạt 4.26:1 với chữ trắng.
+Hệ thiết kế mặc định: *Dụng cụ đo* (`shared/theme.css`). Nền xám trung tính, một màu nhấn (xanh cobalt `#3D63DD`, chữ và nút dùng `#2A50C8` để đạt 4.5:1), font IBM Plex Sans / Plex Mono. Màu chỉ xuất hiện khi có nghĩa: màu nhấn cho hành động chính và mục đang chọn, xanh lá / vàng / đỏ cho trạng thái. Muốn màu hồng cũ: **Giao diện → Màu chủ đạo → Hồng hoa**.
 
 ### Kiểm thử API
 
@@ -63,7 +63,13 @@ Mô hình dữ liệu, thứ tự ưu tiên biến, pipeline chạy, bảo mật
 1. Chép thư mục `tools/_template` thành `tools/<id>` (vd `tools/so-sanh-csv`).
 2. Sửa `index.html` và `app.js` trong thư mục mới.
    - Giao diện dùng chung nằm ở `shared/theme.css` (màu, chữ, nút, ô nhập, tab, bảng, tooltip, cửa sổ) và `shared/theme.js` (sáng/tối + màu tự chọn). Trang mới phải nạp cả hai trong `<head>`.
-   - Chỉ dùng biến màu (`var(--primary-strong)`, `var(--surface)`, `var(--text-secondary)`…), không viết mã màu cứng, để chế độ tối và màu tự chọn hoạt động.
+   - Chỉ dùng token, không viết mã màu hay cỡ chữ cứng, để chế độ tối và màu tự chọn hoạt động:
+     - nền `--bg` (vùng làm việc) · `--bg-subtle` (thanh bên, đầu bảng) · `--bg-raised` (ô nhập, thẻ, menu), trạng thái `--bg-hover` · `--bg-selected`;
+     - chữ `--fg` · `--fg-muted` · `--fg-faint`; viền `--line` · `--line-strong`;
+     - màu nhấn `--accent` (đồ hoạ) · `--accent-fg` (chữ, nền nút) · `--accent-bg` (nền nhạt) · `--on-accent`; trạng thái `--ok` · `--warn` · `--bad` · `--info` (+ `-bg` chỉ cho khung thông báo);
+     - cỡ chữ `--fs-xs … --fs-2xl`, độ cao control `--h-sm` · `--h-md` · `--h-lg`, khoảng cách `--space-*`, bo góc `--rad-sm` · `--rad` · `--rad-lg`.
+
+     Quy tắc chi tiết ở đầu `shared/theme.css`. Tên cũ (`--primary-strong`, `--surface`, `--text-secondary`…) vẫn chạy nhưng không dùng cho code mới.
    - Icon dùng bộ Google Material Symbols: `<span class="ms">tên_icon</span>`, tên tra ở https://fonts.google.com/icons.
    - Extension không cho viết `<script>` trong HTML, mọi code để trong file `.js`.
 3. Thêm một dòng vào `tools/registry.js` (id, tên, icon, mô tả, đường dẫn).

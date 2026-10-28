@@ -622,7 +622,7 @@
     const rt = W.runtime();
     box.innerHTML = `
       <div class="view-head pad">
-        <div><h2>Environments ${App.helpBtn?.('vars', 'Hướng dẫn biến & environment') || ''}</h2><p class="muted small">Cấu hình một lần, dùng cho mọi request: <code>{{baseUrl}}</code>, token, header chung, host được phép gửi. Thứ tự ưu tiên biến: <b>Runtime › Environment › Collection › Globals</b>.</p></div>
+        <div><h2>Environments ${App.helpBtn?.('vars', 'Hướng dẫn biến & environment') || ''}</h2></div>
         <button type="button" class="btn btn-primary btn-sm" data-env-act="new"><span class="ms sm" aria-hidden="true">add</span>Tạo environment</button>
       </div>
       ${App.tip?.('envs', '<b>Mẹo:</b> chọn environment bên trái, điền <code>baseUrl</code> và token, thêm host vào <b>Allowed hosts</b>. Đổi environment ở thanh trên cùng là mọi request đổi theo.', 'vars') || ''}
@@ -670,15 +670,15 @@
       ${missing.length ? `<div class="fill-box"><p class="fill-title"><span class="ms sm" aria-hidden="true">edit_note</span>Request đang dùng biến chưa có giá trị ở đây</p>
         ${missing.slice(0, 8).map(([v, reqs]) => `<div class="miss-var"><code>{{${esc(v)}}}</code><span class="muted small">${reqs.length} request: ${reqs.slice(0, 2).map(r => esc(r.name)).join(', ')}${reqs.length > 2 ? '…' : ''}</span><button type="button" class="btn btn-sm" data-add-var="${esc(v)}">Thêm</button></div>`).join('')}</div>` : ''}
       <section class="set-sec">
-        <div class="set-h"><h3><span class="ms sm" aria-hidden="true">data_object</span>Variables</h3><p class="muted small">Dùng bằng <code>{{NAME}}</code> ở URL, params, headers, body, auth. Bấm <span class="ms sm inline-ic" aria-hidden="true">lock</span> để đánh dấu secret: chỉ giữ trong phiên trình duyệt, che trong báo cáo, không export.</p></div>
+        <div class="set-h"><h3><span class="ms sm" aria-hidden="true">data_object</span>Variables</h3><p class="muted small">Dùng bằng <code>{{NAME}}</code>. <span class="ms sm inline-ic" aria-hidden="true">lock</span> = secret, chỉ giữ trong phiên.</p></div>
         <div class="kv" id="envVars"></div>
       </section>
       <section class="set-sec">
-        <div class="set-h"><h3><span class="ms sm" aria-hidden="true">shield</span>Allowed hosts</h3><p class="muted small">Chỉ gửi request tới các host này (chống gửi nhầm sang hệ thống khác). Gõ host rồi <kbd>Enter</kbd>; <code>*.example.com</code> cho mọi subdomain; localhost / IP nội bộ phải ghi đúng tên.${isG ? '' : ' Host ở Globals cũng được tính.'}</p></div>
+        <div class="set-h"><h3><span class="ms sm" aria-hidden="true">shield</span>Allowed hosts</h3><p class="muted small">Chỉ gửi request tới các host này. Gõ host rồi <kbd>Enter</kbd>, <code>*.example.com</code> cho mọi subdomain.</p></div>
         ${hostBoxHtml('envHosts')}
       </section>
       ${isG ? '' : `<section class="set-sec">
-        <div class="set-h"><h3><span class="ms sm" aria-hidden="true">list_alt</span>Headers của environment</h3><p class="muted small">Gửi kèm mọi request khi dùng environment này, ghi đè header trùng tên của request.</p></div>
+        <div class="set-h"><h3><span class="ms sm" aria-hidden="true">list_alt</span>Headers của environment</h3><p class="muted small">Gửi kèm mọi request, ghi đè header cùng tên.</p></div>
         <div class="kv" id="envHeaders"></div>
       </section>`}`;
     const changed = () => { if (env) W.touchEnv(env.id); else W.saveMeta(); App.emit('vars'); };

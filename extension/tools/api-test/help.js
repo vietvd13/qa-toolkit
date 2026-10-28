@@ -271,6 +271,7 @@
     if (topic && TOPICS.some(t => t.id === topic)) cur = topic;
     $('#helpSearch').value = '';
     renderHelp();
+    $('#helpTips').checked = !!ui().showTips;
     Ui.openDrawer($('#helpDrawer'), opener);
     $('#helpBody').scrollTop = 0;
   };
@@ -290,8 +291,8 @@
   });
 
   // ================= MẸO CÓ THỂ ẨN =================
-  // App.tip(id, html) → HTML hộp mẹo, rỗng nếu tester đã ẩn
-  App.tip = (id, html, topic) => ((ui().tips || []).includes(id) ? '' : `<div class="tip" data-tip="${id}"><span class="ms sm" aria-hidden="true">lightbulb</span><span class="tip-t">${html}${topic ? ` <button type="button" class="link-btn" data-help="${topic}">Xem hướng dẫn</button>` : ''}</span><button type="button" class="icon-btn tip-x" data-tip-close="${id}" aria-label="Ẩn mẹo này" title="Ẩn mẹo này"><span class="ms sm" aria-hidden="true">close</span></button></div>`);
+  // App.tip(id, html) → HTML hộp mẹo. Mặc định tắt cho màn hình gọn; bật trong drawer Hướng dẫn. Rỗng nếu tester đã ẩn mẹo đó.
+  App.tip = (id, html, topic) => (!ui().showTips || (ui().tips || []).includes(id) ? '' : `<div class="tip" data-tip="${id}"><span class="ms sm" aria-hidden="true">lightbulb</span><span class="tip-t">${html}${topic ? ` <button type="button" class="link-btn" data-help="${topic}">Xem hướng dẫn</button>` : ''}</span><button type="button" class="icon-btn tip-x" data-tip-close="${id}" aria-label="Ẩn mẹo này" title="Ẩn mẹo này"><span class="ms sm" aria-hidden="true">close</span></button></div>`);
   // Nút ? nhỏ cạnh tiêu đề
   App.helpBtn = (topic, label = 'Hướng dẫn') => `<button type="button" class="help-q" data-help="${topic}" aria-label="${esc(label)}" title="${esc(label)}"><span class="ms sm" aria-hidden="true">help</span></button>`;
 
@@ -309,6 +310,15 @@
       <button type="button" class="icon-btn tip-x" data-tip-close="next" aria-label="Ẩn gợi ý bước tiếp theo" title="Không hiện gợi ý này nữa"><span class="ms sm" aria-hidden="true">close</span></button></div>`;
   };
 
+  function setTips(on) {
+    ui().showTips = on;
+    if (on) ui().tips = [];
+    saveUi();
+    App.refreshSelection();
+    if (S.nav !== 'requests') App.setNav(S.nav);
+  }
+  $('#helpTips').addEventListener('change', e => setTips(e.target.checked));
+
   // ================= SỰ KIỆN CHUNG =================
   document.addEventListener('click', e => {
     const h = e.target.closest('[data-help]');
@@ -320,7 +330,7 @@
       ui().tips = [...new Set([...(ui().tips || []), id])];
       saveUi();
       tc.closest('[data-tip]')?.remove();
-      toast('Đã ẩn. Xem lại trong Hướng dẫn (phím ?).', 'info', 3000, { label: 'Hiện lại mọi mẹo', fn: () => { ui().tips = []; saveUi(); App.refreshSelection(); if (S.nav !== 'requests') App.setNav(S.nav); } });
+      toast('Đã ẩn. Xem lại trong Hướng dẫn (phím ?).', 'info', 3000, { label: 'Hiện lại mọi mẹo', fn: () => setTips(true) });
       return;
     }
     const ob = e.target.closest('[data-ob-act]');

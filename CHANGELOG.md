@@ -4,6 +4,28 @@ Ghi theo [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/), đánh số t
 
 ## [Chưa phát hành]
 
+### Thay đổi
+- Hệ thiết kế mới **Dụng cụ đo** cho cả bộ công cụ, thay *Feminine Work OS*:
+  - nền xám trung tính, một màu nhấn (mặc định xanh cobalt; màu hồng cũ vẫn chọn được trong **Giao diện**);
+  - nhãn trạng thái viền mảnh thay cho nền pastel, thông báo nền trung tính có vạch màu;
+  - số liệu (status code, thời gian, số đếm, KPI) dùng mono;
+  - font IBM Plex Sans / Plex Mono, icon Material Symbols Outlined, bớt icon trang trí.
+- Control dùng chung vẽ lại:
+  - ô nhập có bóng mảnh, viền đậm khi rê chuột, vòng focus mềm, trạng thái lỗi / tắt rõ ràng;
+  - select có mũi tên riêng; checkbox / radio vẽ lại (có trạng thái *một phần*);
+  - nút có độ nổi, lún nhẹ khi bấm, vòng focus bàn phím.
+- Token gọn và nhất quán trong `shared/theme.css`: `--bg*`, `--fg*`, `--line*`, `--accent*`, `--ok/--warn/--bad/--info`, `--fs-*`, `--h-*`, `--rad-*`, kèm quy tắc dùng. Tên cũ vẫn chạy (alias).
+- Kiểm thử API:
+  - thêm chỗ làm việc: thanh bên của bộ công cụ tự thu khi mở tool;
+  - đường dẫn và tên request trên cùng một dòng;
+  - vùng Response chỉ còn một dòng khi chưa có response, lỗi *Chưa gửi* hiện gọn kèm nút xử lý;
+  - KPI kết quả nằm trên một hàng, bấm để lọc (bỏ hàng chip trùng số). Ý nghĩa PASS / FAIL / ERROR / SKIPPED hiện khi rê chuột;
+  - bớt chữ trên màn hình: mẹo mặc định tắt (bật trong **Hướng dẫn → Hiện mẹo ngay trong giao diện**), bỏ đoạn mô tả dưới tiêu đề Runner / Environments / Params, rút gọn chú thích Environment và Preset;
+  - tab Tests: Test cases lên đầu, thống kê thành hàng nút lọc gọn.
+
+### Sửa
+- Kiểm thử API: chữ tô màu `{{biến}}` lệch lên trên trong ô URL và cột Value.
+
 ## [1.4.0] - 2026-10-26
 
 ### Thêm
