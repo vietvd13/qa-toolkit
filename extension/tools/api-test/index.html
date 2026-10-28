@@ -11,37 +11,42 @@
 </head>
 <body>
 <div class="app" id="app">
-  <!-- ================= THANH ỨNG DỤNG ================= -->
-  <header class="appbar">
-    <button type="button" class="icon-btn sb-toggle" id="btnSidebar" aria-controls="sidebar" aria-expanded="true" aria-label="Ẩn / hiện danh sách request" title="Ẩn / hiện danh sách request"><span class="ms" aria-hidden="true">left_panel_close</span></button>
-    <div class="ab-brand"><span class="ms" aria-hidden="true">api</span><b>Kiểm thử API</b></div>
-    <nav class="ab-nav" role="tablist" aria-label="Khu vực">
-      <button type="button" role="tab" class="ab-tab" id="nav-requests" data-nav="requests" aria-selected="true"><span class="ms sm" aria-hidden="true">folder_open</span><span class="lbl">Requests</span></button>
-      <button type="button" role="tab" class="ab-tab" id="nav-envs" data-nav="envs" aria-selected="false"><span class="ms sm" aria-hidden="true">dns</span><span class="lbl">Environments</span></button>
-      <button type="button" role="tab" class="ab-tab" id="nav-run" data-nav="run" aria-selected="false"><span class="ms sm" aria-hidden="true">play_circle</span><span class="lbl">Runner</span><span class="ab-dot hidden" id="navRunDot" aria-hidden="true"></span></button>
-    </nav>
-    <span class="spacer"></span>
-    <span class="save-state" id="saveState" role="status" aria-live="polite"></span>
-    <div class="env-pick-top" id="envPickTop">
-      <span class="env-dot" id="envTopDot" aria-hidden="true"></span>
-      <label class="visually-hidden" for="envSelect">Environment đang dùng</label>
-      <select id="envSelect" class="env-select"></select>
-    </div>
-    <button type="button" class="guide-pill hidden" id="btnGuide" aria-haspopup="dialog"><span class="ms sm" aria-hidden="true">flag</span><span class="lbl">Bắt đầu</span></button>
-    <button type="button" class="icon-btn" id="btnHelp" aria-haspopup="dialog" aria-label="Hướng dẫn sử dụng (phím ?)" title="Hướng dẫn sử dụng (phím ?)"><span class="ms" aria-hidden="true">help</span></button>
-    <button type="button" class="icon-btn" id="btnWsMenu" aria-haspopup="menu" aria-expanded="false" aria-label="Workspace: import, export, cài đặt" title="Workspace"><span class="ms" aria-hidden="true">more_vert</span></button>
-  </header>
-
   <div class="shell" id="shell">
-    <!-- ================= SIDEBAR: COLLECTION ================= -->
+    <!-- ================= PANEL TRÁI: khu vực · environment · cây Collection · workspace =================
+         Không có thanh ứng dụng riêng: mọi điều khiển chung nằm ở đây để vùng làm việc có trọn chiều cao. -->
     <aside class="sidebar" id="sidebar" aria-label="Collections">
+      <!-- Mặt hiển thị (than chì): công tắc khu vực + môi trường đang dùng — hai thứ quyết định "đang đo cái gì, ở đâu" -->
+      <div class="sb-deck">
+        <div class="sb-top">
+          <nav class="ab-nav" role="tablist" aria-label="Khu vực">
+            <button type="button" role="tab" class="ab-tab" id="nav-requests" data-nav="requests" aria-selected="true" title="Requests"><span class="ms" aria-hidden="true">account_tree</span><span class="lbl">Requests</span></button>
+            <button type="button" role="tab" class="ab-tab" id="nav-envs" data-nav="envs" aria-selected="false" title="Environments"><span class="ms" aria-hidden="true">tune</span><span class="lbl">Env</span></button>
+            <button type="button" role="tab" class="ab-tab" id="nav-run" data-nav="run" aria-selected="false" title="Runner"><span class="ms" aria-hidden="true">monitoring</span><span class="lbl">Runner</span><span class="ab-dot hidden" id="navRunDot" aria-hidden="true"></span></button>
+          </nav>
+          <button type="button" class="icon-btn sb-toggle" id="btnSidebar" aria-controls="sidebar" aria-expanded="true" aria-label="Thu gọn / mở rộng panel" title="Thu gọn / mở rộng panel"><span class="ms" aria-hidden="true">left_panel_close</span></button>
+        </div>
+        <div class="sb-env">
+          <label class="eyebrow" for="envSelect">Môi trường</label>
+          <div class="env-pick-top" id="envPickTop">
+            <span class="env-dot" id="envTopDot" aria-hidden="true"></span>
+            <select id="envSelect" class="env-select"></select>
+          </div>
+        </div>
+      </div>
       <div class="sb-head">
-        <div class="search-box sb-search"><span class="ms sm" aria-hidden="true">search</span><input type="search" id="sbSearch" placeholder="Tìm request, URL…" aria-label="Tìm request"></div>
-        <button type="button" class="icon-btn" id="btnNew" aria-haspopup="menu" aria-expanded="false" aria-label="Tạo mới" title="Tạo mới"><span class="ms" aria-hidden="true">add</span></button>
+        <div class="search-box sb-search"><span class="ms sm" aria-hidden="true">search</span><input type="search" id="sbSearch" placeholder="Tìm request, URL…" aria-label="Tìm request"><kbd class="sb-kbd" aria-hidden="true">Ctrl K</kbd></div>
+        <div class="sb-acts">
+          <button type="button" class="icon-btn" id="btnPasteCurl" aria-label="Dán cURL / fetch" title="Dán cURL / fetch"><span class="ms" aria-hidden="true">content_paste</span></button>
+          <button type="button" class="icon-btn" id="btnNew" aria-haspopup="menu" aria-expanded="false" aria-label="Tạo mới" title="Tạo mới"><span class="ms" aria-hidden="true">add</span></button>
+        </div>
       </div>
       <div class="sb-tree" id="tree" role="tree" aria-label="Collections và request"></div>
       <div class="sb-foot">
-        <button type="button" class="btn btn-sm btn-ghost" id="btnPasteCurl"><span class="ms sm" aria-hidden="true">content_paste</span>Dán cURL / fetch</button>
+        <span class="save-state" id="saveState" role="status" aria-live="polite"></span>
+        <button type="button" class="guide-pill hidden" id="btnGuide" aria-haspopup="dialog"><span class="ms sm" aria-hidden="true">flag</span><span class="lbl">Bắt đầu</span></button>
+        <span class="spacer"></span>
+        <button type="button" class="icon-btn" id="btnHelp" aria-haspopup="dialog" aria-label="Hướng dẫn sử dụng (phím ?)" title="Hướng dẫn sử dụng (phím ?)"><span class="ms" aria-hidden="true">help</span></button>
+        <button type="button" class="icon-btn" id="btnWsMenu" aria-haspopup="menu" aria-expanded="false" aria-label="Workspace: import, export, cài đặt" title="Workspace"><span class="ms" aria-hidden="true">more_vert</span></button>
       </div>
     </aside>
     <div class="sb-resizer" id="sbResizer" role="separator" aria-orientation="vertical" aria-controls="sidebar" aria-label="Kéo để đổi độ rộng danh sách" tabindex="0"></div>
@@ -51,7 +56,7 @@
       <!-- ================= CHƯA CÓ GÌ / CHƯA CHỌN ================= -->
       <section class="view view-welcome" id="view-welcome">
         <div class="welcome">
-          <span class="welcome-ic"><span class="ms lg" aria-hidden="true">api</span></span>
+          <p class="eyebrow">Kiểm thử API</p>
           <h1 id="welcomeTitle">Bắt đầu kiểm thử API</h1>
           <p class="muted" id="welcomeSub">Dán một request từ Postman hoặc DevTools, gửi thử ngay, rồi lưu vào collection để chạy lại bất cứ lúc nào. Không cần tạo collection hay environment trước.</p>
           <div class="welcome-acts">
@@ -69,12 +74,14 @@
       <section class="view view-request hidden" id="view-request" aria-labelledby="rqName">
         <div class="rq-top">
           <div class="rq-title-row">
-            <nav class="crumbs" id="rqCrumbs" aria-label="Vị trí"></nav>
-            <input id="rqName" class="title-in" type="text" aria-label="Tên request" spellcheck="false">
-            <span class="badge badge-warning hidden" id="rqDraft"><span class="ms sm" aria-hidden="true">draft</span> Chưa lưu vào collection</span>
+            <div class="rq-title min0">
+              <nav class="crumbs" id="rqCrumbs" aria-label="Vị trí"></nav>
+              <input id="rqName" class="title-in" type="text" aria-label="Tên request" spellcheck="false">
+            </div>
+            <span class="badge badge-warning hidden" id="rqDraft"><span class="ms sm" aria-hidden="true">draft</span> Chưa lưu</span>
             <span class="spacer"></span>
             <button type="button" class="btn btn-sm hidden" id="btnSaveTo"><span class="ms sm" aria-hidden="true">save</span>Lưu vào collection</button>
-            <button type="button" class="btn btn-sm" id="btnRunReq" title="Chạy mọi test case của request này"><span class="ms sm" aria-hidden="true">play_arrow</span><span class="lbl">Run tests</span></button>
+            <button type="button" class="btn btn-sm btn-primary" id="btnRunReq" title="Chạy mọi test case của request này"><span class="ms sm fill" aria-hidden="true">play_arrow</span><span class="lbl">Run tests</span></button>
             <button type="button" class="help-q" data-help="request" aria-label="Hướng dẫn tạo & gửi request" title="Hướng dẫn tạo & gửi request"><span class="ms sm" aria-hidden="true">help</span></button>
             <button type="button" class="icon-btn" id="btnReqMenu" aria-haspopup="menu" aria-expanded="false" aria-label="Thao tác với request"><span class="ms" aria-hidden="true">more_horiz</span></button>
           </div>
@@ -90,13 +97,14 @@
 
         <div class="rq-split" id="rqSplit">
           <div class="rq-editor" id="rqEditor">
+            <!-- Tests đứng đầu: test case là việc chính của tool, cấu hình request xếp sau -->
             <div class="tabs rq-tabs" role="tablist" aria-label="Cấu hình request">
-              <button class="tab" role="tab" id="rt-tab-params" aria-controls="rt-params" data-rt="params">Params <span class="n" id="cntParams"></span></button>
-              <button class="tab" role="tab" id="rt-tab-auth" aria-controls="rt-auth" data-rt="auth">Authorization <span class="n" id="cntAuth"></span></button>
-              <button class="tab" role="tab" id="rt-tab-headers" aria-controls="rt-headers" data-rt="headers">Headers <span class="n" id="cntHeaders"></span></button>
-              <button class="tab" role="tab" id="rt-tab-body" aria-controls="rt-body" data-rt="body">Body <span class="n" id="cntBody"></span></button>
-              <button class="tab" role="tab" id="rt-tab-scripts" aria-controls="rt-scripts" data-rt="scripts">Scripts <span class="n" id="cntScripts"></span></button>
               <button class="tab" role="tab" id="rt-tab-tests" aria-controls="rt-tests" data-rt="tests">Tests <span class="n" id="cntTests"></span></button>
+              <button class="tab" role="tab" id="rt-tab-body" aria-controls="rt-body" data-rt="body">Body <span class="n" id="cntBody"></span></button>
+              <button class="tab" role="tab" id="rt-tab-headers" aria-controls="rt-headers" data-rt="headers">Headers <span class="n" id="cntHeaders"></span></button>
+              <button class="tab" role="tab" id="rt-tab-params" aria-controls="rt-params" data-rt="params">Params <span class="n" id="cntParams"></span></button>
+              <button class="tab" role="tab" id="rt-tab-auth" aria-controls="rt-auth" data-rt="auth">Auth <span class="n" id="cntAuth"></span></button>
+              <button class="tab" role="tab" id="rt-tab-scripts" aria-controls="rt-scripts" data-rt="scripts">Scripts <span class="n" id="cntScripts"></span></button>
             </div>
             <div class="rt-panel" role="tabpanel" id="rt-params" aria-labelledby="rt-tab-params">
               <div class="kv" id="rqQuery"></div>
@@ -154,7 +162,7 @@
             </div>
             <div class="rt-panel hidden" role="tabpanel" id="rt-tests" aria-labelledby="rt-tab-tests"><div id="rqTests"></div></div>
           </div>
-          <div class="split-handle" id="splitHandle" role="separator" aria-orientation="horizontal" aria-controls="rqResponse" aria-label="Kéo để đổi chiều cao vùng Response" tabindex="0"></div>
+          <div class="split-handle" id="splitHandle" role="separator" aria-orientation="vertical" aria-controls="rqResponse" aria-label="Kéo để đổi độ rộng vùng Response" tabindex="0"></div>
           <div class="rq-response" id="rqResponse" aria-label="Response"></div>
         </div>
       </section>

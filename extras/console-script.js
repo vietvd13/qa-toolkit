@@ -100,7 +100,7 @@
   const N = rows.length;
   const pct = n => (N ? (100 * n / N).toFixed(1) : '0.0') + '%';
   const TOP = 20; // tham số có quá nhiều giá trị (vd click_id) → chỉ in TOP giá trị nhiều nhất
-  const H = 'font-weight:bold;font-size:13px';
+  const H = 'font-weight:bold;font-size:13px;color:#FF4F1A;font-family:"JetBrains Mono",ui-monospace,monospace'; // màu tín hiệu của hệ thiết kế
   const demTheo = key => {
     const m = new Map();
     rows.forEach(r => { const k = key(r); m.set(k, (m.get(k) || 0) + 1); });

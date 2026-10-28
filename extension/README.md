@@ -14,7 +14,7 @@ Kho công cụ hỗ trợ test, gói trong một extension. Không cần cài No
 3. Bấm **Load unpacked** (Tải tiện ích đã giải nén) rồi chọn thư mục `extension` này.
 4. Ghim icon **Bộ công cụ** lên thanh công cụ cho tiện.
 
-Khi có bản mới, đầu trang hiện nút **Bản mới vX.Y.Z** (tự kiểm tra GitHub Releases, tối đa 6 giờ/lần; muốn kiểm tra ngay thì bấm **Kiểm tra cập nhật** ở cuối thanh bên). Bấm vào để xem thay đổi, tải file .zip, giải nén đè vào thư mục cũ rồi bấm **Tải lại extension**.
+Khi có bản mới, cuối thanh bên hiện thẻ **Bản mới vX.Y.Z** (tự kiểm tra GitHub Releases, tối đa 6 giờ/lần; muốn kiểm tra ngay thì bấm nút **Kiểm tra cập nhật** ⟳ ở hàng icon cuối thanh bên). Bấm vào để xem thay đổi, tải file .zip, giải nén đè vào thư mục cũ rồi bấm **Tải lại extension**.
 
 ## Sử dụng
 
@@ -24,18 +24,13 @@ Khi có bản mới, đầu trang hiện nút **Bản mới vX.Y.Z** (tự kiể
 
 ### Giao diện
 
-Nút ở góc phải đầu trang: biểu tượng mặt trời/mặt trăng để chuyển nhanh *Theo hệ thống → Sáng → Tối*, biểu tượng bảng màu để mở **Giao diện**:
+Hai chế độ: **Sáng** và **Tối**. Lần đầu mở, bộ công cụ theo giao diện của máy; bấm nút mặt trăng / mặt trời ở cuối thanh bên trái để đổi. Đổi là áp dụng ngay cho mọi công cụ, lưu trên máy.
 
-- **Chế độ màu:** Theo hệ thống (tự đổi khi máy chuyển sáng/tối), Sáng, hoặc Tối.
-- **Màu chủ đạo** (nút chính, mục đang chọn, thanh tiến độ) và **màu phụ** (nhãn, biểu đồ tỉ lệ): chọn màu có sẵn, bấm ô cầu vồng để chọn tự do, hoặc gõ mã màu `#RRGGBB`.
-- Tool tự tính các sắc độ còn lại và tự chỉnh đậm hơn nếu màu quá nhạt khiến chữ khó đọc. Bảng **Độ dễ đọc** cho biết từng cặp màu có đạt chuẩn 4.5:1 không.
-- Đổi là áp dụng ngay cho mọi công cụ. Cài đặt lưu trên máy, không ảnh hưởng người khác.
-
-Hệ thiết kế mặc định: *Dụng cụ đo* (`shared/theme.css`). Nền xám trung tính, một màu nhấn (xanh cobalt `#3D63DD`, chữ và nút dùng `#2A50C8` để đạt 4.5:1), font IBM Plex Sans / Plex Mono. Màu chỉ xuất hiện khi có nghĩa: màu nhấn cho hành động chính và mục đang chọn, xanh lá / vàng / đỏ cho trạng thái. Muốn màu hồng cũ: **Giao diện → Màu chủ đạo → Hồng hoa**.
+Màu dùng cố định theo hệ thiết kế *Dao động ký* (`shared/theme.css`), không có tuỳ chọn đổi màu. Giao diện như một máy đo: vỏ xám, mặt hiển thị than chì cho thanh điều hướng và vùng đọc kết quả, một màu tín hiệu (cam `#FF4F1A`, chữ dùng `#C23B0C` để đạt 4.5:1). Nút chính màu mực; màu tín hiệu chỉ cho mục đang chọn, biến và vạch đo; xanh lá / vàng / đỏ cho trạng thái. Font Be Vietnam Pro, JetBrains Mono cho mã và số liệu, Chakra Petch cho nhãn in hoa.
 
 ### Kiểm thử API
 
-Thanh trên cùng có ba khu vực **Requests · Environments · Runner**, trạng thái lưu (*Đã lưu*) và ô chọn environment. Thanh bên trái là cây **Collection › Folder › Request** (tìm bằng Ctrl + K, chuột phải hoặc nút ⋯ để đổi tên / nhân bản / di chuyển / tắt khi chạy / xoá).
+Panel bên trái có ba khu vực **Requests · Env · Runner**, ô chọn environment, ô tìm request (Ctrl + K) và cây **Collection › Folder › Request** (chuột phải hoặc nút ⋯ để đổi tên / nhân bản / di chuyển / tắt khi chạy / xoá). Cuối panel là trạng thái lưu, hướng dẫn (**?**) và menu workspace (⋮). Bấm nút thu gọn để panel chỉ còn dải icon.
 
 1. **Request đầu tiên:** *Dán cURL / Fetch* (Postman: `</>` Code → cURL; Chrome: F12 → Network → Copy as cURL / Copy as fetch). Tool đọc chữ, không chạy lệnh, rồi cho **xem lại** các thay đổi đề xuất trước khi áp dụng: tắt header trình duyệt, chuyển token / cookie thành biến bí mật `{{TOKEN}}`, tách `{{baseUrl}}`, cho phép host. Bấm **Send** (Ctrl + Enter) để xem response ngay, chưa cần collection hay environment.
 2. **Lưu và tổ chức:** *Lưu vào collection*, tạo folder theo chức năng. Mọi thay đổi tự lưu trên máy.

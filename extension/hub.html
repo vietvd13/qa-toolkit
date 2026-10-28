@@ -12,54 +12,38 @@
 <body>
 <a class="skip" href="#main">Bỏ qua tới nội dung chính</a>
 <div class="hub" id="hub">
-  <!-- Đầu trang: logo · tìm công cụ · giao diện -->
-  <header class="top">
-    <div class="top-brand">
-      <button class="icon-btn" type="button" id="btnCollapse" aria-label="Thu gọn thanh bên" aria-controls="side" aria-expanded="true">
-        <span class="ms" aria-hidden="true">menu</span>
-      </button>
-      <a class="brand-link" href="#/">
+  <!-- Rail: bảng tên máy · tìm nhanh · các kênh công cụ · hàng cài đặt -->
+  <aside class="rail" id="side" aria-label="Điều hướng">
+    <div class="rail-top">
+      <a class="brand-link" href="#/" title="Bộ công cụ">
         <img class="brand-logo" src="icons/icon128.png" alt="">
-        <span class="brand-name">Bộ công cụ</span>
+        <span class="brand-txt nav-label"><span class="brand-name">Bộ công cụ</span><span class="ver" id="ver"></span></span>
       </a>
     </div>
-
-    <div class="top-search" role="search">
-      <span class="ms" aria-hidden="true">search</span>
-      <input type="search" id="q" placeholder="Tìm công cụ…" aria-label="Tìm công cụ" autocomplete="off" spellcheck="false">
-      <kbd class="kbd" aria-hidden="true">Ctrl K</kbd>
-    </div>
-
-    <div class="top-actions">
-      <button class="btn btn-sm upd-pill hidden" type="button" id="btnUpdate" aria-haspopup="dialog">
-        <span class="ms sm" aria-hidden="true">upgrade</span><span class="upd-pill-t" id="updPillText">Bản mới</span>
-      </button>
-      <button class="icon-btn" type="button" id="btnMode" aria-label="Chế độ màu"><span class="ms" aria-hidden="true">brightness_auto</span></button>
-      <button class="icon-btn" type="button" id="btnTheme" aria-haspopup="dialog" aria-label="Giao diện"><span class="ms" aria-hidden="true">palette</span></button>
-    </div>
-  </header>
-
-  <!-- Thanh bên -->
-  <aside class="side" id="side" aria-label="Điều hướng">
+    <button class="rail-find" type="button" id="btnFind" title="Tìm công cụ (Ctrl K)">
+      <span class="ms" aria-hidden="true">search</span><span class="nav-label">Tìm công cụ</span><kbd class="rail-kbd nav-label" aria-hidden="true">Ctrl K</kbd>
+    </button>
     <nav class="side-nav">
       <a class="nav-item" href="#/" data-id="" title="Tất cả công cụ">
-        <span class="ms" aria-hidden="true">apps</span><span class="nav-label">Tất cả công cụ</span>
+        <span class="ms" aria-hidden="true">dashboard</span><span class="nav-label">Tất cả công cụ</span>
       </a>
-      <button class="nav-group" type="button" id="btnGroup" aria-expanded="true" aria-controls="navTools">
-        <span class="nav-label">Công cụ</span><span class="nav-count" id="navCount"></span>
-        <span class="ms sm chev" aria-hidden="true">expand_more</span>
-      </button>
+      <div class="nav-sec nav-label" aria-hidden="true"><span>Kênh</span><span class="nav-count" id="navCount"></span></div>
       <div id="navTools" class="nav-list"></div>
     </nav>
-    <div class="side-links">
-      <a class="nav-item" href="https://github.com/vietvd13/qa-toolkit" target="_blank" rel="noopener" title="Mã nguồn trên GitHub">
-        <span class="ms" aria-hidden="true">code</span><span class="nav-label">Mã nguồn trên GitHub</span>
-        <span class="ms sm ext nav-label" aria-hidden="true">open_in_new</span>
-      </a>
-    </div>
-    <div class="side-foot">
-      <span class="ver nav-label" id="ver"></span>
-      <button class="link-btn" type="button" id="btnCheckUpdate" aria-haspopup="dialog">Kiểm tra cập nhật</button>
+    <div class="rail-foot">
+      <button class="upd-card hidden" type="button" id="btnUpdate" aria-haspopup="dialog">
+        <span class="ms" aria-hidden="true">upgrade</span>
+        <span class="nav-label"><b id="updPillText">Bản mới</b><small>Xem cách cập nhật</small></span>
+      </button>
+      <div class="rail-tools">
+        <button class="icon-btn" type="button" id="btnMode" aria-label="Chế độ màu"><span class="ms" aria-hidden="true">dark_mode</span></button>
+        <button class="icon-btn" type="button" id="btnCheckUpdate" aria-haspopup="dialog" aria-label="Kiểm tra cập nhật" title="Kiểm tra cập nhật"><span class="ms" aria-hidden="true">sync</span></button>
+        <a class="icon-btn" href="https://github.com/vietvd13/qa-toolkit" target="_blank" rel="noopener" aria-label="Mã nguồn trên GitHub (mở tab mới)" title="Mã nguồn trên GitHub"><span class="ms" aria-hidden="true">code</span></a>
+        <span class="spacer"></span>
+        <button class="icon-btn rail-collapse" type="button" id="btnCollapse" aria-label="Thu gọn thanh bên" aria-controls="side" aria-expanded="true">
+          <span class="ms" aria-hidden="true">left_panel_close</span>
+        </button>
+      </div>
     </div>
   </aside>
 
@@ -67,8 +51,16 @@
   <main class="main" id="main" tabindex="-1">
     <section class="home" id="home">
       <div class="home-in">
-        <h1>Tất cả công cụ</h1>
-        <p class="lead" id="lead"></p>
+        <header class="home-head">
+          <p class="eyebrow" id="homeEyebrow">Bộ công cụ QA</p>
+          <h1>Tất cả công cụ</h1>
+          <p class="lead" id="lead"></p>
+          <div class="top-search" role="search">
+            <span class="ms" aria-hidden="true">search</span>
+            <input type="search" id="q" placeholder="Tìm công cụ theo tên, việc cần làm…" aria-label="Tìm công cụ" autocomplete="off" spellcheck="false">
+            <kbd class="kbd" aria-hidden="true">Ctrl K</kbd>
+          </div>
+        </header>
         <div class="cats" id="cats" role="toolbar" aria-label="Lọc theo nhóm"></div>
         <div class="tool-grid" id="toolGrid"></div>
         <div class="empty hidden" id="noTools">
@@ -81,75 +73,6 @@
     <div class="frames" id="frames"></div>
   </main>
 </div>
-<!-- Bảng cài đặt giao diện -->
-<div class="modal-bg hidden" id="themeDlg">
-  <div class="modal theme-modal" role="dialog" aria-modal="true" aria-labelledby="themeTitle">
-    <div class="modal-h">
-      <div>
-        <h3 id="themeTitle">Giao diện</h3>
-        <div class="muted">Áp dụng ngay cho mọi công cụ. Chỉ lưu trên máy này.</div>
-      </div>
-      <button class="x" type="button" data-close aria-label="Đóng"><span class="ms" aria-hidden="true">close</span></button>
-    </div>
-    <div class="modal-b">
-      <section class="tset">
-        <h4>Chế độ màu</h4>
-        <div class="seg" id="modeSeg" role="radiogroup" aria-label="Chế độ màu">
-          <button type="button" role="radio" data-mode="system"><span class="ms sm" aria-hidden="true">brightness_auto</span>Theo hệ thống</button>
-          <button type="button" role="radio" data-mode="light"><span class="ms sm" aria-hidden="true">light_mode</span>Sáng</button>
-          <button type="button" role="radio" data-mode="dark"><span class="ms sm" aria-hidden="true">dark_mode</span>Tối</button>
-        </div>
-      </section>
-
-      <section class="tset">
-        <h4>Màu chủ đạo <span class="hint">nút chính, mục đang chọn, thanh tiến độ</span></h4>
-        <div class="swatches" id="swPrimary" role="radiogroup" aria-label="Màu chủ đạo"></div>
-      </section>
-
-      <section class="tset">
-        <h4>Màu phụ <span class="hint">nhãn, biểu đồ tỉ lệ, điểm nhấn nhẹ</span></h4>
-        <div class="swatches" id="swSecondary" role="radiogroup" aria-label="Màu phụ"></div>
-      </section>
-
-      <section class="tset">
-        <h4>Xem trước</h4>
-        <div class="preview">
-          <div class="pv-row">
-            <button class="btn btn-primary" type="button" style="padding:9px 18px"><span class="ms fill sm" aria-hidden="true">play_arrow</span>Nút chính</button>
-            <button class="btn" type="button">Nút phụ</button>
-            <button class="btn btn-ghost" type="button">Nút chữ</button>
-            <button class="btn btn-danger btn-sm" type="button"><span class="ms sm fill" aria-hidden="true">stop</span>Dừng</button>
-          </div>
-          <div class="pv-row">
-            <span class="chip on">Đang lọc</span><span class="chip">Bộ lọc</span>
-            <span class="badge badge-primary">chủ đạo</span><span class="badge badge-secondary">màu phụ</span>
-            <span class="badge badge-success">✓ đạt</span><span class="badge badge-warning">! thiếu</span><span class="badge badge-error">✗ lỗi</span><span class="badge badge-info">i thông tin</span>
-          </div>
-          <div class="pv-row">
-            <span class="pv-nav"><span class="ms sm" aria-hidden="true">alt_route</span>Mục đang chọn</span>
-            <span class="pv-bar"><span></span></span>
-            <span class="pv-bar sec"><span></span></span>
-          </div>
-        </div>
-      </section>
-
-      <section class="tset">
-        <h4>Độ dễ đọc <span class="hint">chuẩn tối thiểu 4.5:1 cho chữ</span></h4>
-        <table class="contrast">
-          <thead><tr><th>Cặp màu</th><th>Sáng</th><th>Tối</th></tr></thead>
-          <tbody id="contrastBody"></tbody>
-        </table>
-        <p class="adj-note" id="adjNote"></p>
-      </section>
-
-      <div class="theme-actions">
-        <button class="btn btn-ghost" type="button" id="btnThemeReset"><span class="ms sm" aria-hidden="true">restart_alt</span>Khôi phục mặc định</button>
-        <button class="btn btn-primary" type="button" data-close style="padding:9px 22px">Xong</button>
-      </div>
-    </div>
-  </div>
-</div>
-
 <!-- Bảng cập nhật phiên bản -->
 <div class="modal-bg hidden" id="updDlg">
   <div class="modal upd-modal" role="dialog" aria-modal="true" aria-labelledby="updTitle">

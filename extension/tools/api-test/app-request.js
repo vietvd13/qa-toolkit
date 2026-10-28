@@ -4,7 +4,7 @@
   const { $, $$, esc, toast, debounce } = Ui;
   const App = window.App;
   const S = App.state;
-  const RT = ['params', 'auth', 'headers', 'body', 'scripts', 'tests'];
+  const RT = ['tests', 'body', 'headers', 'params', 'auth', 'scripts'];
   const sends = App.sends = new Map(); // requestId → { running, ctrl, result, changed, at, envName }
   const rs = { tab: 'body', pretty: true, q: '' }; // trạng thái khung response
   let scriptTab = 'pre';
@@ -15,8 +15,8 @@
   // ================= KHỞI TẠO =================
   App.initRequest = () => {
     $('#apiRef').innerHTML = API_REF.map(([a, b]) => `<li><code>${esc(a)}</code> ${esc(b)}</li>`).join('');
-    const h = App.W.meta.ui.splitH;
-    if (h) document.documentElement.style.setProperty('--resp-h', h + 'px');
+    const w = App.W.meta.ui.splitW;
+    if (w) document.documentElement.style.setProperty('--resp-w', w + 'px');
     App.on('vars', () => { if (node() && S.nav === 'requests') { renderUrlNote(); renderCounts(); if (!$('#rqAuth').contains(document.activeElement)) authEd?.draw(); } });
     App.on('env', () => { if (node() && S.nav === 'requests') renderResponse(); });
   };
@@ -55,14 +55,14 @@
     renderBodyMode();
     renderScriptTab();
     App.renderTests?.();
-    setTab(App.W.meta.ui.rt || 'params', { silent: true });
+    setTab(App.W.meta.ui.rt || 'tests', { silent: true });
     renderCounts();
     renderUrlNote();
     renderResponse();
   };
 
   function setTab(t, { silent = false } = {}) {
-    if (!RT.includes(t)) t = 'params';
+    if (!RT.includes(t)) t = 'tests';
     for (const x of RT) {
       $('#rt-' + x).classList.toggle('hidden', x !== t);
       const tab = $('#rt-tab-' + x);
@@ -79,7 +79,7 @@
     const d = { ArrowRight: 1, ArrowLeft: -1 }[e.key];
     if (!d) return;
     e.preventDefault();
-    setTab(RT[(RT.indexOf(App.W.meta.ui.rt || 'params') + d + RT.length) % RT.length]);
+    setTab(RT[(RT.indexOf(App.W.meta.ui.rt || 'tests') + d + RT.length) % RT.length]);
   });
   $('#rqCrumbs').addEventListener('click', e => { const g = e.target.closest('[data-go]'); if (g) App.select(g.dataset.go); });
 
@@ -506,14 +506,14 @@ pm.test('Có data.id', () => pm.expect(body.data).to.have.property('id'));` },
     btn.querySelector('.lbl').textContent = s?.running ? 'Huỷ' : 'Send';
     btn.title = s?.running ? 'Huỷ request đang gửi' : 'Gửi request (Ctrl + Enter)';
     if (s?.running) {
-      box.innerHTML = `<div class="resp-empty"><span class="ms lg spin" aria-hidden="true">progress_activity</span><p>Đang gửi…</p></div>`;
+      box.innerHTML = `<div class="scope-idle"><span class="eyebrow">Response</span><b class="scope-big"><span class="ms spin" aria-hidden="true">progress_activity</span>Đang gửi…</b></div>`;
       return;
     }
     const r = s?.result;
     if (!r) {
-      box.innerHTML = `<div class="resp-line"><span class="ms sm" aria-hidden="true">send</span>
-        <span>Bấm <b>Send</b> (<kbd>Ctrl</kbd> + <kbd>Enter</kbd>) để xem response ở đây. Sau đó bấm tên field để lưu thành biến.</span>
-        <button type="button" class="link-btn" data-help="request">Hướng dẫn</button></div>`;
+      box.innerHTML = `<div class="scope-idle"><span class="eyebrow">Response</span><b class="scope-big">Chưa gửi</b>
+        <p>Bấm <b>Send</b> hoặc <kbd>Ctrl</kbd> + <kbd>Enter</kbd>. Response hiện ở đây; bấm tên field trong JSON để lưu thành biến.</p>
+        <button type="button" class="link-btn" data-help="request">Hướng dẫn gửi request</button></div>`;
       return;
     }
     const res = r.response;
@@ -544,14 +544,18 @@ pm.test('Có data.id', () => pm.expect(body.data).to.have.property('id'));` },
     const consoleN = (r.scriptLogs?.length || 0) + (r.warnings?.length || 0);
     box.innerHTML = `
       <div class="resp-head">
-        <span class="badge http-badge http-${String(res.status)[0]}">${res.status} ${esc(res.statusText || '')}</span>
-        <span class="muted small" title="Thời gian phản hồi">${Ui.fmtDur(r.durationMs)}</span><span class="muted small" title="Kích thước">${Ui.fmtBytes(res.size)}</span>
-        ${res.redirected ? `<span class="badge badge-info" title="${esc(res.url)}"><span class="ms sm" aria-hidden="true">alt_route</span> redirect</span>` : ''}
-        ${res.truncated ? '<span class="badge badge-warning">bị cắt ở 10 MB</span>' : ''}
-        ${tests.length ? `<span class="badge ${failed ? 'badge-error' : 'badge-success'}">${failed ? `${failed}/${tests.length} test sai` : `${tests.length} test đạt`}</span>` : ''}
-        ${Object.keys(r.extracted || {}).length ? `<span class="badge badge-secondary" title="Đã lưu vào Runtime"><span class="ms sm" aria-hidden="true">bolt</span> ${Object.keys(r.extracted).map(esc).join(', ')}</span>` : ''}
+        <div class="rh-status http-${String(res.status)[0]}"><b>${res.status}</b><small>${esc(res.statusText || '')}</small></div>
         <span class="spacer"></span>
-        <span class="muted small">${esc(s.envName || '')} · ${esc(Ui.fmtTime(s.at))}</span>
+        <div class="rh-read"><span>Thời gian</span><b>${Ui.fmtDur(r.durationMs)}</b></div>
+        <div class="rh-read"><span>Kích thước</span><b>${Ui.fmtBytes(res.size)}</b></div>
+      </div>
+      <div class="rh-meta">
+        ${res.redirected ? `<span class="rh-tag" title="${esc(res.url)}"><span class="ms sm" aria-hidden="true">alt_route</span>redirect</span>` : ''}
+        ${res.truncated ? '<span class="rh-tag warn">bị cắt ở 10 MB</span>' : ''}
+        ${tests.length ? `<span class="rh-tag ${failed ? 'bad' : 'ok'}">${failed ? `${failed}/${tests.length} pm.test sai` : `${tests.length} pm.test đạt`}</span>` : ''}
+        ${Object.keys(r.extracted || {}).length ? `<span class="rh-tag sig" title="Đã lưu vào Runtime"><span class="ms sm" aria-hidden="true">bolt</span>${Object.keys(r.extracted).map(k => `{{${esc(k)}}}`).join(' ')}</span>` : ''}
+        <span class="spacer"></span>
+        <span>${esc(s.envName || '')} · ${esc(Ui.fmtTime(s.at))}</span>
       </div>
       ${App.nextStepHtml?.(n, r) || ''}
       <div class="tabs resp-tabs" role="tablist" aria-label="Response">
@@ -648,30 +652,30 @@ pm.test('Có data.id', () => pm.expect(body.data).to.have.property('id'));` },
     ]);
   }
 
-  // ---------- Kéo đổi chiều cao vùng response ----------
+  // ---------- Kéo đổi độ rộng cột response (bên phải) ----------
   (() => {
     const h = $('#splitHandle');
     const set = px => {
       const split = $('#rqSplit').getBoundingClientRect();
-      px = Math.max(120, Math.min(split.height - 140, Math.round(px)));
-      document.documentElement.style.setProperty('--resp-h', px + 'px');
-      App.W.meta.ui.splitH = px;
+      px = Math.max(320, Math.min(split.width - 380, Math.round(px)));
+      document.documentElement.style.setProperty('--resp-w', px + 'px');
+      App.W.meta.ui.splitW = px;
       App.saveUi();
     };
     h.addEventListener('pointerdown', e => {
       e.preventDefault();
       h.setPointerCapture(e.pointerId);
-      const bottom = $('#rqSplit').getBoundingClientRect().bottom;
-      const move = ev => set(bottom - ev.clientY);
+      const right = $('#rqSplit').getBoundingClientRect().right;
+      const move = ev => set(right - ev.clientX);
       const up = () => { h.removeEventListener('pointermove', move); h.removeEventListener('pointerup', up); };
       h.addEventListener('pointermove', move);
       h.addEventListener('pointerup', up);
     });
     h.addEventListener('keydown', e => {
-      const d = { ArrowUp: 24, ArrowDown: -24 }[e.key];
+      const d = { ArrowLeft: 24, ArrowRight: -24 }[e.key];
       if (!d) return;
       e.preventDefault();
-      set($('#rqResponse').getBoundingClientRect().height + d);
+      set($('#rqResponse').getBoundingClientRect().width + d);
     });
   })();
 
