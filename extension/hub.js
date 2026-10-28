@@ -132,14 +132,24 @@ addEventListener('message', e => {
 addEventListener('beforeunload', e => { if (busy.size) { e.preventDefault(); e.returnValue = ''; } });
 
 // ---------- Thanh bên: thu gọn + nhóm "Công cụ" ----------
-const setCollapsed = on => {
+// Tool cần nhiều chỗ (registry: wide: true) → thanh bên tự thu thành dải icon khi mở tool đó, không ghi đè lựa chọn đã lưu.
+// Bấm mở rộng khi đang ở tool đó thì giữ mở cho tới khi tải lại trang.
+let wideOpened = false;
+const isWide = () => !!tools.find(t => t.id === currentId())?.wide;
+const paintCollapsed = () => {
+  const on = isWide() ? !wideOpened : !!store.get('hub-collapsed');
   $('#hub').classList.toggle('collapsed', on);
   $('#btnCollapse').setAttribute('aria-expanded', !on);
   $('#btnCollapse').setAttribute('aria-label', on ? 'Mở rộng thanh bên' : 'Thu gọn thanh bên');
-  store.set('hub-collapsed', on ? '1' : '');
+};
+const setCollapsed = on => {
+  if (isWide()) wideOpened = !on; // ở tool rộng: chỉ nhớ trong phiên
+  else store.set('hub-collapsed', on ? '1' : '');
+  paintCollapsed();
 };
 $('#btnCollapse').addEventListener('click', () => setCollapsed(!$('#hub').classList.contains('collapsed')));
-if (store.get('hub-collapsed')) setCollapsed(true);
+addEventListener('hashchange', paintCollapsed);
+paintCollapsed();
 
 const setGroupOpen = open => {
   $('#btnGroup').setAttribute('aria-expanded', open);
@@ -177,7 +187,7 @@ function swatchesHtml(kind) {
   const presets = Theme.PRESETS[kind];
   const inPreset = presets.some(p => (p.hex || null) === cur);
   const name = cur ? (presets.find(p => p.hex === cur)?.name || 'Màu tự chọn') : presets[0].name;
-  const tick = hex => (Theme.contrast('#FFFFFF', hex) >= 3 ? '#FFFFFF' : '#29242D');
+  const tick = hex => (Theme.contrast('#FFFFFF', hex) >= 3 ? '#FFFFFF' : '#16191D');
   return presets.map(p => {
     const c = p.hex || p.swatch;
     const on = (p.hex || null) === cur;

@@ -5,21 +5,22 @@
 (() => {
   const KEY = 'bcc-theme';
   const DEFAULTS = { mode: 'system', primary: null, secondary: null };
-  const LIGHT = { bg: '#FFFFFF', surface: '#F8F6F8' };
-  const DARK = { bg: '#171419', elevated: '#2B2630' };
+  const LIGHT = { bg: '#FFFFFF', surface: '#F6F7F8' };
+  const DARK = { bg: '#121416', elevated: '#1E2226' };
 
   const PRESETS = {
     primary: [
-      { name: 'Hồng hoa (mặc định)', hex: null, swatch: '#C6537B' },
+      { name: 'Xanh cobalt (mặc định)', hex: null, swatch: '#3D63DD' },
+      { name: 'Hồng hoa', hex: '#C6537B' },
       { name: 'Đỏ mận', hex: '#A63D5A' },
       { name: 'Cam đào', hex: '#C8643B' },
       { name: 'Tím oải hương', hex: '#8E5BB5' },
-      { name: 'Xanh biển', hex: '#3559A8' },
       { name: 'Xanh ngọc', hex: '#0A7C86' },
       { name: 'Xanh lá', hex: '#2F7D57' },
     ],
     secondary: [
-      { name: 'Tím mauve (mặc định)', hex: null, swatch: '#79638F' },
+      { name: 'Xám chì (mặc định)', hex: null, swatch: '#5B6878' },
+      { name: 'Tím mauve', hex: '#79638F' },
       { name: 'Xám ấm', hex: '#716975' },
       { name: 'Xanh xám', hex: '#5B7083' },
       { name: 'Nâu be', hex: '#8A6F5A' },
@@ -94,10 +95,10 @@
     return { light: L, dark: D };
   }
 
-  // Bộ màu mặc định (đúng file thiết kế) để báo cáo tương phản
+  // Bộ màu mặc định (đúng shared/theme.css) để báo cáo tương phản
   const SPEC = {
-    primary: { light: { primary: '#C6537B', subtle: '#FCE7EF', strong: '#AD4168', onPrimary: '#FFFFFF' }, dark: { primary: '#F09AB8', subtle: '#482635', strong: '#F09AB8', onPrimary: '#30121F' } },
-    secondary: { light: { secondary: '#79638F', subtle: '#F0EAF6', strong: '#604B75' }, dark: { secondary: '#C1ACD4', subtle: '#30243A', strong: '#C1ACD4' } },
+    primary: { light: { primary: '#3D63DD', subtle: '#ECF0FC', strong: '#2A50C8', onPrimary: '#FFFFFF' }, dark: { primary: '#8EA8F5', subtle: '#1F2A44', strong: '#8EA8F5', onPrimary: '#0D1530' } },
+    secondary: { light: { secondary: '#5B6878', subtle: '#EEF1F4', strong: '#485463' }, dark: { secondary: '#A9B4C2', subtle: '#232A31', strong: '#A9B4C2' } },
   };
 
   // ---------- Đọc / ghi ----------
@@ -116,15 +117,15 @@
     if (p) {
       const { light: L, dark: D } = deriveBrand(p, 'primary');
       lines.push(
-        `--primary: ${ld(L.primary, D.primary)};`, `--primary-hover: ${ld(L.hover, D.hover)};`, `--primary-active: ${ld(L.active, D.active)};`,
-        `--primary-subtle: ${ld(L.subtle, D.subtle)};`, `--surface-selected: ${ld(L.subtle, D.subtle)};`,
-        `--primary-strong: ${ld(L.strong, D.strong)};`, `--primary-strong-hover: ${ld(L.strongHover, D.strongHover)};`, `--primary-strong-active: ${ld(L.strongActive, D.strongActive)};`,
-        `--text-on-primary: ${ld(L.onPrimary, D.onPrimary)};`, `--focus-ring: ${ld(L.primary, D.primary)};`,
+        `--accent: ${ld(L.primary, D.primary)};`, `--accent-hover: ${ld(L.hover, D.hover)};`, `--accent-press: ${ld(L.active, D.active)};`,
+        `--accent-bg: ${ld(L.subtle, D.subtle)};`,
+        `--accent-fg: ${ld(L.strong, D.strong)};`, `--accent-fg-hover: ${ld(L.strongHover, D.strongHover)};`, `--accent-fg-press: ${ld(L.strongActive, D.strongActive)};`,
+        `--on-accent: ${ld(L.onPrimary, D.onPrimary)};`, `--focus: ${ld(L.primary, D.primary)};`,
       );
     }
     if (s) {
       const { light: L, dark: D } = deriveBrand(s, 'secondary');
-      lines.push(`--secondary: ${ld(L.secondary, D.secondary)};`, `--secondary-subtle: ${ld(L.subtle, D.subtle)};`, `--secondary-strong: ${ld(L.strong, D.strong)};`);
+      lines.push(`--accent2: ${ld(L.secondary, D.secondary)};`, `--accent2-bg: ${ld(L.subtle, D.subtle)};`, `--accent2-fg: ${ld(L.strong, D.strong)};`);
     }
     return lines.length ? `:root {\n  ${lines.join('\n  ')}\n}` : '';
   }
@@ -161,7 +162,7 @@
     return [
       row('Chữ trên nút chính', contrast(P.light.onPrimary, P.light.strong), contrast(P.dark.onPrimary, P.dark.strong)),
       row('Chữ màu chủ đạo trên nền', contrast(P.light.strong, LIGHT.bg), contrast(P.dark.strong, DARK.elevated)),
-      row('Mục đang chọn (thanh bên, bộ lọc)', contrast(P.light.strong, P.light.subtle), contrast(P.dark.strong, P.dark.subtle)),
+      row('Chữ màu chủ đạo trên nền nhạt',contrast(P.light.strong, P.light.subtle), contrast(P.dark.strong, P.dark.subtle)),
       row('Chữ màu phụ trên nền nhạt', contrast(S.light.strong, S.light.subtle), contrast(S.dark.strong, S.dark.subtle)),
     ];
   }

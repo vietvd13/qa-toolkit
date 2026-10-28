@@ -3,6 +3,7 @@
 //   category  — nhóm hiển thị ở bộ lọc trang chủ
 //   platforms — 'extension' (chạy trong Chrome extension) và/hoặc 'web' (bản npm run ui).
 //               Tool dùng API chrome.* mà không có engine cho web thì chỉ ghi 'extension'.
+//   wide      — tool cần nhiều chỗ: thanh bên của bộ công cụ tự thu thành dải icon khi mở tool này.
 window.TOOLS = [
   {
     id: 'redirect',
@@ -22,6 +23,7 @@ window.TOOLS = [
     desc: 'Collection, Environment và Send như Postman; test case không cần code (form, Excel, AI); chạy cả collection theo thứ tự phụ thuộc, lưu Preset, xuất Excel / ZIP evidence.',
     tags: ['API', 'cURL', 'Postman', 'Excel', 'Tự động'],
     platforms: ['extension', 'web'],
+    wide: true,
     path: 'tools/api-test/index.html',
   },
 ];

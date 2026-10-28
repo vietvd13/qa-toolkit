@@ -69,7 +69,7 @@
     const lock = running ? ' disabled' : '';
     box.innerHTML = `
       <div class="view-head pad">
-        <div><h2>Runner ${App.helpBtn?.('runner', 'Hướng dẫn Runner & Preset') || ''}</h2><p class="muted small">Chạy nhiều request / cả collection với test case của từng request. Request dùng biến do request khác sinh ra (vd <code>{{TOKEN}}</code>) tự chạy sau request đó.</p></div>
+        <div><h2>Runner ${App.helpBtn?.('runner', 'Hướng dẫn Runner & Preset') || ''}</h2></div>
       </div>
       ${App.tip?.('runner', '<b>3 bước:</b> ① chọn <b>Chạy gì</b> (collection, tích folder / request) → ② xem <b>Kiểm tra trước khi chạy</b>, sửa mục đỏ → ③ <b>Run</b>. Chạy ổn rồi thì <b>Lưu cấu hình thành preset</b> để lần sau chỉ cần bấm Run.', 'runner') || ''}
       <div class="run-wrap">
@@ -83,7 +83,7 @@
               <button type="button" class="btn btn-sm btn-primary" data-preset-run="${esc(p.id)}"${lock}${col ? '' : ' disabled'} title="Chọn preset và Run"><span class="ms sm fill" aria-hidden="true">play_arrow</span><span class="lbl">Run</span></button>
               <button type="button" class="icon-btn" data-preset-menu="${esc(p.id)}" aria-haspopup="menu" aria-label="Thao tác với preset ${esc(p.name)}"${lock}><span class="ms sm" aria-hidden="true">more_vert</span></button>
             </div>`;
-          }).join('')}</div>` : '<p class="muted small">Chưa có preset. Cấu hình bên dưới rồi bấm “Lưu cấu hình thành preset” (vd Smoke Test, Regression) để lần sau chỉ cần <b>chọn preset → Run</b>.</p>'}
+          }).join('')}</div>` : '<p class="muted small">Chưa có preset. Lưu cấu hình chạy (vd Smoke, Regression) để lần sau chỉ cần chọn rồi Run.</p>'}
           ${curPreset && presetDirty(curPreset) ? `<div class="d-msg warn"><span class="ms sm" aria-hidden="true">edit</span><span>Cấu hình đã khác preset <b>${esc(curPreset.name)}</b>.</span><button type="button" class="btn btn-sm" data-run-act="update-preset"${lock}>Lưu thay đổi vào preset</button></div>` : ''}
 
           <div class="sec-h"><h3><span class="ms sm" aria-hidden="true">account_tree</span>Chạy gì</h3></div>
@@ -462,7 +462,6 @@
       </div>
       ${run.restored ? `<p class="muted small restored-note"><span class="ms sm" aria-hidden="true">history</span> Kết quả lần chạy lúc ${esc(Ui.fmtTime(run.startedAt))} (đã lưu trên máy${run.trimmed ? ', body đã rút gọn' : ''}). Request / test case có thể đã thay đổi sau đó.</p>` : ''}
       <div class="kpis" id="kpis"></div>
-      <p class="muted small kpi-legend"><b class="ok-t">PASS</b> đúng mong đợi · <b class="err-t">FAIL</b> API trả sai (báo dev) · <b class="warn-t">ERROR</b> chưa kiểm thử được (thường do cấu hình) · <b>SKIPPED</b> không chạy. ${App.helpBtn?.('results', 'Hướng dẫn đọc kết quả') || ''}</p>
       <div class="toolbar list-toolbar">
         <div class="chips" id="rFilters" role="group" aria-label="Lọc theo trạng thái"></div>
         <span class="spacer"></span>
@@ -477,8 +476,7 @@
         </table>
         <div class="empty hidden" id="rEmpty">Không có case nào khớp bộ lọc.</div>
       </div>
-      <div class="pager" id="rPager"></div>
-      <p class="muted small foot-note">Bấm một dòng để xem evidence: kiểm tra, request, response, console. Dữ liệu nhạy cảm đã được che.</p>`;
+      <div class="pager" id="rPager"></div>`;
     renderProgress();
     renderKpis();
     renderTable();
@@ -509,12 +507,14 @@
     if (!run || !$('#kpis')) return;
     const c = ApiReport.counts(run.results);
     const dur = (run.finishedAt || Date.now()) - run.startedAt;
-    const k = (key, icon, label, n, kind) => `<button type="button" class="kpi ${kind}${R.f.status === key ? ' on' : ''}" data-rf="${key}" aria-pressed="${R.f.status === key}"><span class="ms" aria-hidden="true">${icon}</span><span class="kpi-n">${n}</span><span class="kpi-l">${label}</span></button>`;
-    $('#kpis').innerHTML = k('PASS', 'check_circle', 'PASS', c.PASS, 'pass') + k('FAIL', 'cancel', 'FAIL', c.FAIL, 'fail') + k('ERROR', 'error', 'ERROR', c.ERROR, 'error') + k('SKIPPED', 'skip_next', 'SKIPPED', c.SKIPPED, 'skip')
+    const k = (key, icon, label, n, kind, tip) => `<button type="button" class="kpi ${kind}${R.f.status === key ? ' on' : ''}" data-rf="${key}" aria-pressed="${R.f.status === key}" title="${tip} · bấm để lọc"><span class="ms" aria-hidden="true">${icon}</span><span class="kpi-n">${n}</span><span class="kpi-l">${label}</span></button>`;
+    $('#kpis').innerHTML = k('PASS', 'check_circle', 'PASS', c.PASS, 'pass', 'Đúng mong đợi') + k('FAIL', 'cancel', 'FAIL', c.FAIL, 'fail', 'API trả sai: báo dev')
+      + k('ERROR', 'error', 'ERROR', c.ERROR, 'error', 'Chưa kiểm thử được, thường do cấu hình') + k('SKIPPED', 'skip_next', 'SKIPPED', c.SKIPPED, 'skip', 'Không chạy')
       + `<div class="kpi static" title="PASS / (Tổng − SKIPPED)"><span class="ms" aria-hidden="true">percent</span><span class="kpi-n">${ApiReport.pct(c.passRate)}</span><span class="kpi-l">Pass rate</span></div>`
       + `<div class="kpi static"><span class="ms" aria-hidden="true">timer</span><span class="kpi-n" id="kpiDur">${Ui.fmtDur(dur)}</span><span class="kpi-l">Thời gian</span></div>`;
     const n = { all: run.results.length, issues: c.FAIL + c.ERROR, FAIL: c.FAIL, ERROR: c.ERROR, PASS: c.PASS, SKIPPED: c.SKIPPED };
-    $('#rFilters').innerHTML = [['all', 'Tất cả'], ['issues', 'FAIL + ERROR'], ['FAIL', 'FAIL'], ['ERROR', 'ERROR'], ['PASS', 'PASS'], ['SKIPPED', 'SKIPPED']]
+    // Lọc theo từng trạng thái bằng thẻ KPI ở trên; ở đây chỉ còn hai lối tắt
+    $('#rFilters').innerHTML = [['all', 'Tất cả'], ['issues', 'FAIL + ERROR']]
       .filter(([key]) => key === 'all' || n[key] || R.f.status === key)
       .map(([key, l]) => `<button type="button" class="chip${R.f.status === key ? ' on' : ''}${key === 'issues' ? ' chip-issue' : ''}" data-rf="${key}" aria-pressed="${R.f.status === key}">${l} <b>${n[key]}</b></button>`).join('');
   }

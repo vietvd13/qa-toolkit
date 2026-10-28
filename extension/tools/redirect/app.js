@@ -684,7 +684,7 @@ function renderGroups(done) {
     const p = pct(g.stts.length, done);
     return `<tr data-key="${esc(g.key)}" class="${state.groupFilter === g.key ? 'active' : ''}" tabindex="0">
       ${state.params.map(pp => {
-        if (state.highCard.has(pp)) return `<td class="val">${hasParam(r, pp) ? '<span style="color:var(--success)"><span class="ms sm" aria-hidden="true">check</span> có</span> <span class="none">· mỗi lượt 1 giá trị</span>' : '<span class="none">không có</span>'}</td>`;
+        if (state.highCard.has(pp)) return `<td class="val">${hasParam(r, pp) ? '<span style="color:var(--ok)"><span class="ms sm" aria-hidden="true">check</span> có</span> <span class="none">· mỗi lượt 1 giá trị</span>' : '<span class="none">không có</span>'}</td>`;
         const v = valText(r.values[pp]);
         return `<td class="val">${v ? `<span class="clamp" title="${esc(v)}">${esc(v)}</span>` : '<span class="none">không có</span>'}</td>`;
       }).join('')}

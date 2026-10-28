@@ -363,6 +363,8 @@
     for (const k of COPY) bd.style[k] = cs[k];
     bd.style.borderColor = 'transparent';
     bd.style.borderStyle = 'solid';
+    // Ô một dòng tự căn chữ giữa theo chiều cao → lớp vẽ lại phải có line-height bằng phần trong của ô
+    if (el.tagName === 'INPUT') bd.style.lineHeight = Math.max(0, el.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom)) + 'px';
     if (el.tagName === 'TEXTAREA') bd.style.width = el.clientWidth + parseFloat(cs.borderLeftWidth) + parseFloat(cs.borderRightWidth) + 'px'; // trừ thanh cuộn dọc
     bd.scrollTop = el.scrollTop;
     bd.scrollLeft = el.scrollLeft;

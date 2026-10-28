@@ -28,12 +28,11 @@
     if (tv.reqId !== n.id) { tv.reqId = n.id; tv.sel.clear(); tv.search = ''; tv.priority = ''; tv.status = ''; tv.page = 0; }
     const s = App.W.suite(n.id);
     box.innerHTML = `
+      <section class="tests-sec" id="tcSec"></section>
       <section class="tests-sec">
-        <div class="sec-h"><h3><span class="ms sm" aria-hidden="true">bolt</span>Lưu biến từ response ${App.helpBtn?.('chain', 'Hướng dẫn lấy token cho request sau') || ''}</h3>
-          <p class="muted small">Mỗi lần Send / Run, lấy giá trị từ response lưu vào biến Runtime (vd <code>TOKEN</code> từ <code>$.data.access_token</code>). Request khác dùng <code>{{TOKEN}}</code>; Runner tự chạy request này trước. Mẹo: bấm tên field trong Response để thêm nhanh.</p></div>
+        <div class="sec-h"><h3><span class="ms sm" aria-hidden="true">bolt</span>Lưu biến từ response ${App.helpBtn?.('chain', 'Lấy giá trị từ response (vd TOKEN) cho request sau dùng. Bấm tên field trong Response để thêm nhanh.') || ''}</h3></div>
         <div id="exList"></div>
-      </section>
-      <section class="tests-sec" id="tcSec"></section>`;
+      </section>`;
     renderExtract(n);
     renderCases(n, s);
   };
