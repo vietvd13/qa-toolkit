@@ -34,6 +34,14 @@ Các công cụ tiếp theo sẽ được thêm dần vào cùng extension. Hư�
     <td align="center"><sub>Tổng quan: tỉ lệ, nhận xét tự động, các nhóm kết quả</sub></td>
     <td align="center"><sub>Từng lượt: đường đi và vị trí tham số ở mỗi link</sub></td>
   </tr>
+  <tr>
+    <td><img src="docs/images/api-request.png" alt="Kiểm thử API: request, test case và response, giao diện sáng"></td>
+    <td><img src="docs/images/api-runner-dark.png" alt="Kiểm thử API: kết quả Runner, giao diện tối"></td>
+  </tr>
+  <tr>
+    <td align="center"><sub>Kiểm thử API: test case viết thành câu, response trên mặt hiển thị</sub></td>
+    <td align="center"><sub>Runner: tỉ lệ đạt, biểu đồ vạch từng case, “mong đợi → nhận”</sub></td>
+  </tr>
 </table>
 
 ## Cài đặt
@@ -44,15 +52,13 @@ Các công cụ tiếp theo sẽ được thêm dần vào cùng extension. Hư�
 4. Bấm **Load unpacked**, chọn thư mục vừa giải nén.
 5. Ghim icon **Bộ công cụ** lên thanh công cụ.
 
-Cập nhật bản mới: khi có bản mới, đầu trang bộ công cụ hiện nút **Bản mới**. Bấm vào để tải file .zip, giải nén đè vào thư mục cũ rồi bấm **Tải lại extension**.
+Cập nhật bản mới: khi có bản mới, cuối thanh bên trái hiện nút **Bản mới**. Bấm vào để tải file .zip, giải nén đè vào thư mục cũ rồi bấm **Tải lại extension**.
 
 ## Tính năng chung
 
-- **Nhiều công cụ trong một chỗ:** tìm công cụ (Ctrl K), lọc theo nhóm, thanh bên chọn nhanh. Công cụ đang chạy dở vẫn chạy khi chuyển sang công cụ khác.
-- **Giao diện sáng / tối / theo hệ thống** và **tự chọn màu chủ đạo, màu phụ**. Màu quá nhạt được tự chỉnh để chữ luôn đạt độ tương phản 4.5:1.
+- **Nhiều công cụ trong một chỗ:** tìm công cụ ở trang chủ (Ctrl K từ bất kỳ đâu), lọc theo nhóm, thanh bên chọn nhanh. Công cụ đang chạy dở vẫn chạy khi chuyển sang công cụ khác.
+- **Giao diện sáng / tối**, một nút bấm để đổi (lần đầu theo giao diện của máy). Màu theo hệ thiết kế *Dao động ký*, chữ luôn đạt độ tương phản 4.5:1.
 - **Xuất CSV** kết quả để mở bằng Excel hoặc Google Sheets.
-
-<img src="docs/images/theme-settings.png" width="420" alt="Bảng cài đặt giao diện">
 
 ## Bản chạy bằng Node (tuỳ chọn)
 

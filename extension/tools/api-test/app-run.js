@@ -68,8 +68,9 @@
     const curPreset = R.cfg.presetId && W.preset(R.cfg.presetId);
     const lock = running ? ' disabled' : '';
     box.innerHTML = `
+      <section class="run-results ${R.run ? '' : 'hidden'}" id="runResults" aria-label="Kết quả"></section>
       <div class="view-head pad">
-        <div><h2>Runner ${App.helpBtn?.('runner', 'Hướng dẫn Runner & Preset') || ''}</h2></div>
+        <div><p class="eyebrow">Runner</p><h2>${R.run ? 'Lần chạy tiếp theo' : 'Chạy test'} ${App.helpBtn?.('runner', 'Hướng dẫn Runner & Preset') || ''}</h2></div>
       </div>
       ${App.tip?.('runner', '<b>3 bước:</b> ① chọn <b>Chạy gì</b> (collection, tích folder / request) → ② xem <b>Kiểm tra trước khi chạy</b>, sửa mục đỏ → ③ <b>Run</b>. Chạy ổn rồi thì <b>Lưu cấu hình thành preset</b> để lần sau chỉ cần bấm Run.', 'runner') || ''}
       <div class="run-wrap">
@@ -113,8 +114,7 @@
         </section>
 
         <section class="card prerun" id="preRun" aria-live="polite"></section>
-      </div>
-      <section class="run-results ${R.run ? '' : 'hidden'}" id="runResults" aria-label="Kết quả"></section>`;
+      </div>`;
     renderPreRun();
     renderResults();
   }
@@ -408,6 +408,7 @@
     reportBusy(false);
     $('#app').classList.remove('is-running');
     W.saveLastRun(storable(run));
+    App.renderTests?.();
     const k = ApiReport.counts(run.results);
     if (failed) toast('Runner dừng vì lỗi: ' + failed, 'err', 10000);
     else toast(`Xong: ${k.PASS} PASS · ${k.FAIL} FAIL · ${k.ERROR} ERROR · ${k.SKIPPED} SKIPPED`, k.FAIL + k.ERROR ? 'warn' : 'ok', 6000);
@@ -442,6 +443,8 @@
     if (rVisible(r)) renderTable(); // chỉ vẽ lại trang đang xem
     if (Ui.currentDrawer() === $('#evDrawer') && ev.index === r.index) renderEvidence();
   }
+  // Kết quả theo hướng "máy đo": tiêu đề + hành động · dải chỉ số · biểu đồ vạch (mỗi case một vạch) · danh sách gom theo request.
+  // Chạy xong mà có FAIL / ERROR thì mặc định chỉ hiện các case đó (R.f.status = 'issues').
   function renderResults() {
     const box = $('#runResults');
     if (!box) return;
@@ -451,17 +454,19 @@
     const reqOpts = run.items.map(x => `<option value="${esc(x.requestId)}"${R.f.request === x.requestId ? ' selected' : ''}>${esc(x.method)} ${esc(x.requestName)}</option>`).join('');
     const folders = [...new Set(run.results.map(r => r.folderPath || ''))];
     box.innerHTML = `
-      <div class="progress-card">
-        <div class="progress-row">
-          <div class="status" aria-live="polite" id="runStatus"></div>
-          <div class="progress-count" id="countBig"></div>
-          <span class="spacer"></span>
-          <div class="run-actions" id="runActions"></div>
+      <div class="run-head">
+        <div class="min0">
+          <p class="eyebrow" id="runStatus" aria-live="polite"></p>
+          <h2 class="run-title">${run.running ? 'Đang chạy' : `Kết quả ${esc(Ui.fmtTime(run.startedAt).split(' ')[0])}`}</h2>
+          <p class="run-sub" id="countBig"></p>
         </div>
-        <div class="bar" role="progressbar" aria-label="Tiến độ" aria-valuemin="0" aria-valuemax="100" id="barWrap"><div id="barFill"></div></div>
+        <span class="spacer"></span>
+        <div class="run-actions" id="runActions"></div>
       </div>
+      <div class="bar" role="progressbar" aria-label="Tiến độ" aria-valuemin="0" aria-valuemax="100" id="barWrap"><div id="barFill"></div></div>
       ${run.restored ? `<p class="muted small restored-note"><span class="ms sm" aria-hidden="true">history</span> Kết quả lần chạy lúc ${esc(Ui.fmtTime(run.startedAt))} (đã lưu trên máy${run.trimmed ? ', body đã rút gọn' : ''}). Request / test case có thể đã thay đổi sau đó.</p>` : ''}
       <div class="kpis" id="kpis"></div>
+      <div class="trace" id="runTrace"></div>
       <div class="toolbar list-toolbar">
         <div class="chips" id="rFilters" role="group" aria-label="Lọc theo trạng thái"></div>
         <span class="spacer"></span>
@@ -469,13 +474,8 @@
         ${run.items.length > 1 ? `<label class="visually-hidden" for="rReq">Request</label><select id="rReq" class="filter-select"><option value="">Mọi request</option>${reqOpts}</select>` : ''}
         <div class="search-box"><span class="ms sm" aria-hidden="true">search</span><input type="search" id="rSearch" value="${esc(R.f.q)}" placeholder="Tìm TC ID, tên, lý do…" aria-label="Tìm kết quả"></div>
       </div>
-      <div class="table-wrap data-wrap">
-        <table class="data res">
-          <thead><tr><th>Trạng thái</th><th>TC ID</th><th>Test case</th><th>Expected</th><th>Actual</th><th>Thời gian</th><th>Lý do</th></tr></thead>
-          <tbody id="rBody"></tbody>
-        </table>
-        <div class="empty hidden" id="rEmpty">Không có case nào khớp bộ lọc.</div>
-      </div>
+      <div class="rlist" id="rBody" role="list" aria-label="Kết quả từng case"></div>
+      <div class="empty hidden" id="rEmpty">Không có case nào khớp bộ lọc.</div>
       <div class="pager" id="rPager"></div>`;
     renderProgress();
     renderKpis();
@@ -487,19 +487,21 @@
     const done = run.results.length;
     const pct = run.total ? Math.round((done / run.total) * 100) : 0;
     $('#runStatus').innerHTML = run.running
-      ? `<span class="s-dot run"></span><span>Đang chạy${run.current ? `: ${esc(run.current)}` : ''}</span>`
-      : `<span class="s-dot ${run.aborted ? 'stop' : 'ok'}"></span><span>${run.aborted ? 'Đã dừng' : 'Hoàn tất'} · ${esc(run.envName)}${run.presetName ? ` · ${esc(run.presetName)}` : ''}</span>`;
-    $('#countBig').innerHTML = `Đã xử lý <b>${done}</b> / ${run.total} case · ${esc(run.scopeLabel)}`;
+      ? `<span class="s-dot run"></span>Đang chạy${run.current ? ` · ${esc(run.current)}` : ''}`
+      : `<span class="s-dot ${run.aborted ? 'stop' : 'ok'}"></span>${run.aborted ? 'Đã dừng' : 'Hoàn tất'}`;
+    $('#countBig').innerHTML = [run.presetName && `<b>${esc(run.presetName)}</b>`, `<b>${esc(run.envName)}</b>`, esc(run.scopeLabel), `${done} / ${run.total} case`].filter(Boolean).join(' · ');
+    $('#barWrap').classList.toggle('hidden', !run.running);
     $('#barFill').style.width = (run.running ? pct : 100) + '%';
     $('#barWrap').setAttribute('aria-valuenow', run.running ? pct : 100);
     const k = ApiReport.counts(run.results);
+    const bad = k.FAIL + run.results.filter(r => r.status === 'ERROR' && r.errorKind !== 'cancelled').length;
     $('#runActions').innerHTML = run.running
       ? '<button class="btn btn-danger btn-sm" type="button" data-run-act="stop"><span class="ms sm fill" aria-hidden="true">stop</span>Stop</button>'
-      : `${k.FAIL ? '<button class="btn btn-sm" type="button" data-run-act="retry-fail"><span class="ms sm" aria-hidden="true">replay</span>Chạy lại FAIL</button>' : ''}
-        ${run.results.some(r => r.status === 'ERROR' && r.errorKind !== 'cancelled') ? '<button class="btn btn-sm" type="button" data-run-act="retry-error"><span class="ms sm" aria-hidden="true">replay</span>Chạy lại ERROR</button>' : ''}
-        <button class="btn btn-sm" type="button" data-run-act="rerun"><span class="ms sm" aria-hidden="true">restart_alt</span>Run lại</button>
+      : `${k.FAIL ? `<button class="btn btn-sm" type="button" data-run-act="retry-fail"><span class="ms sm" aria-hidden="true">replay</span>Chạy lại ${k.FAIL} FAIL</button>` : ''}
+        ${bad - k.FAIL ? `<button class="btn btn-sm" type="button" data-run-act="retry-error"><span class="ms sm" aria-hidden="true">replay</span>Chạy lại ${bad - k.FAIL} ERROR</button>` : ''}
         <button class="btn btn-sm" type="button" data-run-act="xlsx"><span class="ms sm" aria-hidden="true">table_view</span>Export Excel</button>
         <button class="btn btn-sm" type="button" data-run-act="zip" title="Excel + evidence JSON đầy đủ + test suite + scripts"><span class="ms sm" aria-hidden="true">folder_zip</span>Export ZIP</button>
+        <button class="btn btn-sm btn-primary" type="button" data-run-act="rerun"><span class="ms sm fill" aria-hidden="true">play_arrow</span>Chạy lại tất cả</button>
         <button class="icon-btn" type="button" data-run-act="clear" aria-label="Xoá kết quả" title="Xoá kết quả"><span class="ms" aria-hidden="true">delete</span></button>`;
   }
   function renderKpis() {
@@ -507,16 +509,40 @@
     if (!run || !$('#kpis')) return;
     const c = ApiReport.counts(run.results);
     const dur = (run.finishedAt || Date.now()) - run.startedAt;
-    const k = (key, icon, label, n, kind, tip) => `<button type="button" class="kpi ${kind}${R.f.status === key ? ' on' : ''}" data-rf="${key}" aria-pressed="${R.f.status === key}" title="${tip} · bấm để lọc"><span class="ms" aria-hidden="true">${icon}</span><span class="kpi-n">${n}</span><span class="kpi-l">${label}</span></button>`;
-    $('#kpis').innerHTML = k('PASS', 'check_circle', 'PASS', c.PASS, 'pass', 'Đúng mong đợi') + k('FAIL', 'cancel', 'FAIL', c.FAIL, 'fail', 'API trả sai: báo dev')
-      + k('ERROR', 'error', 'ERROR', c.ERROR, 'error', 'Chưa kiểm thử được, thường do cấu hình') + k('SKIPPED', 'skip_next', 'SKIPPED', c.SKIPPED, 'skip', 'Không chạy')
-      + `<div class="kpi static" title="PASS / (Tổng − SKIPPED)"><span class="ms" aria-hidden="true">percent</span><span class="kpi-n">${ApiReport.pct(c.passRate)}</span><span class="kpi-l">Pass rate</span></div>`
-      + `<div class="kpi static"><span class="ms" aria-hidden="true">timer</span><span class="kpi-n" id="kpiDur">${Ui.fmtDur(dur)}</span><span class="kpi-l">Thời gian</span></div>`;
-    const n = { all: run.results.length, issues: c.FAIL + c.ERROR, FAIL: c.FAIL, ERROR: c.ERROR, PASS: c.PASS, SKIPPED: c.SKIPPED };
-    // Lọc theo từng trạng thái bằng thẻ KPI ở trên; ở đây chỉ còn hai lối tắt
-    $('#rFilters').innerHTML = [['all', 'Tất cả'], ['issues', 'FAIL + ERROR']]
+    const k = (key, label, n, kind, tip) => `<button type="button" class="kpi ${kind}${R.f.status === key ? ' on' : ''}" data-rf="${key}" aria-pressed="${R.f.status === key}" title="${tip} · bấm để lọc"><span class="kpi-l">${label}</span><span class="kpi-n">${n}</span></button>`;
+    $('#kpis').innerHTML = `<div class="kpi big" title="PASS / (Tổng − SKIPPED)"><span class="kpi-l">Tỉ lệ đạt</span><span class="kpi-n">${ApiReport.pct(c.passRate)}</span></div>`
+      + k('PASS', 'Pass', c.PASS, 'pass', 'Đúng mong đợi') + k('FAIL', 'Fail', c.FAIL, 'fail', 'API trả sai: báo dev')
+      + k('ERROR', 'Error', c.ERROR, 'error', 'Chưa kiểm thử được, thường do cấu hình') + k('SKIPPED', 'Skipped', c.SKIPPED, 'skip', 'Không chạy')
+      + `<div class="kpi static"><span class="kpi-l">Thời gian</span><span class="kpi-n" id="kpiDur">${Ui.fmtDur(dur)}</span></div>`;
+    const n = { all: run.results.length, issues: c.FAIL + c.ERROR };
+    // Lọc theo từng trạng thái bằng ô chỉ số ở trên; ở đây chỉ còn hai lối tắt
+    $('#rFilters').innerHTML = [['issues', 'Cần xem'], ['all', 'Tất cả']]
       .filter(([key]) => key === 'all' || n[key] || R.f.status === key)
       .map(([key, l]) => `<button type="button" class="chip${R.f.status === key ? ' on' : ''}${key === 'issues' ? ' chip-issue' : ''}" data-rf="${key}" aria-pressed="${R.f.status === key}">${l} <b>${n[key]}</b></button>`).join('');
+    renderTrace();
+  }
+  // Biểu đồ vạch: mỗi case một vạch theo thứ tự chạy, cao = thời gian phản hồi (thang căn bậc hai để case nhanh vẫn thấy), màu = trạng thái.
+  // Vạch gom theo request, có nhãn tên request bên dưới; bấm vạch để mở evidence.
+  function renderTrace() {
+    const run = R.run, box = $('#runTrace');
+    if (!run || !box) return;
+    const list = run.results;
+    if (!list.length) { box.innerHTML = ''; return; }
+    const max = Math.max(1, ...list.map(r => r.durationMs || 0));
+    const groups = [];
+    for (const r of list) {
+      const g = groups[groups.length - 1];
+      if (g && g.id === r.requestId) g.rs.push(r); else groups.push({ id: r.requestId, name: r.requestName, rs: [r] });
+    }
+    const tick = r => {
+      const h = r.status === 'SKIPPED' || r.durationMs == null ? 6 : Math.max(8, Math.round(Math.sqrt((r.durationMs || 0) / max) * 100));
+      const k = r.kase || { id: r.caseId };
+      return `<button type="button" class="tk ${(r.status || 'run').toLowerCase()}" style="height:${h}%" data-ri="${r.index}" title="${esc(`${k.id} · ${r.status || 'đang chạy'}${r.durationMs != null ? ` · ${Ui.fmtDur(r.durationMs)}` : ''}`)}" aria-label="${esc(`${k.id} ${r.status || ''}`)}"></button>`;
+    };
+    box.innerHTML = `<div class="tr-h"><span>Mỗi vạch là 1 case · cao = thời gian phản hồi (tối đa ${esc(Ui.fmtDur(max))})</span><span class="spacer"></span>
+        <span class="lg pass">Pass</span><span class="lg fail">Fail</span><span class="lg error">Error</span><span class="lg skip">Skipped</span></div>
+      <div class="tr-plot">${groups.map(g => `<div class="tr-g" style="flex:${g.rs.length}">${g.rs.map(tick).join('')}</div>`).join('')}</div>
+      <div class="tr-lbl">${groups.map(g => `<span style="flex:${g.rs.length}" title="${esc(g.name)}">${esc(g.name)}</span>`).join('')}</div>`;
   }
   const rVisible = r => {
     const f = R.f.status;
@@ -529,18 +555,31 @@
     return [k.id, k.name, k.group, r.reason, r.evidenceId, r.requestName].some(x => Ui.norm(x).includes(Ui.norm(R.f.q)));
   };
   const filtered = () => R.run.results.filter(rVisible);
+  // Một câu "mong đợi → nhận" cho dòng kết quả: lỗi status trước, rồi kiểm tra sai đầu tiên, rồi thời gian
+  function diffHtml(r, k) {
+    if (r.status === 'ERROR' || r.status === 'SKIPPED' || !r.response) {
+      return `${r.errorKind && r.status !== 'PASS' ? `<b class="kind-tag">${esc(ApiReport.ERROR_KIND[r.errorKind] || r.errorKind)}</b>` : ''}<span class="clamp-1">${esc(r.reason || '')}</span>`;
+    }
+    const sc = r.statusCheck;
+    if (sc && !sc.pass) return `<span class="dk">status</span><s>${esc(ApiReport.fmtCodes(sc.expected))}</s><b class="got">${esc(sc.actual)}</b>`;
+    const a = (r.assertions || []).find(x => !x.pass);
+    if (a) {
+      const where = a.source === 'time' ? 'thời gian' : a.source === 'script' ? 'pm.test' : a.source === 'header' ? `header ${a.path}` : a.path === '$' ? 'body' : `body${String(a.path).replace(/^\$/, '')}`;
+      return `<span class="dk">${esc(where)}</span>${a.expected ? `<s>${esc(a.operator === 'lte' ? '≤ ' + a.expected : a.expected)}</s>` : ''}<b class="got clamp-1">${esc(a.actual || a.reason)}</b>`;
+    }
+    return `<span class="dk">status</span><span class="ok-t">${esc(sc?.actual ?? r.response.status)}</span>${k.synthetic ? '<span class="muted small">kiểm tra mặc định 2xx</span>' : ''}`;
+  }
   function rowHtml(r) {
     const k = r.kase || { id: r.caseId, name: r.caseId, expect: { statusCodes: [] } };
-    const actual = r.response ? `<span class="http-${String(r.response.status)[0]}">${r.response.status}</span>` : '<span class="muted">—</span>';
-    return `<tr data-ri="${r.index}" tabindex="0" class="st-${(r.status || 'pending').toLowerCase()}">
-      <td data-label="Trạng thái">${badge(r.status)}</td>
-      <td class="id" data-label="TC ID">${esc(k.id)}</td>
-      <td class="name" data-label="Test case"><span class="clamp-1">${esc(k.name)}</span>${k.group ? `<span class="sub">${esc(k.group)}</span>` : ''}</td>
-      <td class="num" data-label="Expected">${esc(k.synthetic ? '2xx (mặc định)' : ApiReport.fmtCodes(k.expect?.statusCodes))}</td>
-      <td class="num" data-label="Actual">${actual}</td>
-      <td class="num" data-label="Thời gian">${r.durationMs != null ? Ui.fmtDur(r.durationMs) : ''}</td>
-      <td class="why-cell" data-label="Lý do">${r.errorKind && r.status !== 'PASS' ? `<span class="kind-tag">${esc(ApiReport.ERROR_KIND[r.errorKind] || r.errorKind)}</span> ` : ''}<span class="clamp-2">${esc(r.reason || '')}</span></td>
-    </tr>`;
+    const st = (r.status || 'pending').toLowerCase();
+    return `<div class="rrow st-${st}" data-ri="${r.index}" tabindex="0" role="listitem" aria-label="${esc(`${k.id} ${k.name}: ${r.status || 'đang chạy'}`)}">
+      <span class="ms sm${r.status ? ' fill' : ' spin'} r-ic" aria-hidden="true">${STATUS_ICON[r.status] || 'progress_activity'}</span>
+      <span class="tc-id">${esc(k.id)}</span>
+      ${k.priority ? `<span class="tc-p p-${esc(k.priority.toLowerCase())}">${esc(k.priority)}</span>` : '<span></span>'}
+      <span class="r-name clamp-1">${esc(k.name)}</span>
+      <span class="r-diff">${diffHtml(r, k)}</span>
+      <span class="r-dur">${r.durationMs != null ? Ui.fmtDur(r.durationMs) : ''}</span>
+    </div>`;
   }
   function renderTable() {
     const body = $('#rBody');
@@ -549,20 +588,21 @@
     const pages = Math.max(1, Math.ceil(rows.length / R.f.size));
     R.f.page = Math.min(R.f.page, pages - 1);
     const page = rows.slice(R.f.page * R.f.size, (R.f.page + 1) * R.f.size);
-    const multi = R.run.items.length > 1 && !R.f.request;
-    let last = null;
     const html = [];
+    let open = false, last = null;
     for (const r of page) {
-      if (multi && r.requestId !== last) {
+      if (r.requestId !== last) {
+        if (open) html.push('</div>');
         last = r.requestId;
-        const all = R.run.results.filter(x => x.requestId === r.requestId);
-        const c = ApiReport.counts(all);
+        const c = ApiReport.counts(R.run.results.filter(x => x.requestId === r.requestId));
         const item = R.run.items.find(x => x.requestId === r.requestId);
-        html.push(`<tr class="group-row"><td colspan="7"><span class="gr-name">${Ui.methodTag(r.method || item?.method || '')} <b>${esc(r.requestName)}</b> <span class="muted small">${esc(r.folderPath || r.collectionName || '')}</span></span>
-          <span class="gr-cnt">${c.PASS ? `<span class="ok-t">${c.PASS} PASS</span>` : ''}${c.FAIL ? ` <span class="err-t">${c.FAIL} FAIL</span>` : ''}${c.ERROR ? ` <span class="warn-t">${c.ERROR} ERROR</span>` : ''}${c.SKIPPED ? ` <span class="muted">${c.SKIPPED} SKIPPED</span>` : ''}</span></td></tr>`);
+        html.push(`<div class="rgrp"><div class="rgrp-h">${Ui.methodTag(r.method || item?.method || '')}<b>${esc(r.requestName)}</b><span class="muted small clamp-1">${esc(r.folderPath || r.collectionName || '')}</span><span class="spacer"></span>
+          <span class="gr-cnt">${c.PASS ? `<span class="ok-t">${c.PASS} pass</span>` : ''}${c.FAIL ? `<span class="err-t">${c.FAIL} fail</span>` : ''}${c.ERROR ? `<span class="warn-t">${c.ERROR} error</span>` : ''}${c.SKIPPED ? `<span class="muted">${c.SKIPPED} skipped</span>` : ''}</span></div>`);
+        open = true;
       }
       html.push(rowHtml(r));
     }
+    if (open) html.push('</div>');
     body.innerHTML = html.join('');
     $('#rEmpty').classList.toggle('hidden', rows.length > 0);
     if (!rows.length) $('#rEmpty').innerHTML = R.run.results.length ? 'Không có case nào khớp bộ lọc. <button type="button" class="link-btn" data-rf="all">Xem tất cả</button>' : R.run.running ? 'Đang chạy case đầu tiên…' : 'Chưa có kết quả.';
@@ -586,7 +626,7 @@
     if (rf) { setFilter(rf.closest('#kpis') && R.f.status === rf.dataset.rf ? 'all' : rf.dataset.rf); return; }
     const pg = e.target.closest('[data-rpg]');
     if (pg) { R.f.page += Number(pg.dataset.rpg); renderTable(); return; }
-    const tr = e.target.closest('tr[data-ri]');
+    const tr = e.target.closest('[data-ri]');
     if (tr) openEvidence(Number(tr.dataset.ri), tr);
   });
   $('#view-run').addEventListener('change', e => {
@@ -596,14 +636,13 @@
   });
   $('#view-run').addEventListener('input', debounce(e => { if (e.target.id === 'rSearch') { R.f.q = e.target.value.trim(); R.f.page = 0; renderTable(); } }, 200));
   $('#view-run').addEventListener('keydown', e => {
-    const tr = e.target.closest('tr[data-ri]');
+    const tr = e.target.closest('.rrow[data-ri]');
     if (!tr || e.target !== tr) return;
     if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openEvidence(Number(tr.dataset.ri), tr); }
     else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
       e.preventDefault();
-      let x = tr;
-      do x = e.key === 'ArrowDown' ? x.nextElementSibling : x.previousElementSibling; while (x && !x.dataset.ri);
-      x?.focus();
+      const all = $$('#rBody .rrow');
+      all[all.indexOf(tr) + (e.key === 'ArrowDown' ? 1 : -1)]?.focus();
     }
   });
 
@@ -692,6 +731,10 @@
     renderEvidence();
     Ui.openDrawer($('#evDrawer'), opener);
   }
+  // Kết quả gần nhất của một case: tab Tests của request hiện ĐẠT / SAI ngay trên thẻ case và mở được evidence
+  const caseIdx = (reqId, caseId) => { const list = R.run?.results || []; for (let i = list.length - 1; i >= 0; i--) if (list[i].requestId === reqId && list[i].caseId === caseId) return i; return -1; };
+  App.caseResult = (reqId, caseId) => R.run?.results[caseIdx(reqId, caseId)] || null;
+  App.openCaseEvidence = (reqId, caseId, opener) => { const i = caseIdx(reqId, caseId); if (i >= 0) openEvidence(i, opener); };
   function showEvTab(tab) {
     ev.tab = tab;
     for (const t of ['assert', 'req', 'res', 'console']) { $('#ev-' + t).classList.toggle('hidden', t !== tab); $('#ev-tab-' + t).setAttribute('aria-selected', t === tab); }

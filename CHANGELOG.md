@@ -5,26 +5,31 @@ Ghi theo [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/), đánh số t
 ## [Chưa phát hành]
 
 ### Thay đổi
-- Hệ thiết kế mới **Dụng cụ đo** cho cả bộ công cụ, thay *Feminine Work OS*:
-  - nền xám trung tính, một màu nhấn (mặc định xanh cobalt; màu hồng cũ vẫn chọn được trong **Giao diện**);
-  - nhãn trạng thái viền mảnh thay cho nền pastel, thông báo nền trung tính có vạch màu;
-  - số liệu (status code, thời gian, số đếm, KPI) dùng mono;
-  - font IBM Plex Sans / Plex Mono, icon Material Symbols Outlined, bớt icon trang trí.
-- Control dùng chung vẽ lại:
-  - ô nhập có bóng mảnh, viền đậm khi rê chuột, vòng focus mềm, trạng thái lỗi / tắt rõ ràng;
-  - select có mũi tên riêng; checkbox / radio vẽ lại (có trạng thái *một phần*);
-  - nút có độ nổi, lún nhẹ khi bấm, vòng focus bàn phím.
-- Token gọn và nhất quán trong `shared/theme.css`: `--bg*`, `--fg*`, `--line*`, `--accent*`, `--ok/--warn/--bad/--info`, `--fs-*`, `--h-*`, `--rad-*`, kèm quy tắc dùng. Tên cũ vẫn chạy (alias).
-- Kiểm thử API:
-  - thêm chỗ làm việc: thanh bên của bộ công cụ tự thu khi mở tool;
-  - đường dẫn và tên request trên cùng một dòng;
-  - vùng Response chỉ còn một dòng khi chưa có response, lỗi *Chưa gửi* hiện gọn kèm nút xử lý;
-  - KPI kết quả nằm trên một hàng, bấm để lọc (bỏ hàng chip trùng số). Ý nghĩa PASS / FAIL / ERROR / SKIPPED hiện khi rê chuột;
-  - bớt chữ trên màn hình: mẹo mặc định tắt (bật trong **Hướng dẫn → Hiện mẹo ngay trong giao diện**), bỏ đoạn mô tả dưới tiêu đề Runner / Environments / Params, rút gọn chú thích Environment và Preset;
-  - tab Tests: Test cases lên đầu, thống kê thành hàng nút lọc gọn.
+- Hệ thiết kế mới **Dao động ký** cho cả bộ công cụ, thay *Feminine Work OS*:
+  - vỏ máy xám, mặt hiển thị than chì cho điều hướng và vùng đọc kết quả, **một màu tín hiệu** (cam);
+  - nút chính màu mực; màu tín hiệu chỉ dành cho mục đang chọn, biến `{{…}}`, vạch đo, vòng focus;
+  - nhãn trạng thái viền mảnh, số liệu (status code, thời gian, số đếm, KPI) dùng mono;
+  - font Be Vietnam Pro (giao diện), JetBrains Mono (mã, URL, số liệu), Chakra Petch (nhãn in hoa, số đo lớn); icon Material Symbols Outlined.
+- **Bỏ bảng Giao diện** (tự chọn màu chủ đạo / màu phụ): màu cố định theo hệ thiết kế. Chế độ màu chỉ còn **Sáng / Tối** (lần đầu theo máy), một nút bấm để đổi.
+- Control dùng chung vẽ lại: ô nhập có vòng focus mềm, select / checkbox / radio vẽ lại; hộp thoại có nền mờ.
+- Control mượt hơn: mọi ô nhập, select, nút, thanh URL, ô tìm dùng **một kiểu viền** (1px `--line-strong` + `--shadow-xs`) và **một kiểu focus** (viền `--focus` + vòng `--ring`); bỏ viền 1.5px (bị răng cưa ở tỉ lệ màn hình 125% / 150%) và hiệu ứng lún nửa pixel làm nhoè chữ; nút chính hover nhạt dần thay vì pha cam; chuyển trạng thái 150ms cho nút, tab, chip, segmented.
+- Token gọn trong `shared/theme.css`: `--bg*`, `--fg*`, `--line*`, `--ink-*` (mặt hiển thị), `--accent*`, `--ok/--warn/--bad/--info`, `--m-*` (màu method HTTP), `--disp`, `--fs-*`, `--h-*`, `--rad-*`, kèm quy tắc dùng. Tên cũ vẫn chạy (alias).
+- Bộ công cụ: bỏ thanh đầu trang. Điều hướng, nút Sáng / Tối, cập nhật nằm trên **rail** than chì bên trái; ô tìm công cụ chuyển vào trang chủ (Ctrl K từ bất kỳ đâu). Thẻ công cụ nhấc lên khi rê chuột, hiện lần lượt khi mở trang.
+- Thanh bên làm lại:
+  - rail bộ công cụ: đầu rail chỉ còn bảng tên (logo · tên · phiên bản), nút **Tìm công cụ** (Ctrl K; khi thu gọn là icon trơn), mỗi công cụ là một kênh `CH01`, `CH02`… dưới nhóm *Kênh*; chân rail gọn thành một hàng icon (Sáng / Tối · Kiểm tra cập nhật · Mã nguồn · Thu gọn), có bản mới thì hiện thẻ viền tín hiệu ngay trên; bỏ nhóm thu / mở;
+  - panel Kiểm thử API nền sáng trọn vẹn (than chì chỉ còn ở rail và Response): công tắc khu vực dạng segmented chữ thường, ô environment như ô nhập (PRODUCTION viền + nền đỏ); nút Dán cURL / Tạo mới gom thành cụm; panel hẹp tự ẩn gợi ý Ctrl K để ô tìm không bị cắt chữ; cây có đường dẫn hướng theo cấp, tiêu đề nhóm có vạch kẻ, mục đang chọn có vạch tín hiệu sát mép như rail.
+- Kiểm thử API làm lại giao diện:
+  - không còn thanh ứng dụng: khu vực (Requests · Env · Runner), environment, tìm kiếm, trạng thái lưu, hướng dẫn và menu workspace nằm trong panel trái; panel thu gọn thành dải icon; thanh bên của bộ công cụ tự thu khi mở tool;
+  - màn request chia trái / phải: cấu hình và test case bên trái, **Response trên mặt hiển thị than chì** bên phải (status số lớn, thời gian, kích thước; kéo đổi độ rộng);
+  - tab **Tests** đứng đầu. Mỗi test case là một thẻ viết điều kiện thành câu (“Status là 201”, “body.id có kiểu số”), có kết quả lần chạy gần nhất ngay trên thẻ: vạch màu, dòng sai ghi “→ nhận 500”, bấm ĐẠT / SAI để mở evidence;
+  - **Runner** đưa kết quả lên đầu: dải chỉ số (tỉ lệ đạt, Pass / Fail / Error / Skipped, thời gian), **biểu đồ vạch** mỗi case một vạch (cao = thời gian phản hồi, bấm để mở evidence), danh sách gom theo request với một câu “mong đợi → nhận” mỗi dòng;
+  - bớt chữ: mẹo mặc định tắt (bật trong **Hướng dẫn → Hiện mẹo ngay trong giao diện**), bỏ đoạn mô tả dưới tiêu đề, gộp nhập Excel / AI / JSON vào menu ⋯ và dòng *Thêm case*.
 
 ### Sửa
 - Kiểm thử API: chữ tô màu `{{biến}}` lệch lên trên trong ô URL và cột Value.
+- Kiểm thử API: nút chính trên mặt hiển thị Response (vd *Cho phép host*) dùng nền cam chữ trắng, thiếu tương phản (≈3:1 sáng, ≈2.6:1 tối); nay theo quy tắc nút chính màu mực.
+- Kiểm thử API: hai nút khi chưa có collection (Tạo collection · Dán cURL) xếp lệch độ rộng; nay rộng bằng nhau.
+- Đồng bộ token: Kiểm tra Redirect bỏ tên token cũ (`--text-*`, `--shadow*`), cỡ chữ lẻ (11.5 / 12.5px) về thang `--fs-*`, số đo lớn dùng `--disp`; độ đậm chữ viết bằng số đổi sang `--fw-*`, màu `#fff` viết cứng đổi sang token ở cả bộ.
 
 ## [1.4.0] - 2026-10-26
 

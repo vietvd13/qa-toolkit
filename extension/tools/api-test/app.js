@@ -23,7 +23,7 @@
   App.env = () => App.W.activeEnv();
   App.isBusy = () => !!App.runActive?.();
   App.saveUi = debounce(() => {
-    App.W.meta.ui = { ...App.W.meta.ui, sel: S.sel, nav: S.nav, expanded: [...S.expanded], sbW: App.W.meta.ui.sbW, splitH: App.W.meta.ui.splitH, rt: App.W.meta.ui.rt, runner: App.W.meta.ui.runner };
+    App.W.meta.ui = { ...App.W.meta.ui, sel: S.sel, nav: S.nav, expanded: [...S.expanded], sbW: App.W.meta.ui.sbW, splitH: App.W.meta.ui.splitH, splitW: App.W.meta.ui.splitW, rt: App.W.meta.ui.rt, runner: App.W.meta.ui.runner };
     App.W.saveMeta();
   }, 800);
   const isSecretKey = k => ApiRedact.isSecretName(k);
@@ -301,8 +301,10 @@
       tree.innerHTML = found
         ? `<div class="tree-empty"><span class="ms" aria-hidden="true">search_off</span><p>Không tìm thấy “${esc(S.q)}”.</p><button type="button" class="btn btn-sm" data-tree-act="clear-search">Xoá tìm kiếm</button></div>`
         : `<div class="tree-empty"><span class="ms" aria-hidden="true">inventory_2</span><p><b>Chưa có collection</b><br><span class="muted small">Collection gom các request của một API / dự án để chạy cùng nhau.</span></p>
-            <button type="button" class="btn btn-sm btn-primary" data-tree-act="new-collection"><span class="ms sm" aria-hidden="true">add</span>Tạo collection</button>
-            <button type="button" class="btn btn-sm" data-tree-act="paste"><span class="ms sm" aria-hidden="true">content_paste</span>Dán cURL</button></div>`;
+            <div class="tree-empty-acts">
+              <button type="button" class="btn btn-sm btn-primary" data-tree-act="new-collection"><span class="ms sm" aria-hidden="true">add</span>Tạo collection</button>
+              <button type="button" class="btn btn-sm" data-tree-act="paste"><span class="ms sm" aria-hidden="true">content_paste</span>Dán cURL</button>
+            </div></div>`;
       return;
     }
     const focusId = S.sel && rows.some(r => r.n?.id === S.sel) ? S.sel : rows.find(r => r.n)?.n.id;
