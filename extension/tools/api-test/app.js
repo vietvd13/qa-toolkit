@@ -23,7 +23,7 @@
   App.env = () => App.W.activeEnv();
   App.isBusy = () => !!App.runActive?.();
   App.saveUi = debounce(() => {
-    App.W.meta.ui = { ...App.W.meta.ui, sel: S.sel, nav: S.nav, expanded: [...S.expanded], sbW: App.W.meta.ui.sbW, splitH: App.W.meta.ui.splitH, splitW: App.W.meta.ui.splitW, rt: App.W.meta.ui.rt, runner: App.W.meta.ui.runner };
+    App.W.meta.ui = { ...App.W.meta.ui, sel: S.sel, nav: S.nav, expanded: [...S.expanded], sbW: App.W.meta.ui.sbW, splitH: App.W.meta.ui.splitH, splitW: App.W.meta.ui.splitW, respC: App.W.meta.ui.respC, tcView: App.W.meta.ui.tcView, rt: App.W.meta.ui.rt, runner: App.W.meta.ui.runner };
     App.W.saveMeta();
   }, 800);
   const isSecretKey = k => ApiRedact.isSecretName(k);
@@ -216,7 +216,7 @@
   });
 
   // ---------- Sidebar: thu gọn / đổi độ rộng / overlay khi hẹp ----------
-  const narrow = () => matchMedia('(max-width: 760px)').matches;
+  const narrow = () => matchMedia('(max-width: 840px)').matches; // khớp @media trong style.css
   function toggleSidebar(force) {
     const app = $('#app');
     if (narrow()) {
@@ -321,7 +321,8 @@
         <span class="tr-name">${hl(n.name)}</span>
         ${off ? '<span class="ms sm tr-off" aria-label="Đang tắt khi chạy" title="Đang tắt: bỏ qua khi chạy collection / folder">block</span>' : ''}
         ${cc ? `<span class="tr-n" title="${cc} test case">${cc}</span>` : ''}
-        <button type="button" class="tr-more" data-more tabindex="-1" aria-label="Thao tác với ${esc(n.name)}"><span class="ms sm" aria-hidden="true">more_horiz</span></button>
+        ${n.type !== 'request' ? `<button type="button" class="tr-act" data-add-req tabindex="-1" aria-label="Thêm request vào ${esc(n.name)}" title="Thêm request"><span class="ms sm" aria-hidden="true">add</span></button>` : ''}
+        <button type="button" class="tr-more tr-act" data-more tabindex="-1" aria-label="Thao tác với ${esc(n.name)}"><span class="ms sm" aria-hidden="true">more_horiz</span></button>
       </div>`;
     }).join('');
   }
@@ -350,6 +351,7 @@
     if (!row) return;
     const id = row.dataset.id;
     if (e.target.closest('[data-more]')) { nodeMenu(id, e.target.closest('[data-more]')); return; }
+    if (e.target.closest('[data-add-req]')) { newRequest(id); closeSidebarOverlay(); return; }
     if (e.target.closest('[data-twisty]')) { toggle(id); return; }
     if (App.W.get(id).type !== 'request') S.expanded.add(id);
     App.select(id);

@@ -26,9 +26,10 @@
           <button type="button" class="icon-btn sb-toggle" id="btnSidebar" aria-controls="sidebar" aria-expanded="true" aria-label="Thu gọn / mở rộng panel" title="Thu gọn / mở rộng panel"><span class="ms" aria-hidden="true">left_panel_close</span></button>
         </div>
         <div class="sb-env">
-          <label class="eyebrow" for="envSelect">Môi trường</label>
+          <label class="visually-hidden" for="envSelect">Môi trường</label>
           <div class="env-pick-top" id="envPickTop">
             <span class="env-dot" id="envTopDot" aria-hidden="true"></span>
+            <span class="env-pre" aria-hidden="true">Env:</span>
             <select id="envSelect" class="env-select"></select>
           </div>
         </div>
@@ -78,10 +79,9 @@
               <nav class="crumbs" id="rqCrumbs" aria-label="Vị trí"></nav>
               <input id="rqName" class="title-in" type="text" aria-label="Tên request" spellcheck="false">
             </div>
-            <span class="badge badge-warning hidden" id="rqDraft"><span class="ms sm" aria-hidden="true">draft</span> Chưa lưu</span>
+            <span class="badge badge-warning hidden" id="rqDraft" title="Chưa lưu"><span class="ms sm" aria-hidden="true">draft</span><span class="lbl">Chưa lưu</span></span>
             <span class="spacer"></span>
-            <button type="button" class="btn btn-sm hidden" id="btnSaveTo"><span class="ms sm" aria-hidden="true">save</span>Lưu vào collection</button>
-            <button type="button" class="btn btn-sm btn-primary" id="btnRunReq" title="Chạy mọi test case của request này"><span class="ms sm fill" aria-hidden="true">play_arrow</span><span class="lbl">Run tests</span></button>
+            <button type="button" class="btn btn-sm hidden" id="btnSaveTo" title="Lưu vào collection"><span class="ms sm" aria-hidden="true">save</span><span class="lbl">Lưu vào collection</span></button>
             <button type="button" class="help-q" data-help="request" aria-label="Hướng dẫn tạo & gửi request" title="Hướng dẫn tạo & gửi request"><span class="ms sm" aria-hidden="true">help</span></button>
             <button type="button" class="icon-btn" id="btnReqMenu" aria-haspopup="menu" aria-expanded="false" aria-label="Thao tác với request"><span class="ms" aria-hidden="true">more_horiz</span></button>
           </div>
@@ -163,7 +163,11 @@
             <div class="rt-panel hidden" role="tabpanel" id="rt-tests" aria-labelledby="rt-tab-tests"><div id="rqTests"></div></div>
           </div>
           <div class="split-handle" id="splitHandle" role="separator" aria-orientation="vertical" aria-controls="rqResponse" aria-label="Kéo để đổi độ rộng vùng Response" tabindex="0"></div>
-          <div class="rq-response" id="rqResponse" aria-label="Response"></div>
+          <!-- Cột Response thu gọn được thành dải (nhường chỗ cho danh sách test case); Send tự mở lại -->
+          <div class="rq-resp" id="rqResp">
+            <button type="button" class="resp-toggle" id="btnRespToggle" aria-controls="rqResponse" aria-expanded="true" title="Thu gọn Response"><span class="ms" aria-hidden="true">right_panel_close</span><span class="rt-lbl">Response</span><span class="rt-st" id="respStripSt"></span></button>
+            <div class="rq-response" id="rqResponse" aria-label="Response"></div>
+          </div>
         </div>
       </section>
 

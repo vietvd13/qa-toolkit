@@ -13,21 +13,21 @@ Mô tả giao diện hiện tại của công cụ **Kiểm thử API** (qa-tool
 
 - Chrome extension MV3, HTML / CSS / JS thuần, không framework, không CDN, không script inline. Chạy trong iframe của hub (rail của hub tự thu thành dải icon), trong tab riêng (menu ⋮ → *Mở trong tab riêng*) hoặc bản web.
 - Chỉ dùng design token của `extension/shared/theme.css` (hệ *Dao động ký*: vỏ xám, mặt hiển thị than chì `--ink-*`, một màu tín hiệu); hai chế độ sáng / tối, không cho tự chọn màu.
-- Bố cục cao đúng 100% khung nhìn, **không có thanh ứng dụng**; vùng chính cuộn riêng. Responsive bằng **container query** `main` (chiều rộng thật của vùng chính) và `drawer`; khi màn hình ≤ 760px panel trái là dải icon, mở ra thành ngăn trượt.
+- Bố cục cao đúng 100% khung nhìn, **không có thanh ứng dụng**; vùng chính cuộn riêng. Responsive bằng **container query** `main` (chiều rộng thật của vùng chính) và `drawer`; khi màn hình ≤ 840px panel trái là dải icon, mở ra thành ngăn trượt.
 
 ## 3. Information architecture
 
 ```
 ┌ Panel trái ────────────────┬ Vùng chính (vd Request) ─────────────────────────────────┐
 │ [REQUESTS│ENV│RUNNER]   ⇤  │ Student API › Sinh viên                                  │
-│ MÔI TRƯỜNG                 │ Tạo sinh viên                         [▶ Run tests] ? ⋯  │
+│ MÔI TRƯỜNG                 │ Tạo sinh viên                                     ? ⋯  │
 │ [● STAGING            ▾]   │ [POST ▾│ {{baseUrl}}/students                  │  SEND ]  │
 │ [🔍 Tìm request  Ctrl K] 📋 ＋│ → https://staging…/students                              │
 │ ▾ Student API              ├──────────────────────────────┬───────────────────────────┤
 │   ▾ Auth                   │ Tests · Body · Headers · …   │ 201 CREATED   184 ms 312 B │
-│     POST Đăng nhập      2  │ MONG ĐỢI  3 case · 2 đạt …    │ (mặt hiển thị than chì)    │
-│   ▾ Sinh viên              │ ┃TC-001 P0 Tạo hợp lệ   ĐẠT  │ Body · Headers · Tests ·…  │
-│     POST Tạo sinh viên  3  │ ┃ ↳ Status là 201 …          │ { "id": 1042, … }          │
+│     POST Đăng nhập      2  │ MONG ĐỢI 3 case (2 đạt)(1 sai)│ (mặt hiển thị than chì)    │
+│   ▾ Sinh viên              │      [+ Thêm case][▶ Run (3)]⋯│ Body · Headers · Tests ·…  │
+│     POST Tạo sinh viên  3  │ ┃TC-001 P0 Tạo… 201 ĐẠT [●] │ { "id": 1042, … }          │
 │ CHƯA LƯU                   │ ┃TC-002 … SAI → nhận 500     │                            │
 ├────────────────────────────┤ [+ Thêm case]  Excel AI JSON │                            │
 │ ☁ [Bắt đầu 5/7]      ?  ⋮  │ LƯU BIẾN …                   │                            │
@@ -47,17 +47,18 @@ Mô tả giao diện hiện tại của công cụ **Kiểm thử API** (qa-tool
 ## 4. Từng khu vực
 
 ### Panel trái: điều khiển chung
-- 3 tab khu vực trên nền than chì (`tablist`, ← → để chuyển), mục đang mở có vạch tín hiệu. Chấm trên tab Runner khi có kết quả.
-- Chọn environment (nhãn *Môi trường*): chấm màu theo environment, viền / nền đỏ khi Production; có mục *Không dùng environment* và *Quản lý environments…*.
+- 3 tab khu vực dạng segmented (`tablist`, ← → để chuyển): mục đang mở chỉ nổi nền + viền mảnh, không gạch chân. Chấm trên tab Runner khi có kết quả. Nút thu gọn cao bằng khối tab.
+- Chọn environment, hiển thị *● Env: **DEV*** (không còn dòng nhãn riêng; nhãn vẫn có cho trình đọc màn hình): chấm màu theo environment, viền / nền đỏ khi Production; có mục *Không dùng environment* và *Quản lý environments…*.
 - Chân panel — trạng thái lưu: icon *Đang lưu* (xoay) · *Đã lưu* · *Lưu thất bại* + *Thử lại* · *Bộ nhớ đầy* (toast có nút Export); nút **Bắt đầu x/7**; **?** hướng dẫn; menu ⋮.
 - Menu ⋮: Export / Import workspace, Mở trong tab riêng, Dung lượng đã dùng, Xoá dữ liệu phiên bản cũ (khi còn).
-- Nút ⇤ thu panel thành dải icon 52px (chỉ còn khu vực, ?, ⋮); màn hẹp ≤ 760px luôn ở dạng dải, bấm để mở ngăn trượt.
+- Nút ⇤ thu panel thành dải icon 52px (chỉ còn khu vực, ?, ⋮); màn hẹp ≤ 840px luôn ở dạng dải, bấm để mở ngăn trượt.
 
 ### Cây Collection
 - Cây phẳng có `aria-level` (role `tree` / `treeitem`), roving tabindex.
   - ↑ ↓ Home End: di chuyển; → ←: mở / gập hoặc vào con / về cha; Enter: mở.
   - F2: đổi tên; Delete: xoá; Shift+F10 / phím Menu: menu ngữ cảnh; Alt+↑ ↓: sắp xếp.
-- Request: nhãn method màu, số test case; mục tắt khi chạy gạch ngang + icon `block`.
+- Request: nhãn method màu rộng cố định 38px (tên thẳng một trục), số test case; mục tắt khi chạy gạch ngang + icon `block`.
+- Mục đang chọn: nền bo góc + đoạn đường dẫn hướng của nó đổi màu tín hiệu. Rê chuột / focus: nút thao tác thay chỗ số test case (request: ⋯; folder, collection: ＋ thêm request · ⋯).
 - Tìm kiếm (Ctrl / ⌘ + K) theo tên, method, URL; giữ nhánh cha để thấy vị trí; tô đậm chỗ khớp.
 - Trạng thái trống: *Chưa có collection* (Tạo collection / Dán cURL) · *Không tìm thấy “…”* (Xoá tìm kiếm).
 - Kéo cạnh phải để đổi độ rộng (← → khi focus).
@@ -76,30 +77,35 @@ Mô tả giao diện hiện tại của công cụ **Kiểm thử API** (qa-tool
 - Hai nút: *Tạo request* / *Tạo & Send*.
 
 ### Request
-- Đường dẫn (crumbs) trên, tiêu đề sửa tại chỗ bên dưới; badge *Chưa lưu* + nút **Lưu vào collection**; nút chính **Run tests**; menu ⋯.
-- Dòng lệnh viền mực: method (màu cố định theo method) · URL · **SEND** (Ctrl + Enter; khi đang gửi thành **Huỷ**). Dán URL có `?query` → tự chuyển sang tab Params.
+- Đường dẫn (crumbs) trên, tiêu đề sửa tại chỗ bên dưới; badge *Chưa lưu* + nút **Lưu vào collection**; menu ⋯. **Run tests** nằm trong tab Tests (cạnh *Thêm case*).
+- Dòng lệnh viền mực: method (màu cố định theo method) · URL · **SEND** màu tín hiệu, là CTA duy nhất của dòng lệnh (Ctrl + Enter; khi đang gửi thành **Huỷ**, nền đỏ). Dán URL có `?query` → tự chuyển sang tab Params.
 - Dòng dưới URL: URL thật sau khi thay biến (đã che secret), hoặc *Chưa có giá trị cho {{baseUrl}}* + *Nhập giá trị*, hoặc *host chưa được phép* + *Cho phép*.
 - Các tab (bên trái): **Tests** đứng đầu, rồi Body · Headers · Params · Auth · Scripts.
   - **Authorization:** Kế thừa (ghi rõ đang dùng của folder / collection nào) / Không / Bearer / Basic / API Key.
   - **Body:** `none · JSON · Text · XML · x-www-form-urlencoded`, nút Format, báo JSON hợp lệ.
   - **Scripts:** Pre-request / Post-response, số dòng, kiểm cú pháp, Dry run, Snippets, API reference.
   - **Tests:** *Lưu biến từ response* + danh sách test case.
-- **Response** (cột phải, mặt hiển thị than chì; vùng chính ≤ 900px thì nằm dưới):
-  - *Chưa gửi* · *Đang gửi…* dạng chữ lớn.
+- **Response** (cột phải; vùng chính ≤ 900px thì nằm dưới):
+  - Nút thu gọn (góc trên phải): cột thành dải dọc 40px *RESPONSE · 200* (xếp dưới thì thành thanh ngang), nhường chỗ cho danh sách test case. Nhớ theo workspace; **Send tự mở lại**.
+  - *Chưa gửi* · *Đang gửi…* · *Chưa gửi được*: nền sáng như vùng soạn. Chỉ khi có response thật mới chuyển sang mặt hiển thị than chì.
   - Có response: status số lớn (xanh 2xx / đỏ 4xx–5xx) + chữ trạng thái, chỉ số *Thời gian* / *Kích thước*; dòng thẻ: redirect, số `pm.test` đạt / sai, biến vừa lưu `{{…}}`, environment · thời điểm. Tab Body (Pretty / Raw, tìm trong body, Copy; **bấm tên field để lưu thành biến**) · Headers · Tests · Console (cảnh báo, request đã gửi, log).
   - **Chưa gửi được:** nêu rõ *Request chưa được gửi* và lý do, kèm hành động: Nhập giá trị / Cho phép host / Cấp quyền / Mở Body / Mở Scripts. Thiếu biến do request khác sinh ra thì có link mở request đó.
 
 ### Tab Tests
 - **Lưu biến từ response:** bảng `Tên biến ← Body (JSON) / Header / Status code + đường dẫn`, kiểm cú pháp path ngay khi gõ.
-- Tiêu đề **MONG ĐỢI** + một dòng số liệu mono (số case · đạt · sai · lỗi · thời điểm chạy gần nhất).
+- Hàng tiêu đề: **MONG ĐỢI** · số case · pill **đạt / sai / lỗi** (xanh / đỏ / cam; bấm để lọc theo kết quả lần chạy gần nhất, bấm lại để bỏ; rê chuột xem thời điểm chạy) · cụm nút dạt phải *Thêm case* · **▶ Run tests (số case đang bật)** · ⋯.
 - **Chưa có test case:** một câu giải thích Runner sẽ dùng kiểm tra mặc định 2xx + dòng *Thêm case* (nhập từ Excel / AI / JSON ngay trên dòng đó).
-- **Có test case:** mỗi case là một **thẻ**:
-  - dòng đầu: ô chọn (hiện khi rê chuột hoặc khi đang chọn), TC ID, priority (P0 nền mực), tên, group, *Cần review* / *Đang tắt*, kết quả **ĐẠT / SAI / LỖI / BỎ QUA** (bấm để mở evidence), nút sửa;
-  - điều kiện viết thành câu: “Status là 201 trong ≤ 500 ms”, “body.id có kiểu số”, “header content-type chứa …”; case có request riêng ghi *Gửi với body / URL … riêng của case*;
-  - kết quả lần chạy gần nhất: vạch màu bên trái thẻ; dòng sai tô đỏ kèm “→ nhận 500”; case ERROR có câu lý do;
+- Nút **Chi tiết / Gọn** (nhớ theo workspace). **Chi tiết** (mặc định) trình bày như trước: dòng *Gửi với … riêng của case*, mỗi điều kiện một câu “↳ Status là 201 trong ≤ 500 ms”, “↳ body.id có kiểu số”; dòng sai tô đỏ kèm “→ nhận 500”.
+- **Gọn:** mỗi case là một **thẻ gọn** (case đạt chỉ 1 dòng):
+  - hàng 1: ô chọn (hiện khi rê chuột hoặc khi đang chọn), TC ID mono, priority (P0 nền mực), **tên**, group dạng pill xám · bên phải: *status 201* (đỏ khi sai), kết quả **ĐẠT / SAI / LỖI / BỎ QUA** (bấm để mở evidence) hoặc *Cần review*, **công tắc bật / tắt** case;
+  - hàng 2 (chỉ khi có): chữ 12px một dòng: *header, body riêng* + điều kiện còn lại (“≤ 500 ms · body.id có kiểu số · …”), đủ câu ở tooltip;
+  - điều kiện **sai** mới thành dòng đỏ riêng kèm “→ nhận 500” (không lặp ở hàng 2); case ERROR có câu lý do, `{{biến}}` trong lý do là nút mở hộp *Nhập giá trị biến*;
+  - case đang tắt: mờ 65%, viền đứt, nền xám (rõ lại khi rê chuột / focus);
   - bấm thẻ hoặc Enter để sửa, ↑ ↓ chuyển thẻ.
-- Thông báo `NEEDS_REVIEW`. Từ 7 case trở lên (hoặc khi đang lọc) có chip lọc (Tất cả · Sẽ chạy · Cần review · Đang tắt), tìm kiếm, lọc priority.
-- Thanh hàng loạt (chọn tất cả trong bộ lọc · Bật / Tắt / Xoá / Bỏ chọn); phân trang 25 / 50 / 100.
+- Banner `NEEDS_REVIEW` một dòng (chỉ khi còn case cần review đang tắt): *Xem* (lọc) · **Bật tất cả (n)** (có hoàn tác).
+- Từ 7 case trở lên (hoặc khi đang lọc) có thanh lọc: ô chọn tất cả · chip (Tất cả · Sẽ chạy · Cần review · Đang tắt) · tìm kiếm · lọc priority. Lọc *Cần review* / *Đang tắt* và lọc theo kết quả loại trừ nhau.
+- Khi có case được chọn, **thanh hàng loạt** thay chỗ thanh lọc (cùng chiều cao): chọn tất cả trong bộ lọc · Bật · Tắt · Đổi priority · Xoá · Bỏ chọn. Phân trang 25 / 50 / 100.
+- Thanh cuộn (danh sách, panel trái, Response, drawer): 6px, bo tròn, chỉ hiện khi rê chuột vào vùng cuộn.
 - Menu ⋯: nhập từ Excel / AI / JSON, đổi tên bộ, tải JSON, Run tests, xoá toàn bộ (có hoàn tác).
 
 ### Test Case Builder (drawer)
@@ -149,14 +155,15 @@ Mô tả giao diện hiện tại của công cụ **Kiểm thử API** (qa-tool
   - lỗi chặn (đỏ, có nút sửa) / cảnh báo (vàng) / thông tin (xanh);
   - nút lớn **Run N case**.
 - **Xác nhận** (alertdialog, Huỷ được focus): environment, số request / case, danh sách request ghi dữ liệu, host đích.
-- **Kết quả** (khi có, nằm **trên đầu** khu vực Runner; cấu hình xếp dưới với tiêu đề *Lần chạy tiếp theo*):
-  - Tiêu đề *Kết quả HH:MM:SS* (đang chạy: *Đang chạy* + thanh tiến độ + **Stop**), dòng phụ: preset · environment · phạm vi · số case đã xử lý.
+- **Kết quả** (khi có, nằm **trên đầu** khu vực Runner; cấu hình gập thành một dòng *Lần chạy tiếp theo · phạm vi · environment* bên dưới, bấm để mở; tự mở khi Run bị chặn vì còn mục cần sửa):
+  - Tiêu đề *Kết quả HH:MM:SS* (đang chạy: *Đang chạy* + **Stop**), dòng phụ: preset · environment · phạm vi · số case đã xử lý · *còn ~Ns* (ước tính khi đang chạy).
+  - **Thanh tiến độ xếp chồng** theo kết quả (xanh / đỏ / cam / xám, đoạn chưa chạy có hiệu ứng chạy), giữ lại sau khi xong làm thanh tỉ lệ.
   - Chạy xong: *Chạy lại N FAIL* / *Chạy lại N ERROR* / Export Excel / Export ZIP / **Chạy lại tất cả** / Xoá.
   - Export khi đang lọc: nút ghi `(N/M)`, bấm mở menu *Theo bộ lọc hiện tại (N case)* / *Toàn bộ kết quả (M case)*. Không lọc thì xuất ngay.
-  - Dải chỉ số viền mực: **Tỉ lệ đạt** (ô than chì, số lớn) · Pass · Fail · Error · Skipped (bấm để lọc) · Thời gian chạy theo thời gian thực.
+  - Dải chỉ số viền mực: **Tỉ lệ đạt** (ô than chì: vòng chia cung theo trạng thái, phần chưa chạy là rãnh · số lớn · *N / M case đạt*) · Pass · Fail · Error · Skipped (bấm để lọc) · Thời gian chạy theo thời gian thực + thời gian phản hồi *TB · p95*.
   - **Biểu đồ vạch** trên mặt hiển thị: mỗi case một vạch theo thứ tự chạy, cao = thời gian phản hồi (thang căn bậc hai), màu theo trạng thái, gom theo request có nhãn; bấm vạch để mở evidence.
   - Chip *Cần xem* (FAIL + ERROR) / *Tất cả*, lọc Folder, lọc Request, tìm kiếm.
-  - Danh sách **gom theo request** (tiêu đề nhóm: method, tên, folder, số pass / fail…); mỗi dòng: icon trạng thái, TC ID, priority, tên, **một câu “mong đợi → nhận”** (vd `status ~~400~~ 500`, `body.error ~~chứa "email"~~ null`; ERROR ghi loại lỗi + lý do), thời gian. Dòng FAIL / ERROR có vạch màu. Chạy xong mà có lỗi → tự lọc *Cần xem*.
+  - Danh sách **gom theo request** (tiêu đề nhóm: method, tên, folder, thời gian phản hồi TB, thanh tỉ lệ nhỏ, số pass / fail…); mỗi dòng: icon trạng thái, TC ID, priority, tên, **một câu “mong đợi → nhận”** (vd `status ~~400~~ 500`, `body.error ~~chứa "email"~~ null`; ERROR ghi loại lỗi + lý do), thời gian. Dòng FAIL / ERROR có vạch màu. Chạy xong mà có lỗi → tự lọc *Cần xem*.
   - Kết quả lần trước được mở lại khi vào tool (ghi rõ thời điểm). Kết quả gần nhất của từng case cũng hiện trên thẻ case ở tab Tests.
 
 ### Evidence (drawer)
@@ -206,10 +213,13 @@ Mô tả giao diện hiện tại của công cụ **Kiểm thử API** (qa-tool
   - dải chỉ số kết quả 3 cột; dòng kết quả đưa câu “mong đợi → nhận” xuống hàng thứ hai;
   - Environments 1 cột (danh sách thành lưới thẻ); màn chào 1 cột.
 - **≤ 720px:**
-  - thanh URL xuống dòng (URL chiếm cả hàng);
-  - form 1 cột; nút *Run tests* chỉ còn icon;
+  - thanh URL giữ một hàng: method gọn lại, *Send* chỉ còn icon;
+  - hàng tên request không xuống dòng: tên co lại, *Lưu vào collection* / nhãn *Chưa lưu* chỉ còn icon;
+  - thẻ test case bỏ group và chữ “status”;
+  - form 1 cột;
   - dải chỉ số 2 cột; dòng kết quả chỉ còn trạng thái, TC ID, câu “mong đợi → nhận”, thời gian.
-- **Màn hình ≤ 760px:** panel trái là dải icon; bấm nút mở thì trượt ra đầy đủ, đè lên nội dung. **≤ 640px:** drawer chiếm toàn màn hình.
+- **≤ 480px:** ẩn nhãn *Chưa lưu* và nút ? ở hàng tên request (vẫn còn phím ?), tên request cỡ nhỏ hơn.
+- **Màn hình ≤ 840px:** panel trái là dải icon; bấm nút mở thì trượt ra đầy đủ, đè lên nội dung. **≤ 640px:** drawer chiếm toàn màn hình.
 
 ## 8. Còn hạn chế
 

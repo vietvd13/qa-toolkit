@@ -67,11 +67,16 @@
     const envs = W.envList();
     const curPreset = R.cfg.presetId && W.preset(R.cfg.presetId);
     const lock = running ? ' disabled' : '';
+    // Đã có kết quả: cấu hình lần sau thu thành một dòng mở / gập được, để kết quả chiếm trọn trang
+    const nextEnv = R.cfg.envId ? W.envs[R.cfg.envId]?.name : W.activeEnv()?.name;
     box.innerHTML = `
       <section class="run-results ${R.run ? '' : 'hidden'}" id="runResults" aria-label="Kết quả"></section>
-      <div class="view-head pad">
-        <div><p class="eyebrow">Runner</p><h2>${R.run ? 'Lần chạy tiếp theo' : 'Chạy test'} ${App.helpBtn?.('runner', 'Hướng dẫn Runner & Preset') || ''}</h2></div>
-      </div>
+      ${R.run ? `<details class="next-run" id="nextRun"${R.nextOpen ? ' open' : ''}>
+        <summary><span class="ms sm chev" aria-hidden="true">chevron_right</span><span class="nr-t">Lần chạy tiếp theo</span>
+          <span class="nr-meta">${esc(scopeLabel())}${nextEnv ? ` · ${esc(nextEnv)}` : ''}</span><span class="spacer"></span><span class="nr-hint">${R.nextOpen ? 'Thu gọn' : 'Sửa cấu hình'}</span>${App.helpBtn?.('runner', 'Hướng dẫn Runner & Preset') || ''}</summary>`
+      : `<div class="view-head pad">
+        <div><p class="eyebrow">Runner</p><h2>Chạy test ${App.helpBtn?.('runner', 'Hướng dẫn Runner & Preset') || ''}</h2></div>
+      </div>`}
       ${App.tip?.('runner', '<b>3 bước:</b> ① chọn <b>Chạy gì</b> (collection, tích folder / request) → ② xem <b>Kiểm tra trước khi chạy</b>, sửa mục đỏ → ③ <b>Run</b>. Chạy ổn rồi thì <b>Lưu cấu hình thành preset</b> để lần sau chỉ cần bấm Run.', 'runner') || ''}
       <div class="run-wrap">
         <section class="card run-cfg" aria-labelledby="presetH">
@@ -114,7 +119,8 @@
         </section>
 
         <section class="card prerun" id="preRun" aria-live="polite"></section>
-      </div>`;
+      </div>${R.run ? '</details>' : ''}`;
+    $('#nextRun')?.addEventListener('toggle', e => { R.nextOpen = e.target.open; const h = e.target.querySelector('.nr-hint'); if (h) h.textContent = R.nextOpen ? 'Thu gọn' : 'Sửa cấu hình'; });
     renderPreRun();
     renderResults();
   }
@@ -351,6 +357,8 @@
     const errs = [...plan.errors, ...asyncErrs];
     if (errs.length || !plan.counts.cases) {
       if (!auto) toast(`${errs.length || 'Không có'} ${errs.length ? 'mục cần sửa trước khi chạy' : 'case nào để chạy'}`, 'warn');
+      const nr = $('#nextRun');
+      if (nr) nr.open = true;
       renderPreRun();
       $('#preRun')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       return;
@@ -463,7 +471,7 @@
         <span class="spacer"></span>
         <div class="run-actions" id="runActions"></div>
       </div>
-      <div class="bar" role="progressbar" aria-label="Tiến độ" aria-valuemin="0" aria-valuemax="100" id="barWrap"><div id="barFill"></div></div>
+      <div class="sbar" role="progressbar" aria-label="Tiến độ" aria-valuemin="0" aria-valuemax="100" id="barWrap"></div>
       ${run.restored ? `<p class="muted small restored-note"><span class="ms sm" aria-hidden="true">history</span> Kết quả lần chạy lúc ${esc(Ui.fmtTime(run.startedAt))} (đã lưu trên máy${run.trimmed ? ', body đã rút gọn' : ''}). Request / test case có thể đã thay đổi sau đó.</p>` : ''}
       <div class="kpis" id="kpis"></div>
       <div class="trace" id="runTrace"></div>
@@ -489,11 +497,14 @@
     $('#runStatus').innerHTML = run.running
       ? `<span class="s-dot run"></span>Đang chạy${run.current ? ` · ${esc(run.current)}` : ''}`
       : `<span class="s-dot ${run.aborted ? 'stop' : 'ok'}"></span>${run.aborted ? 'Đã dừng' : 'Hoàn tất'}`;
-    $('#countBig').innerHTML = [run.presetName && `<b>${esc(run.presetName)}</b>`, `<b>${esc(run.envName)}</b>`, esc(run.scopeLabel), `${done} / ${run.total} case`].filter(Boolean).join(' · ');
-    $('#barWrap').classList.toggle('hidden', !run.running);
-    $('#barFill').style.width = (run.running ? pct : 100) + '%';
-    $('#barWrap').setAttribute('aria-valuenow', run.running ? pct : 100);
+    // Còn lại ước tính = thời gian trung bình mỗi case đã xong × số case chưa chạy (chỉ hiện khi đã có vài case để đo)
+    const eta = run.running && done >= 3 && done < run.total ? ((Date.now() - run.startedAt) / done) * (run.total - done) : 0;
+    $('#countBig').innerHTML = [run.presetName && `<b>${esc(run.presetName)}</b>`, `<b>${esc(run.envName)}</b>`, esc(run.scopeLabel), `${done} / ${run.total} case`, eta && `còn ~${esc(Ui.fmtDur(Math.max(1000, Math.round(eta / 1000) * 1000)))}`].filter(Boolean).join(' · ');
     const k = ApiReport.counts(run.results);
+    // Thanh tiến độ xếp chồng theo kết quả: nhìn là biết đang đạt / sai bao nhiêu khi vẫn đang chạy; phần trống = chưa chạy
+    const seg = (n, cls) => (n ? `<span class="bs ${cls}" style="flex:${n}"></span>` : '');
+    $('#barWrap').innerHTML = seg(k.PASS, 'pass') + seg(k.FAIL, 'fail') + seg(k.ERROR, 'error') + seg(k.SKIPPED, 'skip') + seg(Math.max(0, run.total - done), 'rest' + (run.running ? ' live' : ''));
+    $('#barWrap').setAttribute('aria-valuenow', run.running ? pct : 100);
     const bad = k.FAIL + run.results.filter(r => r.status === 'ERROR' && r.errorKind !== 'cancelled').length;
     $('#runActions').innerHTML = run.running
       ? '<button class="btn btn-danger btn-sm" type="button" data-run-act="stop"><span class="ms sm fill" aria-hidden="true">stop</span>Stop</button>'
@@ -510,10 +521,24 @@
     const c = ApiReport.counts(run.results);
     const dur = (run.finishedAt || Date.now()) - run.startedAt;
     const k = (key, label, n, kind, tip) => `<button type="button" class="kpi ${kind}${R.f.status === key ? ' on' : ''}" data-rf="${key}" aria-pressed="${R.f.status === key}" title="${tip} · bấm để lọc"><span class="kpi-l">${label}</span><span class="kpi-n">${n}</span></button>`;
-    $('#kpis').innerHTML = `<div class="kpi big" title="PASS / (Tổng − SKIPPED)"><span class="kpi-l">Tỉ lệ đạt</span><span class="kpi-n">${ApiReport.pct(c.passRate)}</span></div>`
+    // Vòng tỉ lệ: mỗi cung một trạng thái, theo thứ tự Pass → Fail → Error → Skipped; phần còn lại (đang chạy) là rãnh
+    const C = 2 * Math.PI * 26, tot = Math.max(1, run.total);
+    let off = 0;
+    const arcs = [['PASS', 'pass'], ['FAIL', 'fail'], ['ERROR', 'error'], ['SKIPPED', 'skip']].map(([key, cls]) => {
+      const len = (c[key] / tot) * C;
+      const s = len ? `<circle class="rg ${cls}" r="26" cx="32" cy="32" stroke-dasharray="${len.toFixed(2)} ${(C - len).toFixed(2)}" stroke-dashoffset="${(-off).toFixed(2)}"/>` : '';
+      off += len;
+      return s;
+    }).join('');
+    const judged = run.results.length - c.SKIPPED;
+    // Độ trễ: trung bình và p95 của các case đã nhận response
+    const ms = run.results.map(r => r.durationMs).filter(x => x != null).sort((a, b) => a - b);
+    const lat = ms.length ? `TB ${Ui.fmtDur(Math.round(ms.reduce((a, b) => a + b, 0) / ms.length))} · p95 ${Ui.fmtDur(ms[Math.min(ms.length - 1, Math.ceil(ms.length * 0.95) - 1)])}` : '';
+    $('#kpis').innerHTML = `<div class="kpi big" title="PASS / (Tổng − SKIPPED)"><svg class="kpi-ring" viewBox="0 0 64 64" aria-hidden="true"><circle class="rg-track" r="26" cx="32" cy="32"/>${arcs}</svg>
+        <span class="kpi-txt"><span class="kpi-l">Tỉ lệ đạt</span><span class="kpi-n">${ApiReport.pct(c.passRate)}</span><span class="kpi-s">${c.PASS} / ${judged} case đạt</span></span></div>`
       + k('PASS', 'Pass', c.PASS, 'pass', 'Đúng mong đợi') + k('FAIL', 'Fail', c.FAIL, 'fail', 'API trả sai: báo dev')
       + k('ERROR', 'Error', c.ERROR, 'error', 'Chưa kiểm thử được, thường do cấu hình') + k('SKIPPED', 'Skipped', c.SKIPPED, 'skip', 'Không chạy')
-      + `<div class="kpi static"><span class="kpi-l">Thời gian</span><span class="kpi-n" id="kpiDur">${Ui.fmtDur(dur)}</span></div>`;
+      + `<div class="kpi static"><span class="kpi-l">Thời gian</span><span class="kpi-n" id="kpiDur">${Ui.fmtDur(dur)}</span>${lat ? `<span class="kpi-s" title="Thời gian phản hồi: trung bình · 95% case nhanh hơn mức này">${lat}</span>` : ''}</div>`;
     const n = { all: run.results.length, issues: c.FAIL + c.ERROR };
     // Lọc theo từng trạng thái bằng ô chỉ số ở trên; ở đây chỉ còn hai lối tắt
     $('#rFilters').innerHTML = [['issues', 'Cần xem'], ['all', 'Tất cả']]
@@ -594,9 +619,15 @@
       if (r.requestId !== last) {
         if (open) html.push('</div>');
         last = r.requestId;
-        const c = ApiReport.counts(R.run.results.filter(x => x.requestId === r.requestId));
+        const mine = R.run.results.filter(x => x.requestId === r.requestId);
+        const c = ApiReport.counts(mine);
         const item = R.run.items.find(x => x.requestId === r.requestId);
+        const ms = mine.map(x => x.durationMs).filter(x => x != null);
+        // Thanh tỉ lệ nhỏ của request + thời gian phản hồi trung bình
+        const gseg = (n, cls) => (n ? `<span class="bs ${cls}" style="flex:${n}"></span>` : '');
         html.push(`<div class="rgrp"><div class="rgrp-h">${Ui.methodTag(r.method || item?.method || '')}<b>${esc(r.requestName)}</b><span class="muted small clamp-1">${esc(r.folderPath || r.collectionName || '')}</span><span class="spacer"></span>
+          ${ms.length ? `<span class="gr-ms" title="Thời gian phản hồi trung bình">TB ${esc(Ui.fmtDur(Math.round(ms.reduce((a, b) => a + b, 0) / ms.length)))}</span>` : ''}
+          <span class="sbar gr-bar" aria-hidden="true">${gseg(c.PASS, 'pass')}${gseg(c.FAIL, 'fail')}${gseg(c.ERROR, 'error')}${gseg(c.SKIPPED, 'skip')}</span>
           <span class="gr-cnt">${c.PASS ? `<span class="ok-t">${c.PASS} pass</span>` : ''}${c.FAIL ? `<span class="err-t">${c.FAIL} fail</span>` : ''}${c.ERROR ? `<span class="warn-t">${c.ERROR} error</span>` : ''}${c.SKIPPED ? `<span class="muted">${c.SKIPPED} skipped</span>` : ''}</span></div>`);
         open = true;
       }

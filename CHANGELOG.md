@@ -4,6 +4,37 @@ Ghi theo [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/), đánh số t
 
 ## [Chưa phát hành]
 
+### Thêm
+- Kiểm thử API, tab **Tests**:
+  - nút **Run tests (số case đang bật)** ngay cạnh *Thêm case* (chuyển từ góc trên của màn request xuống);
+  - pill **đạt / sai / lỗi** trên hàng *Mong đợi*: bấm để lọc theo kết quả lần chạy gần nhất;
+  - **công tắc bật / tắt** case ngay trên thẻ, không cần mở form;
+  - thanh hàng loạt thêm **Đổi priority**; ô *chọn tất cả* nằm ngay đầu thanh lọc;
+  - banner *case cần review* gọn một dòng, có **Bật tất cả (n)** (có hoàn tác);
+  - `{{biến}}` trong lý do lỗi bấm được để nhập giá trị;
+  - kiểu hiển thị **Chi tiết / Gọn** (Chi tiết mặc định, nhớ theo workspace).
+- Kiểm thử API: cột **Response thu gọn được** thành dải `RESPONSE · 200` để nhường chỗ cho danh sách test case; bấm Send tự mở lại.
+- Kiểm thử API, cây request: rê chuột vào folder / collection hiện nút **＋ thêm request** và ⋯.
+- Kiểm thử API, **Runner**:
+  - thanh tiến độ xếp chồng theo kết quả (đạt / sai / lỗi) và **thời gian còn lại** ước tính khi đang chạy;
+  - ô tỉ lệ đạt có **vòng chia cung** theo trạng thái; ô thời gian có thời gian phản hồi **TB · p95**;
+  - tiêu đề từng request có thanh tỉ lệ nhỏ và thời gian phản hồi trung bình;
+  - đã có kết quả thì cấu hình *Lần chạy tiếp theo* gập thành một dòng.
+
+### Thay đổi
+- **Responsive khi chia nhỏ màn hình** (Kiểm thử API và bộ công cụ):
+  - hàng tên request không còn xuống dòng lộn xộn: nút chỉ còn icon khi hẹp; thanh URL luôn một hàng (method gọn, Send chỉ còn icon);
+  - panel trái tự thành dải icon từ **≤ 840px** (trước là 760px), mở ra thành ngăn trượt;
+  - rail bộ công cụ mảnh 52px khi cửa sổ ≤ 560px; chân drawer giữ các nút trên một hàng.
+- Nút **Send** dùng màu tín hiệu (CTA của dòng lệnh); Run tests giữ nút mực.
+- Response chưa có dữ liệu (chưa gửi / đang gửi / chặn trước khi gửi) dùng nền sáng như vùng soạn; chỉ khi có response mới dùng mặt hiển thị than chì.
+- Thẻ test case: case đang tắt mờ + viền đứt; điều kiện sai không lặp lại.
+- Panel trái tối giản: tab khu vực bỏ gạch chân cam; ô environment thành *● Env: DEV* (bỏ dòng nhãn); mục đang chọn đổi màu đoạn đường dẫn hướng của chính nó thay cho vạch rời ở mép; nhãn method rộng cố định để tên request thẳng một trục; số test case nhường chỗ cho nút ⋯ khi rê chuột; chân panel gọn hơn.
+- Thanh cuộn mảnh 6px, chỉ hiện khi rê chuột vào vùng cuộn.
+
+### Sửa
+- Danh sách xổ của ô chọn (vd environment) **không đọc được ở chế độ tối** trên Windows: chữ sáng trên nền trắng.
+
 ## [1.5.0] - 2026-10-28
 
 ### Thay đổi

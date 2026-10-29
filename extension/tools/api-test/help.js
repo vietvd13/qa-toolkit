@@ -118,7 +118,7 @@
         <li>Xem khung <b>Kiểm tra trước khi chạy</b>: mục đỏ phải sửa (có nút <i>Sửa</i>, biến thiếu nhập ngay tại chỗ), mục vàng chỉ là lưu ý.</li>
         <li><b>Run</b>. Chạy trên PROD hoặc có POST / PUT / PATCH / DELETE thì phải xác nhận (nút Huỷ được chọn sẵn để tránh bấm nhầm).</li>
       </ol>
-      <p>Chạy nhanh một request / folder: nút <b>Run tests</b> trên request, hoặc chuột phải folder → <i>Run folder</i>.</p>
+      <p>Chạy nhanh một request / folder: nút <b>Run tests</b> trong tab Tests của request (cạnh <i>Thêm case</i>), hoặc chuột phải folder → <i>Run folder</i>.</p>
       <h4>Preset: cấu hình một lần, chạy mỗi ngày</h4>
       <p>Chọn phạm vi + environment xong → <b>Lưu cấu hình thành preset</b> (vd “Smoke Test”). Lần sau chỉ cần bấm <b>Run</b> cạnh preset. Preset không lưu token.</p>
       <h4>Chế độ chạy</h4>

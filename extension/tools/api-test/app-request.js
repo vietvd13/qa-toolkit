@@ -17,6 +17,7 @@
     $('#apiRef').innerHTML = API_REF.map(([a, b]) => `<li><code>${esc(a)}</code> ${esc(b)}</li>`).join('');
     const w = App.W.meta.ui.splitW;
     if (w) document.documentElement.style.setProperty('--resp-w', w + 'px');
+    setRespCollapsed(!!App.W.meta.ui.respC, false);
     App.on('vars', () => { if (node() && S.nav === 'requests') { renderUrlNote(); renderCounts(); if (!$('#rqAuth').contains(document.activeElement)) authEd?.draw(); } });
     App.on('env', () => { if (node() && S.nav === 'requests') renderResponse(); });
   };
@@ -475,8 +476,20 @@ pm.test('Có data.id', () => pm.expect(body.data).to.have.property('id'));` },
   });
   function setSend(id, s) {
     sends.set(id, { running: false, ...s });
-    if (node()?.id === id) renderResponse();
+    if (node()?.id !== id) return;
+    setRespCollapsed(false); // vừa bấm Send: luôn cho thấy kết quả / lý do chưa gửi
+    renderResponse();
   }
+  // Thu gọn cột Response thành dải; nhớ lựa chọn theo workspace
+  function setRespCollapsed(on, save = true) {
+    $('#rqSplit').classList.toggle('resp-collapsed', on);
+    const b = $('#btnRespToggle');
+    b.setAttribute('aria-expanded', String(!on));
+    b.title = on ? 'Mở Response' : 'Thu gọn Response';
+    b.querySelector('.ms').textContent = on ? 'right_panel_open' : 'right_panel_close';
+    if (save && !!App.W.meta.ui.respC !== on) { App.W.meta.ui.respC = on; App.saveUi(); }
+  }
+  $('#btnRespToggle').addEventListener('click', () => setRespCollapsed(!$('#rqSplit').classList.contains('resp-collapsed')));
   $('#btnSend').addEventListener('click', () => {
     const s = sends.get(node()?.id);
     if (s?.running) { s.ctrl.abort(); return; }
@@ -500,6 +513,12 @@ pm.test('Có data.id', () => pm.expect(body.data).to.have.property('id'));` },
     const s = sends.get(n.id);
     // Chưa có response (chưa gửi / chưa gửi được) → thu gọn vùng response, nhường chỗ cho vùng soạn
     $('#rqSplit').classList.toggle('resp-compact', !s?.running && !s?.result?.response);
+    // Nền than chì chỉ khi có response thật; chưa gửi / đang gửi / lỗi trước khi gửi dùng nền sáng như vùng soạn
+    box.classList.toggle('live', !s?.running && !!s?.result?.response);
+    const st = $('#respStripSt');
+    const code = s?.result?.response?.status;
+    st.textContent = s?.running ? 'Đang gửi' : code ? String(code) : s?.result ? 'Lỗi' : 'Chưa gửi';
+    st.dataset.tone = s?.running ? '' : code ? String(code)[0] : s?.result ? 'err' : '';
     const btn = $('#btnSend');
     btn.classList.toggle('stop', !!s?.running);
     btn.querySelector('.ms').textContent = s?.running ? 'stop' : 'send';
@@ -681,7 +700,6 @@ pm.test('Có data.id', () => pm.expect(body.data).to.have.property('id'));` },
 
   // ================= MENU REQUEST =================
   $('#btnSaveTo').addEventListener('click', () => App.saveDraftTo(node().id));
-  $('#btnRunReq').addEventListener('click', () => App.runRequest?.(node().id));
   $('#btnReqMenu').addEventListener('click', e => App.nodeMenu(node().id, e.currentTarget));
   // Copy as cURL: giữ {{biến}} (không đưa token thật vào clipboard)
   App.copyAsCurl = id => {

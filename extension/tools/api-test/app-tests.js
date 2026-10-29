@@ -5,7 +5,8 @@
   const App = window.App;
   const S = App.state;
   const PAGE_SIZES = [25, 50, 100];
-  const tv = { search: '', priority: '', status: '', page: 0, size: 25, sel: new Set(), reqId: null };
+  // result: lọc theo kết quả lần chạy gần nhất (PASS / FAIL / ERROR), bấm vào pill thống kê để bật / tắt
+  const tv = { search: '', priority: '', status: '', result: '', page: 0, size: 25, sel: new Set(), reqId: null };
   const needsReview = c => /^\s*NEEDS_REVIEW/i.test(c.note || '');
   const OP_LABEL = {
     exists: 'tồn tại', notExists: 'không tồn tại', eq: 'bằng', ne: 'khác', contains: 'chứa', notContains: 'không chứa',
@@ -24,7 +25,7 @@
     const n = reqNode();
     const box = $('#rqTests');
     if (!n) return;
-    if (tv.reqId !== n.id) { tv.reqId = n.id; tv.sel.clear(); tv.search = ''; tv.priority = ''; tv.status = ''; tv.page = 0; }
+    if (tv.reqId !== n.id) { tv.reqId = n.id; tv.sel.clear(); tv.search = ''; tv.priority = ''; tv.status = ''; tv.result = ''; tv.page = 0; }
     const s = App.W.suite(n.id);
     box.innerHTML = `
       <section class="tests-sec" id="tcSec"></section>
@@ -77,7 +78,40 @@
   const tok = (v, cls = '') => `<span class="tok${cls ? ' ' + cls : ''}">${esc(v)}</span>`;
   const valText = (op, v) => (op === 'type' ? SHORT_TYPE[v] || String(v) : op === 'in' && Array.isArray(v) ? v.map(x => JSON.stringify(x)).join(', ') : JSON.stringify(v));
   const pathText = a => (a.source === 'header' ? `header ${a.path}` : a.path === '$' ? 'body' : `body${a.path.slice(1)}`);
-  function caseLines(c, r) {
+  // Thẻ gọn: status mong đợi là badge ở hàng 1; điều kiện còn lại gom thành một dòng phụ (caseSub).
+  // Chỉ điều kiện SAI mới hiện thành dòng riêng kèm "→ nhận …" (caseFails).
+  function caseFails(c, r) {
+    const ran = r && r.status !== 'SKIPPED' && r.response;
+    if (!ran) return '';
+    const got = actual => `<span class="tc-got">→ nhận ${esc(actual)}</span>`;
+    const sc = r.statusCheck;
+    const tm = r.assertions?.find(a => a.source === 'time');
+    const lines = [];
+    if (sc && !sc.pass) lines.push(`<li class="bad">Status ${c.expect.statusCodes.length > 1 ? 'thuộc' : 'là'} ${tok(ApiReport.fmtCodes(c.expect.statusCodes), 'v')}${got(sc.actual)}</li>`);
+    if (tm && !tm.pass) lines.push(`<li class="bad">Thời gian ${tok(`≤ ${c.expect.maxTimeMs} ms`, 'v')}<span class="tc-got">→ ${esc(tm.actual)}</span></li>`);
+    c.expect.assertions.forEach((a, i) => {
+      const ra = r.assertions[i];
+      if (!ra || ra.pass) return;
+      const v = ApiSchema.NO_VALUE.includes(a.operator) ? '' : ` ${tok(valText(a.operator, a.value), 'v')}`;
+      lines.push(`<li class="bad">${tok(pathText(a))} ${OP_LABEL[a.operator] || esc(a.operator)}${v}${got(ra.actual)}</li>`);
+    });
+    return lines.length ? `<ul class="tc-say">${lines.join('')}</ul>` : '';
+  }
+  // r: kết quả (case đang bật) — điều kiện đã SAI hiện ở caseFails nên không lặp lại ở dòng phụ
+  function caseSub(c, r) {
+    const ran = r && r.status !== 'SKIPPED' && r.response;
+    const o = c.requestOverride;
+    const ovr = o ? [o.method && `method ${o.method}`, o.url && 'URL', o.queryParams && 'query', o.headers && 'header', o.body && 'body'].filter(Boolean) : [];
+    const conds = c.expect.assertions.filter((a, i) => !(ran && r.assertions[i] && !r.assertions[i].pass))
+      .map(a => `${pathText(a)} ${OP_LABEL[a.operator] || a.operator}${ApiSchema.NO_VALUE.includes(a.operator) ? '' : ' ' + valText(a.operator, a.value)}`);
+    if (c.expect.maxTimeMs && !(ran && r.assertions?.some(a => a.source === 'time' && !a.pass))) conds.unshift(`≤ ${c.expect.maxTimeMs} ms`);
+    if (!ovr.length && !conds.length) return '';
+    const full = [ovr.length && `Gửi với ${ovr.join(', ')} riêng của case`, ...conds].filter(Boolean).join(' · ');
+    return `<p class="tc-sub" title="${esc(full)}">${ovr.length ? `<span class="tc-ovr"><span class="ms" aria-hidden="true">tune</span>${esc(ovr.join(', '))} riêng</span>` : ''}${conds.length ? `<span class="tc-conds">${esc(conds.join(' · '))}</span>` : ''}</p>`;
+  }
+  // Thẻ chi tiết (mặc định) — trình bày như trước: "Gửi với … riêng của case", rồi mỗi điều kiện một câu "↳ Status là 201 trong ≤ 500 ms",
+  // dòng sai tô đỏ kèm "→ nhận …"
+  function caseDetail(c, r) {
     const ran = r && r.status !== 'SKIPPED' && r.response;
     const got = (ok, actual) => (ran && ok === false ? `<span class="tc-got">→ nhận ${esc(actual)}</span>` : '');
     const sc = r?.statusCheck;
@@ -88,18 +122,18 @@
       const v = ApiSchema.NO_VALUE.includes(a.operator) ? '' : ` ${tok(valText(a.operator, a.value), 'v')}`;
       lines.push(`<li class="${ra && !ra.pass ? 'bad' : ''}">${tok(pathText(a))} ${OP_LABEL[a.operator] || esc(a.operator)}${v}${got(ra?.pass, ra?.actual)}</li>`);
     });
-    return lines.join('');
+    const o = c.requestOverride;
+    const ovr = o ? [o.method && `method ${o.method}`, o.url && 'URL', o.queryParams && 'query', o.headers && 'header', o.body && 'body'].filter(Boolean) : [];
+    return `${ovr.length ? `<p class="tc-ovr-l"><span class="ms sm" aria-hidden="true">tune</span>Gửi với ${esc(ovr.join(', '))} riêng của case</p>` : ''}<ul class="tc-say">${lines.join('')}</ul>`;
   }
-  const overrideText = o => {
-    if (!o) return '';
-    const parts = [o.method && `method ${o.method}`, o.url && 'URL', o.queryParams && 'query', o.headers && 'header', o.body && 'body'].filter(Boolean);
-    return parts.length ? `<p class="tc-ovr"><span class="ms sm" aria-hidden="true">tune</span>Gửi với ${parts.join(', ')} riêng của case</p>` : '';
-  };
+  // Lý do lỗi: {{biến}} thành nút mở hộp nhập giá trị
+  const whyHtml = reason => esc(reason).replace(/\{\{([\w.$-]+)\}\}/g, (m, v) => `<button type="button" class="var-link" data-fill-var="${v}" title="Nhập giá trị cho {{${v}}}">{{${v}}}</button>`);
   function tvMatch(c) {
     if (tv.priority && c.priority !== tv.priority) return false;
     if (tv.status === 'enabled' && !c.enabled) return false;
     if (tv.status === 'disabled' && c.enabled) return false;
     if (tv.status === 'review' && !needsReview(c)) return false;
+    if (tv.result && !(c.enabled && App.caseResult?.(tv.reqId, c.id)?.status === tv.result)) return false;
     if (!tv.search) return true;
     return [c.id, c.name, c.group, c.description, c.note].some(x => Ui.norm(x).includes(Ui.norm(tv.search)));
   }
@@ -113,62 +147,86 @@
   function renderCases(n, s) {
     const sec = $('#tcSec');
     const lock = App.isBusy() ? ' disabled' : '';
+    // Run tests nằm cạnh Thêm case: đây là nơi tester quyết định chạy; Send (thanh URL) chỉ gửi thử một lần
+    const runBtn = num => `<button type="button" class="btn btn-sm btn-primary tc-run" data-tc="run" title="${num == null ? 'Chạy request một lần, kiểm tra status 2xx' : 'Chạy mọi case đang bật của request này'}"><span class="ms sm fill" aria-hidden="true">play_arrow</span>Run tests${num == null ? '' : ` <span class="n">(${num})</span>`}</button>`;
     if (!s) {
-      sec.innerHTML = `<div class="tc-head"><h3 class="tc-title">Mong đợi</h3><span class="tc-meta">chưa có test case</span>${App.helpBtn?.('tests', 'Hướng dẫn test case') || ''}</div>
+      sec.innerHTML = `<div class="tc-head"><h3 class="tc-title">Mong đợi</h3><span class="tc-meta">chưa có test case</span>${App.helpBtn?.('tests', 'Hướng dẫn test case') || ''}<span class="tc-acts">${runBtn(null)}</span></div>
         <p class="tc-none">Chưa có case nào: Runner vẫn chạy request này một lần và chỉ kiểm tra status <b>2xx</b>. Thêm case để kiểm tra status, field, kiểu dữ liệu.</p>
         ${addRow(lock)}
         <p class="muted small tc-sample">Chưa có file? <button type="button" class="link-btn" data-sample-xlsx>Tải file Excel mẫu</button> · <button type="button" class="link-btn" data-help="excel">Cách viết cột Expected</button></p>`;
       return;
     }
     const cs = s.cases;
-    const review = cs.filter(needsReview).length, disabled = cs.filter(c => !c.enabled).length, enabled = cs.length - disabled;
+    const review = cs.filter(needsReview).length, reviewOff = cs.filter(c => needsReview(c) && !c.enabled).length;
+    const disabled = cs.filter(c => !c.enabled).length, enabled = cs.length - disabled;
     const rows = cs.map((c, i) => ({ c, i, r: App.caseResult?.(n.id, c.id) })).filter(({ c }) => tvMatch(c));
     const pages = Math.max(1, Math.ceil(rows.length / tv.size));
     tv.page = Math.min(tv.page, pages - 1);
     const page = rows.slice(tv.page * tv.size, (tv.page + 1) * tv.size);
     for (const id of [...tv.sel]) if (!cs.some(c => c.id === id)) tv.sel.delete(id);
-    const results = cs.map(c => App.caseResult?.(n.id, c.id)).filter(Boolean);
+    // Chỉ đếm kết quả của case đang bật: khớp với kết quả hiện trên thẻ và với bộ lọc theo kết quả
+    const results = cs.filter(c => c.enabled).map(c => App.caseResult?.(n.id, c.id)).filter(Boolean);
     const cnt = st => results.filter(r => r.status === st).length;
     const runAt = results.length ? Math.max(...results.map(r => r.startedAt || 0)) : 0;
-    const meta = [`${cs.length} case`, results.length && `${cnt('PASS')} đạt`, cnt('FAIL') && `${cnt('FAIL')} sai`, cnt('ERROR') && `${cnt('ERROR')} lỗi`, runAt && `chạy lúc ${Ui.fmtTime(runAt)}`].filter(Boolean).join(' · ');
+    const pill = (st, cls, label) => {
+      const k = cnt(st);
+      if (!k && tv.result !== st) return '';
+      return `<button type="button" class="res-pill ${cls}${tv.result === st ? ' on' : ''}" data-res="${st}" aria-pressed="${tv.result === st}" title="${tv.result === st ? 'Bỏ lọc' : `Chỉ hiện case ${label}`}">${k} ${label}</button>`;
+    };
     const chip = (st, label, num) => `<button type="button" class="chip${tv.status === st ? ' on' : ''}" data-stat="${st}" aria-pressed="${tv.status === st}">${label} <span class="n">${num}</span></button>`;
-    const showTools = cs.length > 6 || tv.search || tv.priority || tv.status;
-    sec.innerHTML = `
-      <div class="tc-head">
-        <h3 class="tc-title">Mong đợi</h3><span class="tc-meta">${esc(meta)}</span>${App.helpBtn?.('tests', 'Hướng dẫn test case') || ''}
+    const showTools = cs.length > 6 || tv.search || tv.priority || tv.status || tv.result;
+    const dense = App.W.meta.ui.tcView === 'compact';
+    const allBox = `<input type="checkbox" id="tcAll" class="tc-all" aria-label="Chọn tất cả case trong bộ lọc"${lock}>`;
+    // Đang chọn case → thanh thao tác hàng loạt thay chỗ thanh lọc (cùng vị trí, không đẩy danh sách xuống)
+    const bar = tv.sel.size ? `<div class="toolbar bulk-bar" role="region" aria-label="Thao tác hàng loạt">${allBox}<b class="bulk-n">${tv.sel.size} đã chọn</b>
+        <button type="button" class="btn btn-sm" data-bulk="enable"${lock}><span class="ms sm" aria-hidden="true">toggle_on</span>Bật</button>
+        <button type="button" class="btn btn-sm" data-bulk="disable"${lock}><span class="ms sm" aria-hidden="true">toggle_off</span>Tắt</button>
+        <button type="button" class="btn btn-sm" data-bulk="priority" aria-haspopup="menu"${lock}><span class="ms sm" aria-hidden="true">low_priority</span>Đổi priority</button>
+        <button type="button" class="btn btn-sm btn-danger-ghost" data-bulk="delete"${lock}><span class="ms sm" aria-hidden="true">delete</span>Xoá</button>
         <span class="spacer"></span>
-        <button type="button" class="btn btn-sm" data-tc="new"${lock}><span class="ms sm" aria-hidden="true">add</span>Thêm case</button>
-        <button type="button" class="icon-btn" data-tc="suite-menu" aria-haspopup="menu" aria-label="Thao tác với bộ test case: nhập, tải JSON, đổi tên, xoá"><span class="ms" aria-hidden="true">more_horiz</span></button>
-      </div>
-      ${review ? `<div class="d-msg warn"><span class="ms sm" aria-hidden="true">rate_review</span><span><b>${review} case cần review</b>: tool không đoán được Expected nên để tắt. Mở từng case, kiểm tra rồi bật.</span>${tv.status !== 'review' ? '<button type="button" class="btn btn-sm" data-stat="review">Xem</button>' : ''}</div>` : ''}
-      ${showTools ? `<div class="toolbar list-toolbar">
+        <button type="button" class="btn btn-ghost btn-sm" data-bulk="clear">Bỏ chọn</button></div>`
+      : showTools ? `<div class="toolbar list-toolbar">${allBox}
         <div class="chips">${chip('', 'Tất cả', cs.length)}${chip('enabled', 'Sẽ chạy', enabled)}${review ? chip('review', 'Cần review', review) : ''}${disabled ? chip('disabled', 'Đang tắt', disabled) : ''}</div>
         <span class="spacer"></span>
         <div class="search-box"><span class="ms sm" aria-hidden="true">search</span><input type="search" id="tcSearch" value="${esc(tv.search)}" placeholder="Tìm TC ID, tên, group…" aria-label="Tìm test case"></div>
         <label class="visually-hidden" for="tcPrio">Priority</label>
         <select id="tcPrio" class="filter-select"><option value="">Mọi priority</option>${ApiSchema.PRIORITIES.map(p => `<option${p === tv.priority ? ' selected' : ''}>${p}</option>`).join('')}</select>
-      </div>` : ''}
-      ${tv.sel.size ? `<div class="bulk-bar" role="region" aria-label="Thao tác hàng loạt"><label class="check"><input type="checkbox" id="tcAll" aria-label="Chọn tất cả case trong bộ lọc"${lock}> ${tv.sel.size} case đang chọn</label>
-        <button type="button" class="btn btn-sm" data-bulk="enable"${lock}><span class="ms sm" aria-hidden="true">toggle_on</span>Bật</button>
-        <button type="button" class="btn btn-sm" data-bulk="disable"${lock}><span class="ms sm" aria-hidden="true">toggle_off</span>Tắt</button>
-        <button type="button" class="btn btn-sm" data-bulk="delete"${lock}><span class="ms sm" aria-hidden="true">delete</span>Xoá</button>
-        <button type="button" class="btn btn-ghost btn-sm" data-bulk="clear">Bỏ chọn</button></div>` : ''}
+      </div>` : '';
+    sec.innerHTML = `
+      <div class="tc-head">
+        <h3 class="tc-title">Mong đợi</h3><span class="tc-meta">${cs.length} case</span>
+        ${results.length ? `<span class="res-pills" role="group" aria-label="Lọc theo kết quả lần chạy gần nhất"${runAt ? ` title="Lần chạy gần nhất: ${esc(Ui.fmtTime(runAt))}"` : ''}>${pill('PASS', 'ok', 'đạt')}${pill('FAIL', 'bad', 'sai')}${pill('ERROR', 'warn', 'lỗi')}</span>` : ''}
+        ${App.helpBtn?.('tests', 'Hướng dẫn test case') || ''}
+        <span class="tc-acts">
+          <span class="seg tc-view" role="radiogroup" aria-label="Kiểu hiển thị test case">
+            <button type="button" role="radio" data-view="detail" aria-checked="${!dense}" class="${dense ? '' : 'on'}" title="Chi tiết: đủ điều kiện, mô tả, request riêng"><span class="ms sm" aria-hidden="true">view_agenda</span><span class="lbl">Chi tiết</span></button>
+            <button type="button" role="radio" data-view="compact" aria-checked="${dense}" class="${dense ? 'on' : ''}" title="Gọn: mỗi case 1–2 dòng"><span class="ms sm" aria-hidden="true">view_headline</span><span class="lbl">Gọn</span></button>
+          </span>
+          <button type="button" class="btn btn-sm" data-tc="new"${lock}><span class="ms sm" aria-hidden="true">add</span>Thêm case</button>
+          ${runBtn(enabled)}
+          <button type="button" class="icon-btn" data-tc="suite-menu" aria-haspopup="menu" aria-label="Thao tác với bộ test case: nhập, tải JSON, đổi tên, xoá"><span class="ms" aria-hidden="true">more_horiz</span></button>
+        </span>
+      </div>
+      ${reviewOff ? `<div class="d-msg warn one"><span class="ms sm" aria-hidden="true">rate_review</span><span title="Tool không đoán được Expected nên để tắt. Mở từng case, kiểm tra rồi bật."><b>${review} case cần review</b> · tool không đoán được Expected nên để tắt</span>${tv.status !== 'review' ? '<button type="button" class="btn btn-sm" data-stat="review">Xem</button>' : ''}<button type="button" class="btn btn-sm" data-review-on${lock}>Bật tất cả (${reviewOff})</button></div>` : ''}
+      ${bar}
       <div class="tc-list" role="list" aria-label="Test case">${page.map(({ c, i, r }) => {
-        const rv = needsReview(c);
-        const [rk, ric, rl] = (c.enabled && r && RES_TAG[r.status]) || [];
-        const state = rv ? '<span class="tc-flag warn">Cần review</span>' : !c.enabled ? '<span class="tc-flag">Đang tắt</span>' : '';
-        return `<article class="tc-card${rk ? ' r-' + rk : ''}${c.enabled ? '' : ' off'}${tv.sel.has(c.id) ? ' sel' : ''}" role="listitem" data-i="${i}" tabindex="0" aria-label="${esc(`${c.id} ${c.name}${rl ? ', ' + rl : ''}`)}">
+        const rr = c.enabled ? r : null;
+        const [rk, ric, rl] = (rr && RES_TAG[rr.status]) || [];
+        const ran = rr && rr.status !== 'SKIPPED' && rr.response;
+        const stBad = ran && rr.statusCheck && !rr.statusCheck.pass;
+        const codes = ApiReport.fmtCodes(c.expect.statusCodes);
+        return `<article class="tc-card${dense ? '' : ' detail'}${rk ? ' r-' + rk : ''}${c.enabled ? '' : ' off'}${tv.sel.has(c.id) ? ' sel' : ''}" role="listitem" data-i="${i}" tabindex="0" title="Bấm (hoặc Enter) để sửa" aria-label="${esc(`${c.id} ${c.name}${rl ? ', ' + rl : ''}${c.enabled ? '' : ', đang tắt'}. Enter để sửa`)}">
           <div class="tc-top">
             <input type="checkbox" class="tc-cb" data-sel="${i}" ${tv.sel.has(c.id) ? 'checked' : ''} aria-label="Chọn ${esc(c.id)}"${lock}>
             <span class="tc-id">${esc(c.id)}</span><span class="tc-p p-${esc(c.priority.toLowerCase())}">${esc(c.priority)}</span>
-            <b class="tc-name" title="${esc(c.name)}">${esc(c.name)}</b>${c.group ? `<span class="tc-group" title="${esc(c.group)}">${esc(c.group)}</span>` : ''}${state}
+            <b class="tc-name" title="${esc(c.name)}">${esc(c.name)}</b>${c.group ? `<span class="tc-group" title="${esc(c.group)}">${esc(c.group)}</span>` : ''}
             <span class="spacer"></span>
-            ${rk ? `<span class="tc-res ${rk}"${r.evidenceId ? ` data-ev-case="${esc(c.id)}" role="button" tabindex="0" title="Mở evidence"` : ''}><span class="ms sm fill" aria-hidden="true">${ric}</span>${rl}</span>` : ''}
-            <button type="button" class="icon-btn tc-edit" data-edit="${i}" aria-label="Sửa ${esc(c.id)}"${lock}><span class="ms sm" aria-hidden="true">edit</span></button>
+            <span class="tc-st${stBad ? ' bad' : ''}" title="Status mong đợi${stBad ? ` · nhận ${esc(rr.statusCheck.actual)}` : ''}"><small>status</small>${esc(codes)}</span>
+            ${rk ? `<span class="tc-res ${rk}"${rr.evidenceId ? ` data-ev-case="${esc(c.id)}" role="button" tabindex="0" title="Mở evidence"` : ''}><span class="ms sm fill" aria-hidden="true">${ric}</span>${rl}</span>` : needsReview(c) ? '<span class="tc-flag warn">Cần review</span>' : ''}
+            <label class="tc-sw" title="${c.enabled ? 'Đang bật: bấm để tắt' : 'Đang tắt: bấm để bật'}"><input type="checkbox" role="switch" data-on="${i}"${c.enabled ? ' checked' : ''} aria-label="Chạy ${esc(c.id)}"${lock}><span class="switch" aria-hidden="true"></span></label>
           </div>
-          ${overrideText(c.requestOverride)}
-          <ul class="tc-say">${caseLines(c, c.enabled ? r : null)}</ul>
-          ${r?.status === 'ERROR' && c.enabled ? `<p class="tc-why"><span class="ms sm" aria-hidden="true">error</span>${esc(r.reason || 'Không kiểm thử được')}</p>` : ''}
+          ${dense ? caseSub(c, rr) + caseFails(c, rr) : caseDetail(c, rr)}
+          ${rr?.status === 'ERROR' ? `<p class="tc-why"><span class="ms sm" aria-hidden="true">error</span><span>${whyHtml(rr.reason || 'Không kiểm thử được')}</span></p>` : ''}
         </article>`;
       }).join('') || `<div class="empty">Không có case nào khớp bộ lọc. <button type="button" class="link-btn" data-clear-filter>Xoá bộ lọc</button></div>`}</div>
       ${addRow(lock)}
@@ -199,7 +257,16 @@
       return;
     }
     const sel = e.target.closest('[data-sel]');
-    if (sel) { const id = s.cases[Number(sel.dataset.sel)].id; if (sel.checked) tv.sel.add(id); else tv.sel.delete(id); rerender(); $(`[data-sel="${sel.dataset.sel}"]`)?.focus(); }
+    if (sel) { const id = s.cases[Number(sel.dataset.sel)].id; if (sel.checked) tv.sel.add(id); else tv.sel.delete(id); rerender(); $(`[data-sel="${sel.dataset.sel}"]`)?.focus(); return; }
+    // Công tắc trên thẻ: bật / tắt nhanh một case, không cần mở form
+    const sw = e.target.closest('[data-on]');
+    if (sw) {
+      const c = s.cases[Number(sw.dataset.on)];
+      c.enabled = sw.checked;
+      saveSuite(n, s);
+      if (c.enabled && needsReview(c)) toast(`${c.id} cần review: kiểm tra Expected trước khi chạy`, 'warn');
+      $(`[data-on="${sw.dataset.on}"]`)?.focus();
+    }
   });
   $('#rqTests').addEventListener('click', async e => {
     const n = reqNode();
@@ -209,14 +276,46 @@
     if (exd) { n.extract.splice(Number(exd.dataset.exDel), 1); App.W.touch(n.id); renderExtract(n); return; }
     const s = App.W.suite(n.id);
     const st = e.target.closest('[data-stat]');
-    if (st) { tv.status = tv.status === st.dataset.stat ? '' : st.dataset.stat; tv.page = 0; rerender(); return; }
-    if (e.target.closest('[data-clear-filter]')) { Object.assign(tv, { search: '', priority: '', status: '', page: 0 }); rerender(); return; }
+    // Kết quả chỉ có ở case đang bật: lọc "Cần review" / "Đang tắt" và lọc theo kết quả loại trừ nhau, chọn cái này thì bỏ cái kia
+    if (st) {
+      tv.status = tv.status === st.dataset.stat ? '' : st.dataset.stat;
+      if (tv.status === 'review' || tv.status === 'disabled') tv.result = '';
+      tv.page = 0; rerender(); return;
+    }
+    const vw = e.target.closest('[data-view]');
+    if (vw) { App.W.meta.ui.tcView = vw.dataset.view; App.saveUi(); rerender(); $(`[data-view="${vw.dataset.view}"]`)?.focus(); return; }
+    const rp = e.target.closest('[data-res]');
+    if (rp) {
+      tv.result = tv.result === rp.dataset.res ? '' : rp.dataset.res;
+      if (tv.result && tv.status !== 'enabled') tv.status = '';
+      tv.page = 0; rerender(); $(`[data-res="${rp.dataset.res}"]`)?.focus(); return;
+    }
+    if (e.target.closest('[data-clear-filter]')) { Object.assign(tv, { search: '', priority: '', status: '', result: '', page: 0 }); rerender(); return; }
+    const fv = e.target.closest('[data-fill-var]');
+    if (fv) { App.showFillBox?.([fv.dataset.fillVar]); return; }
+    if (e.target.closest('[data-review-on]')) {
+      const before = JSON.parse(JSON.stringify(s));
+      let k = 0;
+      for (const c of s.cases) if (needsReview(c) && !c.enabled) { c.enabled = true; k++; }
+      saveSuite(n, s);
+      toast(`Đã bật ${k} case cần review: nhớ kiểm tra Expected trước khi chạy`, 'warn', 10000, { label: 'Hoàn tác', fn: () => saveSuite(n, before) });
+      return;
+    }
     const pg = e.target.closest('[data-pg]');
     if (pg) { tv.page += Number(pg.dataset.pg); rerender(); return; }
     const b = e.target.closest('[data-bulk]');
     if (b) {
       const a = b.dataset.bulk;
       if (a === 'clear') { tv.sel.clear(); rerender(); return; }
+      if (a === 'priority') {
+        Ui.menu(b, ApiSchema.PRIORITIES.map(p => ({ label: p, icon: 'flag', action: () => {
+          let k = 0;
+          for (const c of s.cases) if (tv.sel.has(c.id) && c.priority !== p) { c.priority = p; k++; }
+          saveSuite(n, s);
+          toast(`Đổi ${k} case sang ${p}`, 'ok');
+        } })));
+        return;
+      }
       if (a === 'delete') {
         const ok = await Ui.confirmBox(`Xoá ${tv.sel.size} test case?`, '<p>Có thể hoàn tác ngay sau khi xoá.</p>', 'Xoá');
         if (!ok) return;
@@ -240,6 +339,7 @@
     if (tc) {
       const a = tc.dataset.tc;
       if (a === 'new') openCaseEditor({ requestId: n.id, index: -1 }, tc);
+      else if (a === 'run') App.runRequest?.(n.id);
       else if (a.startsWith('import-') && a !== 'import-menu') openImport(n.id, a.slice(7), tc);
       else if (a === 'import-menu') Ui.menu(tc, [
         { label: 'Excel → JSON bằng AI', icon: 'auto_awesome', action: () => openImport(n.id, 'ai', tc) },
@@ -265,11 +365,11 @@
       ]);
       return;
     }
-    if (e.target.closest('.tc-cb')) return;
+    if (e.target.closest('.tc-cb, .tc-sw')) return;
     const evc = e.target.closest('[data-ev-case]');
     if (evc) { App.openCaseEvidence?.(n.id, evc.dataset.evCase, evc); return; }
     const card = e.target.closest('.tc-card[data-i]');
-    if (card && !App.isBusy()) openCaseEditor({ requestId: n.id, index: Number(card.dataset.i) }, e.target.closest('[data-edit]') || card);
+    if (card && !App.isBusy()) openCaseEditor({ requestId: n.id, index: Number(card.dataset.i) }, card);
   });
   $('#rqTests').addEventListener('keydown', e => {
     const evc = e.target.closest('[data-ev-case]');
