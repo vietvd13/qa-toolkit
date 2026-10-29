@@ -4,6 +4,9 @@ Ghi theo [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/), đánh số t
 
 ## [Chưa phát hành]
 
+### Sửa
+- Kiểm thử API: dán cURL nhiều dòng (dòng kết thúc bằng `\`) báo lỗi *Không hiểu phần "" (chỉ hỗ trợ một URL)* ở mỗi dòng; nay đọc đúng.
+
 ## [1.6.0] - 2026-10-29
 
 ### Thêm

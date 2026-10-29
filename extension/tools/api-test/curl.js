@@ -16,6 +16,8 @@
     const push = () => { if (cur != null) out.push(cur); cur = null; };
     while (i < src.length) {
       const ch = src[i];
+      // \ + xuống dòng = nối dòng: xét trước khi mở từ mới, nếu không mỗi dòng sinh một từ rỗng ("Không hiểu phần """)
+      if (ch === '\\' && src[i + 1] === '\n') { i += 2; continue; }
       if (/\s/.test(ch)) { push(); i++; continue; }
       cur = cur ?? '';
       if (ch === "'") {
@@ -46,7 +48,6 @@
         if (i >= src.length) throw new Error('Thiếu dấu " đóng');
         i++;
       } else if (ch === '\\') {
-        if (src[i + 1] === '\n') { i += 2; continue; }
         cur += src[i + 1] ?? '';
         i += 2;
       } else { cur += ch; i++; }
