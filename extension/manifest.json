@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Bộ công cụ",
-  "version": "1.6.0",
+  "version": "1.6.1",
   "description": "Bộ công cụ hỗ trợ test. Hiện có: Kiểm tra Redirect (ghi lại từng bước chuyển hướng và vị trí các tham số affiliate), Kiểm thử API (cURL + test case JSON, xuất Excel bằng chứng).",
   "homepage_url": "https://github.com/vietvd13/qa-toolkit",
   "icons": {
