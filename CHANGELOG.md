@@ -5,7 +5,14 @@ Ghi theo [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/), đánh số t
 ## [Chưa phát hành]
 
 ### Sửa
-- Kiểm thử API: dán cURL nhiều dòng (dòng kết thúc bằng `\`) báo lỗi *Không hiểu phần "" (chỉ hỗ trợ một URL)* ở mỗi dòng; nay đọc đúng.
+- Kiểm thử API: dán cURL nhiều dòng (dòng kết thúc bằng `\`, vd *Copy as cURL* của Chrome, Insomnia) báo lỗi *Không hiểu phần "" (chỉ hỗ trợ một URL)* ở mỗi dòng; nay đọc đúng.
+
+### Thay đổi
+- Kiểm thử API, **dán cURL đọc được hầu hết mọi lệnh**: chỉ báo lỗi khi không có URL hoặc method không gửi được; phần tool chưa làm được thì bỏ qua kèm cảnh báo, request vẫn được tạo:
+  - dòng thừa / lệnh thứ hai dán sau lệnh, nhiều URL (lấy URL đầu), cờ lạ hoặc chưa hỗ trợ (`--proxy`, `--cert`, `-o`, `-D`, `-c`, `--http3`, `--tlsv1.2`…), đọc header / body / cookie từ file, header thiếu `:`, `-u` không mật khẩu;
+  - ngoặc cong ‘ ’ “ ” (dán từ Slack / Word), ký tự vô hình, dấu cách thừa sau `\`, dấu nhắc `$` / `PS C:\>`, khối ``` markdown, `/usr/bin/curl`;
+  - hiểu thêm `-I/--head` (method HEAD), `--oauth2-bearer`, `--url-query`, `-F` chữ (gửi dạng x-www-form-urlencoded, có cảnh báo); URL thiếu giao thức: `localhost` / IP thêm `http://`.
+- `npm run check` kiểm bộ đọc cURL với 42 mẫu thực tế (`scripts/curl-cases.js`: Chrome bash / cmd, Firefox, Postman, Insomnia, tài liệu API, PowerShell…).
 
 ## [1.6.0] - 2026-10-29
 

@@ -3,6 +3,7 @@
 // - Mỗi tool trong tools/registry.js có đủ file, id không trùng
 // - Mọi trang HTML của extension nạp theme.css + theme.js, không có <script> viết trực tiếp (MV3 chặn)
 // - Mọi đường dẫn src/href nội bộ trong HTML đều tồn tại
+// - Bộ đọc cURL của Kiểm thử API đọc đúng các mẫu thực tế trong scripts/curl-cases.js
 const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
@@ -59,8 +60,28 @@ for (const file of htmlFiles) {
   }
 }
 
+// 5) Bộ đọc cURL: mọi mẫu trong scripts/curl-cases.js phải import được và đúng kỳ vọng
+const curlCtx = { window: {}, btoa: s => Buffer.from(s, 'binary').toString('base64'), unescape, encodeURIComponent };
+vm.runInNewContext(fs.readFileSync(path.join(ext, 'tools/api-test/curl.js'), 'utf8'), curlCtx);
+const curlCases = require('./curl-cases.js');
+for (const [name, cmd, exp] of curlCases) {
+  const r = curlCtx.window.ApiCurl.parse(cmd);
+  const q = r.request;
+  const bad = [];
+  if (!q) bad.push('không import được: ' + r.errors.join(' | '));
+  else {
+    if (exp.method && q.method !== exp.method) bad.push(`method ${q.method} ≠ ${exp.method}`);
+    if (exp.headers != null && q.headers.length !== exp.headers) bad.push(`${q.headers.length} header ≠ ${exp.headers}`);
+    if (exp.body && q.body.mode !== exp.body) bad.push(`body ${q.body.mode} ≠ ${exp.body}`);
+    if (exp.query != null && q.query.length !== exp.query) bad.push(`${q.query.length} query ≠ ${exp.query}`);
+    if (exp.url && !exp.url.test(q.url)) bad.push(`url ${q.url}`);
+    if (exp.warn && !r.warnings.some(w => exp.warn.test(w))) bad.push(`thiếu cảnh báo ${exp.warn}`);
+  }
+  if (bad.length) fail(`cURL “${name}”: ${bad.join('; ')}`);
+}
+
 if (errors.length) {
   console.error(`✗ ${errors.length} lỗi:\n` + errors.map(e => '  - ' + e).join('\n'));
   process.exit(1);
 }
-console.log(`✓ Ổn: v${manifest.version} · ${tools.length} công cụ · ${htmlFiles.length} trang HTML`);
+console.log(`✓ Ổn: v${manifest.version} · ${tools.length} công cụ · ${htmlFiles.length} trang HTML · ${curlCases.length} mẫu cURL`);

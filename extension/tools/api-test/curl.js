@@ -8,7 +8,9 @@
 // Hỗ trợ: -X/--request, URL, --url, -H/--header, -d/--data/--data-ascii, --data-raw, --data-binary, --json, -G/--get,
 // --data-urlencode, -u/--user, -b/--cookie, -A/--user-agent, -e/--referer. Cú pháp khác báo lỗi rõ ràng.
 (() => {
-  // Tách từ như bash: '…' giữ nguyên, "…" cho phép \" \\ \$ \`, $'…' có \n \t \' \\ \xHH \uHHHH, \ ngoài ngoặc thoát 1 ký tự
+  // Tách từ như bash: '…' giữ nguyên, "…" cho phép \" \\ \$ \`, $'…' có \n \t \' \\ \xHH \uHHHH, \ ngoài ngoặc thoát 1 ký tự.
+  // Xuống dòng không có \ = hết lệnh, trừ khi dòng sau rõ ràng vẫn là một phần của lệnh (bắt đầu bằng -, ngoặc hoặc http);
+  // phần còn lại (vd tên host dán thừa, lệnh thứ hai) trả về ở out.rest để báo "đã bỏ qua".
   function tokenize(src) {
     const out = [];
     let cur = null;
@@ -18,6 +20,10 @@
       const ch = src[i];
       // \ + xuống dòng = nối dòng: xét trước khi mở từ mới, nếu không mỗi dòng sinh một từ rỗng ("Không hiểu phần """)
       if (ch === '\\' && src[i + 1] === '\n') { i += 2; continue; }
+      if (ch === '\n' && out.length + (cur != null) > 0) {
+        const next = src.slice(i).replace(/^\s+/, '');
+        if (next && !/^(-|'|"|\$'|https?:\/\/)/i.test(next)) { push(); out.rest = next; return out; }
+      }
       if (/\s/.test(ch)) { push(); i++; continue; }
       cur = cur ?? '';
       if (ch === "'") {
@@ -124,23 +130,38 @@
   }
   const looksLikeBrowser = headers => headers.some(h => /^sec-(fetch|ch-ua)/i.test(h.key));
 
+  // Cờ cần giá trị: kể cả cờ tool bỏ qua cũng phải "nuốt" giá trị đi kèm, nếu không giá trị bị hiểu nhầm là URL
   const LONG_WITH_VALUE = new Set(['--request', '--url', '--header', '--data', '--data-ascii', '--data-raw', '--data-binary', '--data-urlencode', '--json',
-    '--user', '--cookie', '--user-agent', '--referer', '--form', '--form-string', '--output', '--upload-file', '--max-time', '--connect-timeout', '--proxy', '--cert', '--key', '--cacert', '--resolve', '--retry', '--write-out']);
-  const SHORT_WITH_VALUE = new Set(['X', 'H', 'd', 'u', 'b', 'A', 'e', 'F', 'o', 'T', 'm', 'x', 'E', 'w']);
-  const SHORT_ALIAS = { X: '--request', H: '--header', d: '--data', u: '--user', b: '--cookie', A: '--user-agent', e: '--referer', F: '--form', o: '--output', T: '--upload-file', m: '--max-time', x: '--proxy', E: '--cert', w: '--write-out', G: '--get', k: '--insecure', L: '--location', s: '--silent', S: '--show-error', v: '--verbose', i: '--include', I: '--head', f: '--fail' };
-  // Cờ không ảnh hưởng nội dung request → bỏ qua (kèm cảnh báo nếu đáng chú ý)
+    '--user', '--cookie', '--user-agent', '--referer', '--form', '--form-string', '--output', '--upload-file', '--max-time', '--connect-timeout', '--proxy', '--cert', '--key', '--cacert', '--resolve', '--retry', '--write-out',
+    '--oauth2-bearer', '--url-query', '--cookie-jar', '--dump-header', '--config', '--range', '--proxy-user', '--proxy-header', '--max-redirs', '--retry-delay', '--retry-max-time',
+    '--speed-limit', '--speed-time', '--limit-rate', '--max-filesize', '--interface', '--local-port', '--noproxy', '--connect-to', '--capath', '--cert-type', '--key-type', '--ciphers',
+    '--trace', '--trace-ascii', '--stderr', '--unix-socket', '--abstract-unix-socket', '--expect100-timeout', '--keepalive-time', '--happy-eyeballs-timeout-ms', '--aws-sigv4',
+    '--request-target', '--variable', '--time-cond', '--pass', '--pinnedpubkey', '--preproxy', '--socks5', '--socks5-hostname', '--dns-servers', '--doh-url', '--etag-save', '--etag-compare',
+    '--output-dir', '--quote', '--continue-at', '--ftp-port', '--telnet-option', '--tlsuser', '--tlspassword', '--login-options', '--sasl-authzid', '--service-name', '--mail-from', '--mail-rcpt', '--hsts', '--alt-svc']);
+  const SHORT_WITH_VALUE = new Set(['X', 'H', 'd', 'u', 'b', 'A', 'e', 'F', 'o', 'T', 'm', 'x', 'E', 'w', 'c', 'D', 'K', 'r', 'U', 'y', 'Y', 'z', 'C', 'P', 'Q', 't']);
+  const SHORT_ALIAS = { X: '--request', H: '--header', d: '--data', u: '--user', b: '--cookie', A: '--user-agent', e: '--referer', F: '--form', o: '--output', T: '--upload-file', m: '--max-time', x: '--proxy', E: '--cert', w: '--write-out', G: '--get', k: '--insecure', L: '--location', s: '--silent', S: '--show-error', v: '--verbose', i: '--include', I: '--head', f: '--fail',
+    c: '--cookie-jar', D: '--dump-header', K: '--config', r: '--range', U: '--proxy-user', y: '--speed-time', Y: '--speed-limit', z: '--time-cond', C: '--continue-at', P: '--ftp-port', Q: '--quote', t: '--telnet-option',
+    g: '--globoff', N: '--no-buffer', O: '--remote-name', J: '--remote-header-name', R: '--remote-time', n: '--netrc', j: '--junk-session-cookies', q: '--disable', Z: '--parallel', B: '--use-ascii', l: '--list-only', M: '--manual', V: '--version', h: '--help' };
+  // Cờ không ảnh hưởng nội dung request → bỏ qua (kèm cảnh báo nếu đáng chú ý). Cờ lạ khác: bỏ qua kèm cảnh báo, không chặn import.
   const IGNORED = {
     '--compressed': '', '--silent': '', '--show-error': '', '--verbose': '', '--include': '', '--location': 'Tool luôn tự đi theo redirect (tối đa 5 bước).',
-    '--insecure': 'Đã bỏ qua -k/--insecure: tool không tắt kiểm tra chứng chỉ TLS.', '--http1.1': '', '--http2': '', '--http2-prior-knowledge': '', '--fail': '',
-    '--max-time': 'Thời gian chờ đặt ở phần Cài đặt chạy, không lấy từ cURL.', '--connect-timeout': '', '--retry': 'Tool không tự retry.', '--write-out': '', '--output': '',
+    '--insecure': 'Đã bỏ qua -k/--insecure: tool không tắt kiểm tra chứng chỉ TLS.', '--http1.1': '', '--http1.0': '', '--http2': '', '--http2-prior-knowledge': '', '--http3': '', '--http3-only': '', '--fail': '', '--fail-with-body': '',
+    '--max-time': 'Thời gian chờ đặt ở phần Cài đặt chạy, không lấy từ cURL.', '--connect-timeout': '', '--retry': 'Tool không tự retry.', '--retry-delay': '', '--retry-max-time': '', '--retry-all-errors': '', '--retry-connrefused': '',
+    '--write-out': '', '--output': '', '--output-dir': '', '--remote-name': '', '--remote-name-all': '', '--remote-header-name': '', '--remote-time': '', '--create-dirs': '', '--dump-header': '', '--cookie-jar': '', '--stderr': '',
+    '--globoff': '', '--no-buffer': '', '--path-as-is': '', '--location-trusted': '', '--max-redirs': '', '--tcp-nodelay': '', '--tcp-fastopen': '', '--no-keepalive': '', '--keepalive-time': '', '--no-sessionid': '', '--no-alpn': '', '--no-npn': '',
+    '--ipv4': '', '--ipv6': '', '--tlsv1': '', '--tlsv1.0': '', '--tlsv1.1': '', '--tlsv1.2': '', '--tlsv1.3': '', '--tls-max': '', '--sslv2': '', '--sslv3': '', '--ssl': '', '--ssl-reqd': '', '--ssl-no-revoke': '', '--ssl-revoke-best-effort': '', '--ssl-allow-beast': '',
+    '--progress-bar': '', '--no-progress-meter': '', '--show-headers': '', '--styled-output': '', '--no-styled-output': '', '--raw': '', '--tr-encoding': '', '--trace': '', '--trace-ascii': '', '--trace-time': '', '--expect100-timeout': '', '--happy-eyeballs-timeout-ms': '',
+    '--limit-rate': '', '--speed-limit': '', '--speed-time': '', '--max-filesize': '', '--disable': '', '--parallel': '', '--parallel-max': '', '--netrc': '', '--netrc-optional': '', '--junk-session-cookies': '', '--disable-eprt': '', '--disable-epsv': '',
+    '--anyauth': '', '--basic': '', '--digest': 'Tool chỉ gửi Basic auth, đã bỏ qua --digest.', '--ntlm': 'Tool không hỗ trợ NTLM, đã bỏ qua --ntlm.', '--negotiate': '', '--http0.9': '', '--interface': '', '--local-port': '', '--dns-servers': '', '--doh-url': '',
   };
+  // Tool không làm được → bỏ qua kèm cảnh báo rõ ràng; request vẫn được tạo từ phần còn lại của lệnh
   const UNSUPPORTED = {
-    '--form': 'multipart/form-data (-F/--form) chưa hỗ trợ',
-    '--form-string': 'multipart/form-data (--form-string) chưa hỗ trợ',
-    '--upload-file': 'tải file lên (-T/--upload-file) chưa hỗ trợ',
-    '--proxy': 'proxy (-x/--proxy) chưa hỗ trợ',
-    '--cert': 'chứng chỉ client (--cert) chưa hỗ trợ', '--key': 'chứng chỉ client (--key) chưa hỗ trợ', '--cacert': '--cacert chưa hỗ trợ',
-    '--resolve': '--resolve chưa hỗ trợ', '--head': '-I/--head chưa hỗ trợ (đặt method HEAD trong ô Method)',
+    '--upload-file': 'tải file lên (-T/--upload-file) chưa hỗ trợ: đã bỏ qua',
+    '--proxy': 'proxy (-x/--proxy) chưa hỗ trợ: request gửi thẳng, không qua proxy', '--proxy-user': '', '--proxy-header': '', '--preproxy': '', '--socks5': 'proxy SOCKS chưa hỗ trợ: đã bỏ qua', '--socks5-hostname': 'proxy SOCKS chưa hỗ trợ: đã bỏ qua', '--noproxy': '',
+    '--cert': 'chứng chỉ client (--cert) chưa hỗ trợ: đã bỏ qua', '--key': '', '--cert-type': '', '--key-type': '', '--pass': '', '--cacert': '--cacert chưa hỗ trợ: đã bỏ qua', '--capath': '', '--ciphers': '', '--pinnedpubkey': '',
+    '--resolve': '--resolve chưa hỗ trợ: đã bỏ qua', '--connect-to': '--connect-to chưa hỗ trợ: đã bỏ qua', '--unix-socket': 'Unix socket chưa hỗ trợ: đã bỏ qua', '--abstract-unix-socket': 'Unix socket chưa hỗ trợ: đã bỏ qua',
+    '--range': 'Đã bỏ qua -r/--range (thêm header Range nếu cần)', '--config': 'Đọc cấu hình từ file (-K/--config) chưa hỗ trợ: đã bỏ qua', '--aws-sigv4': 'Ký AWS SigV4 chưa hỗ trợ: đã bỏ qua', '--variable': '--variable chưa hỗ trợ: đã bỏ qua',
+    '--continue-at': '', '--time-cond': '', '--request-target': '--request-target chưa hỗ trợ: đã bỏ qua',
   };
 
   const enc = s => encodeURIComponent(s).replace(/%20/g, '+');
@@ -158,9 +179,20 @@
     return { url: noHash.slice(0, q), query };
   }
 
+  // Làm sạch chữ dán vào trước khi đọc: ký tự vô hình, khối ``` markdown, dấu nhắc ($ / > / PS C:\>), dấu cách thừa sau \ cuối dòng,
+  // ngoặc cong ‘ ’ “ ” (Slack / Word / Notion tự đổi) khi cả lệnh không còn dấu ngoặc thẳng nào
+  function clean(text) {
+    let s = String(text || '').replace(/[\u200b-\u200d\u2060\ufeff]/g, '').replace(/\r\n?/g, '\n');
+    s = s.split('\n').filter(l => !/^\s*```/.test(l)).join('\n').trim();
+    s = s.replace(/^(?:\$|>|#|PS [^>\n]*>)\s+(?=\S)/, '');
+    s = s.replace(/\\[ \t]+\n/g, '\\\n');
+    if (/[‘’“”]/.test(s) && !/['"]/.test(s)) s = s.replace(/[‘’]/g, "'").replace(/[“”]/g, '"');
+    return s;
+  }
+
   function parse(text) {
     const errors = [], warnings = [];
-    let src = String(text || '').trim();
+    let src = clean(text);
     if (!src) return { request: null, errors: ['Chưa dán gì'], warnings };
     if (/^(await\s+)?fetch\s*\(/.test(src)) {
       let f;
@@ -172,12 +204,15 @@
     if (format === 'bash') src = src.replace(/`\r?\n/g, ' ').replace(/\r\n/g, '\n'); // nối dòng kiểu PowerShell
     let tokens;
     try { tokens = format === 'cmd' ? tokenizeCmd(src) : tokenize(src); } catch (e) { return { request: null, errors: ['Không tách được lệnh cURL: ' + e.message], warnings }; }
-    if (tokens[0] && /^curl(\.exe)?$/i.test(tokens[0])) tokens.shift();
+    if (tokens.rest) warnings.push(`Đã bỏ qua phần dán sau lệnh cURL: “${tokens.rest.length > 60 ? tokens.rest.slice(0, 60) + '…' : tokens.rest}”`);
+    if (tokens[0] && /(^|[\\/])curl(\.exe)?$/i.test(tokens[0])) tokens.shift();
     if (!tokens.length) return { request: null, errors: ['Lệnh cURL trống'], warnings };
 
     let method = null, url = null, getMode = false, jsonMode = false, urlencoded = false;
     const headers = [];
-    const data = [];
+    const data = [], extraQuery = [], form = [];
+    const once = new Set();
+    const warn = m => { if (m && !once.has(m)) { once.add(m); warnings.push(m); } };
     const setHeader = (k, v) => {
       const i = headers.findIndex(h => h.key.toLowerCase() === k.toLowerCase());
       if (i >= 0) headers.splice(i, 1);
@@ -198,63 +233,87 @@
         }
         t = SHORT_ALIAS[f] || t;
       }
-      if (!t.startsWith('-')) { if (url == null) url = t; else errors.push(`Không hiểu phần "${t}" (chỉ hỗ trợ một URL)`); continue; }
+      // Từ không phải cờ: URL đầu tiên; URL thứ hai trở đi (cURL gửi lần lượt) thì bỏ qua kèm cảnh báo
+      if (!t.startsWith('-') || t === '-') {
+        if (url == null) url = t;
+        else warn(`Lệnh có nhiều URL: tool chỉ lấy URL đầu tiên, đã bỏ qua “${t.length > 60 ? t.slice(0, 60) + '…' : t}”`);
+        continue;
+      }
       const needs = LONG_WITH_VALUE.has(t);
       if (needs && val == null) {
-        if (i + 1 >= tokens.length) { errors.push(`${t} thiếu giá trị`); break; }
+        if (i + 1 >= tokens.length) { warn(`${t} thiếu giá trị: đã bỏ qua`); break; }
         val = tokens[++i];
       }
       switch (t) {
         case '--request': method = val.toUpperCase(); break;
-        case '--url': url = val; break;
+        case '--head': method = method ?? 'HEAD'; break;
+        case '--url': if (url == null) url = val; else warn(`Lệnh có nhiều URL: tool chỉ lấy URL đầu tiên, đã bỏ qua “${val}”`); break;
         case '--get': getMode = true; break;
+        case '--url-query': extraQuery.push(val.startsWith('+') ? val.slice(1) : val); break;
+        case '--oauth2-bearer': setHeader('Authorization', 'Bearer ' + val); break;
         case '--header': {
           const c = val.indexOf(':');
           if (c > 0) {
             const v = val.slice(c + 1).trim();
-            if (v === '') warnings.push(`Header "${val.slice(0, c).trim()}:" không có giá trị (cURL hiểu là bỏ header) → đã bỏ qua`);
+            if (v === '') warn(`Header "${val.slice(0, c).trim()}:" không có giá trị (cURL hiểu là bỏ header) → đã bỏ qua`);
             else setHeader(val.slice(0, c).trim(), v);
           } else if (/;\s*$/.test(val)) setHeader(val.replace(/;\s*$/, '').trim(), '');
-          else if (val.startsWith('@')) errors.push('Đọc header từ file (-H @file) chưa hỗ trợ');
-          else errors.push(`Header "${val}" thiếu dấu ":"`);
+          else if (val.startsWith('@')) warn('Đọc header từ file (-H @file) chưa hỗ trợ: đã bỏ qua, hãy thêm header trong tab Headers');
+          else warn(`Header "${val}" thiếu dấu ":" → đã bỏ qua`);
           break;
         }
         case '--data': case '--data-ascii': case '--data-binary':
-          if (val.startsWith('@')) errors.push(`Đọc body từ file (${t} @file) chưa hỗ trợ, hãy dán nội dung body trực tiếp`);
+          if (val.startsWith('@')) warn(`Đọc body từ file (${t} ${val}) chưa hỗ trợ: body để trống, hãy dán nội dung vào tab Body`);
           else data.push(t === '--data-binary' ? val : val.replace(/[\r\n]/g, ''));
           break;
         case '--data-raw': data.push(val); break;
         case '--json':
-          if (val.startsWith('@')) errors.push('Đọc body từ file (--json @file) chưa hỗ trợ');
-          else { data.push(val); jsonMode = true; }
+          if (val.startsWith('@')) warn(`Đọc body từ file (--json ${val}) chưa hỗ trợ: body để trống, hãy dán JSON vào tab Body`);
+          else data.push(val);
+          jsonMode = true;
           break;
         case '--data-urlencode': {
           urlencoded = true;
-          const at = val.match(/^([^=@]*)@/);
-          if (at) { errors.push(`--data-urlencode đọc từ file ("${val}") chưa hỗ trợ`); break; }
+          if (/^([^=@]*)@/.test(val)) { warn(`--data-urlencode đọc từ file (“${val}”) chưa hỗ trợ: đã bỏ qua`); break; }
           const eq = val.indexOf('=');
           if (eq < 0) data.push(enc(val));
           else if (eq === 0) data.push(enc(val.slice(1)));
           else data.push(val.slice(0, eq) + '=' + enc(val.slice(eq + 1)));
           break;
         }
+        // multipart chưa gửi được: field chữ chuyển thành x-www-form-urlencoded, field file bỏ qua — đều có cảnh báo
+        case '--form': case '--form-string': {
+          const eq = val.indexOf('=');
+          if (eq <= 0) { warn(`-F “${val}” không đúng dạng name=value: đã bỏ qua`); break; }
+          const v = val.slice(eq + 1);
+          if (t === '--form' && /^[@<]/.test(v)) { warn(`Field file “${val.slice(0, eq)}” (-F ${val.slice(0, eq)}=${v.split(';')[0]}) chưa gửi được: đã bỏ qua`); break; }
+          form.push(val.slice(0, eq) + '=' + enc(t === '--form' ? v.replace(/;type=[^;]*$/, '') : v));
+          break;
+        }
         case '--user': {
-          if (!val.includes(':')) { errors.push('-u/--user cần dạng user:password'); break; }
-          setHeader('Authorization', 'Basic ' + btoa(unescape(encodeURIComponent(val))));
+          // Không có mật khẩu: cURL sẽ hỏi mật khẩu → coi như mật khẩu rỗng
+          if (!val.includes(':')) warn('-u/--user không có mật khẩu: dùng mật khẩu rỗng, sửa lại ở tab Auth nếu cần');
+          setHeader('Authorization', 'Basic ' + btoa(unescape(encodeURIComponent(val.includes(':') ? val : val + ':'))));
           break;
         }
         case '--cookie':
-          if (!val.includes('=')) errors.push('-b/--cookie đọc từ file chưa hỗ trợ, hãy ghi dạng name=value');
+          if (!val.includes('=')) warn('-b/--cookie đọc từ file chưa hỗ trợ: đã bỏ qua, hãy ghi dạng name=value');
           else setHeader('Cookie', val);
           break;
         case '--user-agent': setHeader('User-Agent', val); break;
         case '--referer': setHeader('Referer', val.replace(/;auto$/, '')); break;
         default:
-          if (t in IGNORED) { if (IGNORED[t]) warnings.push(IGNORED[t]); }
-          else if (t in UNSUPPORTED) errors.push(UNSUPPORTED[t]);
-          else errors.push(`Cờ ${t} chưa hỗ trợ`);
+          if (t in IGNORED) warn(IGNORED[t]);
+          else if (t in UNSUPPORTED) warn(UNSUPPORTED[t]);
+          else warn(`Đã bỏ qua cờ ${t} (tool chưa dùng tới)`);
       }
     }
+    if (form.length) {
+      warn('multipart/form-data (-F) chưa hỗ trợ: các field chữ được gửi dạng x-www-form-urlencoded, kiểm tra lại API có chấp nhận không');
+      data.push(...form);
+      urlencoded = true;
+    }
+    if (extraQuery.length && url) url += (url.includes('?') ? '&' : '?') + extraQuery.join('&');
 
     return assemble({ method, url, headers, bodyText: getMode ? '' : data.join('&'), getData: getMode ? data.join('&') : '', jsonMode, urlencoded }, errors, warnings, format);
   }
@@ -267,7 +326,9 @@
     };
     if (!url) errors.push('Không thấy URL trong lệnh');
     else if (!/^https?:\/\//i.test(url) && !/^\{\{/.test(url)) {
-      if (/^[a-z0-9.-]+\.[a-z]{2,}(?::\d+)?(\/|$)/i.test(url)) { warnings.push(`URL không có giao thức, đã thêm https://`); url = 'https://' + url; }
+      // Thiếu giao thức như cURL vẫn chạy: localhost / IP → http://, tên miền → https://
+      if (/^(localhost|\d{1,3}(\.\d{1,3}){3}|\[[0-9a-f:]+\])(:\d+)?([/?#]|$)/i.test(url)) { warnings.push('URL không có giao thức, đã thêm http://'); url = 'http://' + url; }
+      else if (/^[a-z0-9.-]+\.[a-z]{2,}(:\d+)?([/?#]|$)/i.test(url)) { warnings.push('URL không có giao thức, đã thêm https://'); url = 'https://' + url; }
       else errors.push(`URL "${url}" phải bắt đầu bằng http:// hoặc https://`);
     }
     if (errors.length) return { request: null, errors, warnings };
