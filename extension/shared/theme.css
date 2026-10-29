@@ -135,6 +135,9 @@
 }
 :root[data-theme="light"] { color-scheme: light; }
 :root[data-theme="dark"] { color-scheme: dark; }
+/* Danh sách xổ của <select> (Chrome / Windows) lấy nền của chính ô chọn: ô nền trong suốt thì danh sách nền trắng
+   nhưng chữ vẫn sáng theo chế độ tối → không đọc được. Gán màu cho option để luôn theo theme. */
+select option, select optgroup { background-color: var(--bg-raised); color: var(--fg); }
 
 /* ---------- Nền ---------- */
 * { box-sizing: border-box; }
