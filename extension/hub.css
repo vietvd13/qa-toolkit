@@ -160,6 +160,9 @@ body { overflow: hidden; }
   #btnCollapse, .kbd { display: none; }
 }
 @media (max-width: 560px) {
+  /* Cửa sổ rất hẹp: rail mảnh bằng dải icon của tool để nội dung còn nhiều chỗ */
+  .hub, .hub.collapsed { grid-template-columns: 52px minmax(0, 1fr); }
+  .rail-top { height: 56px; }
   .home-in { padding: var(--space-8) var(--space-4) var(--space-12); }
   .home h1 { font-size: 30px; }
   .tool-grid { grid-template-columns: 1fr; }
