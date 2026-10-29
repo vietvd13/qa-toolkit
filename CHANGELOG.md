@@ -4,6 +4,8 @@ Ghi theo [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/), đánh số t
 
 ## [Chưa phát hành]
 
+## [1.6.0] - 2026-10-29
+
 ### Thêm
 - Kiểm thử API, tab **Tests**:
   - nút **Run tests (số case đang bật)** ngay cạnh *Thêm case* (chuyển từ góc trên của màn request xuống);
@@ -150,7 +152,8 @@ Ghi theo [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/), đánh số t
 - Tổng quan, tỉ lệ từng giá trị, nhóm kết quả, nhận xét tự động, xem bằng chứng, xuất CSV.
 - Bản dòng lệnh và bản web chạy bằng Playwright; script dán vào Console.
 
-[Chưa phát hành]: ../../compare/v1.5.0...HEAD
+[Chưa phát hành]: ../../compare/v1.6.0...HEAD
+[1.6.0]: ../../releases/tag/v1.6.0
 [1.5.0]: ../../releases/tag/v1.5.0
 [1.4.0]: ../../releases/tag/v1.4.0
 [1.3.0]: ../../releases/tag/v1.3.0
